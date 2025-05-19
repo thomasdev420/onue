@@ -1,4 +1,11 @@
+// Import the CounterGroup component
+import CounterGroup from "./CounterGroup"; // adjust path if needed
+
 export default function Dashboard() {
-    return <div>Dashboard</div>;
-    
+  return (
+    <div>
+      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <CounterGroup />
+    </div>
+  );
 }
