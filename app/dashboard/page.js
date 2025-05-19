@@ -1,5 +1,5 @@
 // Import the CounterGroup component
-import CounterGroup from "./CounterGroup"; // adjust path if needed
+import CounterGroup from "../component/Counter"; // adjust path if needed
 
 export default function Dashboard() {
   return (
