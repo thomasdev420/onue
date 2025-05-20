@@ -5,8 +5,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900">
       {/* Banner */}
-      <div className="inline-block bg-white text-gray-600 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-4 mb-5">
-        Over 100M+ views across all ReelFarm videos
+      <div className="inline-block bg-white text-gray-500 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-4 mb-5">
+        Over 100M+ views across all Swiftreel videos
       </div>
 
       {/* Header Section */}
@@ -14,7 +14,7 @@ export default function Home() {
         <h1 className="text-4xl font-extrabold mb-4 tracking-tight text-gray-700">
           Automate TikToks that drive traffic to your website
         </h1>
-        <p className="text-md font-medium text-gray-400 mb-6">
+        <p className="text-md font-medium text-gray-500 mb-6">
           like a gen z marketing team, but way cheaper
         </p>
 
@@ -22,7 +22,7 @@ export default function Home() {
         <div className="flex gap-4 justify-center">
           <Link href="/dashboard">
             <button className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition">
-              Jump to app →
+              Start Now
             </button>
           </Link>
 
