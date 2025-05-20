@@ -15,7 +15,7 @@ export default function Home() {
           Automate TikToks that drive traffic to your website
         </h1>
         <p className="text-md font-medium text-gray-400 mb-6">
-          It's like a gen z marketing team, but way cheaper
+          like a gen z marketing team, but way cheaper
         </p>
 
         {/* Buttons */}
