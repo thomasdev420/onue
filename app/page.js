@@ -4,20 +4,18 @@ import Counter from "./component/Counter";
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900">
-      
-      {/*Banner*/}
+      {/* Banner */}
       <div className="inline-block bg-white text-gray-600 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-4 mb-5">
-  Over 100M+ views across all ReelFarm videos
+        Over 100M+ views across all ReelFarm videos
       </div>
-
 
       {/* Header Section */}
       <header className="max-w-2xl text-center mb-12">
         <h1 className="text-4xl font-extrabold mb-4 tracking-tight text-gray-700">
           Automate TikToks that drive traffic to your website
         </h1>
-        <p className="text-m font-medium text-gray-400 mb-6">
-          it's like a gen z marketing team, but way cheaper
+        <p className="text-md font-medium text-gray-400 mb-6">
+          It's like a gen z marketing team, but way cheaper
         </p>
 
         {/* Buttons */}
@@ -30,7 +28,6 @@ export default function Home() {
 
           <Link href="/demo">
             <button className="bg-white text-gray-800 font-semibold px-6 py-3 rounded-full shadow hover:bg-gray-100 transition">
-
               Watch Demo
             </button>
           </Link>
@@ -44,7 +41,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-20 text-gray-500 text-sm">
-        &copy; {new Date().getFullYear()} Swiftreel. All rights reserved.
+        © {new Date().getFullYear()} Swiftreel. All rights reserved.
       </footer>
     </div>
   );
