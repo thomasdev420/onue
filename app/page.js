@@ -48,7 +48,7 @@ export default function Home() {
           ) : (
             <li>
               <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                onClick={() => signIn("google")}
                 className="bg-[#4285F4] text-white font-semibold px-3 py-1 rounded-full shadow-sm hover:bg-[#357ae8] transition text-sm"
               >
                 Sign In with Google
@@ -82,7 +82,7 @@ export default function Home() {
             </Link>
           ) : (
             <button
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              onClick={() => signIn("google")}
               className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition"
             >
               Start Now
@@ -172,9 +172,16 @@ export default function Home() {
               simple monthly subscription.
             </p>
             <ul className="text-left text-sm space-y-1">
-              <li className="flex items-center text-green-400 mr-2">✔</li>
-              <li className="flex items-center text-green-400 mr-2">✔</li>
-              <li className="flex items-center text-green-400 mr-2">✔</li>
+              <li className="flex items-center">
+                <span className="text-green-400 mr-2">✔</span> Cost effective
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-400 mr-2">✔</span> Fully automated
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-400 mr-2">✔</span> Multi-platform
+                publishing
+              </li>
             </ul>
           </div>
         </div>
@@ -202,52 +209,100 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Starter</h3>
-              <p className="text-gray-600 mb-4">Free for 3 videos per month</p>
-              <ul className="mb-6 text-left space-y-1 text-gray-700">
-                <li>3 videos / month</li>
-                <li>Limited customization</li>
-                <li>Community support</li>
-              </ul>
-              <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                className="bg-[#ff4514] text-white font-semibold px-4 py-2 rounded-full shadow hover:bg-[#e63e12] transition"
-              >
-                Get Started
+              <p className="mb-4">
+                <span className="text-gray-800 font-bold text-3xl">$19</span>
+                <span className="text-gray-400 text-base ml-1">per month</span>
+              </p>
+              <button className="w-full bg-gray-900 text-white font-semibold py-2 rounded-full mb-4 hover:bg-gray-700 transition">
+                Buy Now
               </button>
+              <ul className="text-left space-y-2 text-sm">
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Generate 10 videos per month
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Use default 200+ UGC avatars included
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Create your own AI avatars (25 images, 5 videos)
+                </li>
+              </ul>
             </div>
-            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Pro</h3>
-              <p className="text-gray-600 mb-4">Unlimited videos for $29 / month</p>
-              <ul className="mb-6 text-left space-y-1 text-gray-700">
-                <li>Unlimited videos</li>
-                <li>Full customization</li>
-                <li>Priority support</li>
-              </ul>
-              <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                className="bg-[#ff4514] text-white font-semibold px-4 py-2 rounded-full shadow hover:bg-[#e63e12] transition"
-              >
-                Get Started
+
+            <div className="bg-white p-8 rounded-xl shadow-sm border-2 border-[#ff4514] flex flex-col items-start relative">
+              <span className="absolute top-4 left-4 bg-[#ff4514] text-white text-xs font-semibold px-2 py-1 rounded-full">
+                Most Popular
+              </span>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2 mt-8">Growth</h3>
+              <p className="mb-4">
+                <span className="text-gray-800 font-bold text-3xl">$49</span>
+                <span className="text-gray-400 text-base ml-1">per month</span>
+              </p>
+              <button className="w-full bg-[#ff4514] text-white font-semibold py-2 rounded-full mb-4 hover:bg-[#e63e12] transition">
+                Buy Now
               </button>
+              <ul className="text-left space-y-2 text-sm">
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Everything in Starter, plus...
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Generate 50 videos per month
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> AI slideshow generator access
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Create your own AI avatars (100 images, 25 videos)
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Publish directly to TikTok
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Schedule and automate videos
+                </li>
+              </ul>
             </div>
+
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Enterprise</h3>
-              <p className="text-gray-600 mb-4">Custom pricing & features</p>
-              <ul className="mb-6 text-left space-y-1 text-gray-700">
-                <li>Custom videos & integrations</li>
-                <li>Dedicated account manager</li>
-                <li>24/7 support</li>
-              </ul>
-              <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                className="bg-[#ff4514] text-white font-semibold px-4 py-2 rounded-full shadow hover:bg-[#e63e12] transition"
-              >
-                Contact Us
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Scale</h3>
+              <p className="mb-4">
+                <span className="text-gray-800 font-bold text-3xl">$95</span>
+                <span className="text-gray-400 text-base ml-1">per month</span>
+              </p>
+              <button className="w-full bg-gray-900 text-white font-semibold py-2 rounded-full mb-4 hover:bg-gray-700 transition">
+                Buy Now
               </button>
+              <ul className="text-left space-y-2 text-sm">
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Everything in Growth, plus...
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Generate 150 videos per month
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Create your own AI avatars (200 images, 50 videos)
+                </li>
+                <li className="flex items-center text-gray-600">
+                  <span className="text-[#ff4514] mr-2">✔</span> Priority support
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="mt-20 text-gray-500 text-sm">
+        © {new Date().getFullYear()} SwiftReel. All rights reserved.
+      </footer>
+
+      <style>
+        {`
+          html {
+            scroll-behavior: smooth;
+          }
+        `}
+      </style>
     </div>
   );
 }
