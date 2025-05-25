@@ -58,6 +58,11 @@ export default function Home() {
         </ul>
       </nav>
 
+      {/* Version 2.0 */}
+      <div className="absolute bottom-4 left-4 text-black font-medium text-gray-500 mb-5"> 
+        Version 2.0
+      </div>
+
       {/* Banner */}
       <div className="inline-block bg-white text-gray-500 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-18 mb-5">
         Over 100M+ views across all SwiftReel videos
@@ -89,7 +94,7 @@ export default function Home() {
             </button>
           )}
 
-          <Link href="/demo">
+          <Link href="/dashboard">
             <button className="bg-white text-gray-800 font-semibold px-6 py-3 rounded-full shadow hover:bg-gray-100 transition">
               Watch Demo
             </button>

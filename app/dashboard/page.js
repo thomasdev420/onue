@@ -1,3 +1,5 @@
+"use client"; // Mark this component as a Client Component
+
 import Link from "next/link";
 import {
   Home,
@@ -11,8 +13,12 @@ import {
   Settings,
   ArrowLeft
 } from 'lucide-react';
+import { useSession, signOut } from "next-auth/react"; // Import useSession and signOut
 
 export default function Dashboard() {
+  const { data: session, status } = useSession(); // Fetch session data
+  const user = session?.user; // Extract user data from session (contains name, email, image)
+
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: '#FAF9F6' }}>
       {/* Sidebar */}
@@ -115,17 +121,41 @@ export default function Dashboard() {
 
         {/* User Info and Upgrade Button */}
         <div className="p-4 pl-4 pr-6">
-         <Link href="/#pricing">
-           <button className="w-full bg-[#ff4514] text-white font-semibold py-2 rounded-lg hover:bg-orange-600 transition">
-             Upgrade
+          <Link href="/#pricing">
+            <button className="w-full bg-[#ff4514] text-white font-semibold py-2 rounded-lg hover:bg-orange-600 transition">
+              Upgrade
             </button>
-         </Link>
+          </Link>
           <div className="mt-4 flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-            <div>
-              <p className="text-gray-800 font-semibold text-sm">Thomas Collins</p>
-              <p className="text-gray-500 text-xs">thcollins542@gmail.com</p>
-            </div>
+            {/* Display Google Account Details */}
+            {status === "loading" ? (
+              <p className="text-gray-800 font-semibold text-sm">Loading...</p>
+            ) : user ? (
+              <>
+                <img
+                  src={user.image}
+                  alt="Google Profile"
+                  className="w-10 h-10 rounded-full"
+                />
+                <div>
+                  <p className="text-gray-800 font-semibold text-sm">{user.name}</p>
+                  <p className="text-gray-500 text-xs">{user.email}</p>
+                  <button
+                    onClick={() => signOut({ callbackUrl: "/" })}
+                    className="text-blue-500 text-xs hover:underline mt-1"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div>
+                <p className="text-gray-800 font-semibold text-sm">Not signed in</p>
+                <Link href="/api/auth/signin">
+                  <span className="text-blue-500 text-xs hover:underline">Sign in with Google</span>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -149,7 +179,7 @@ export default function Dashboard() {
               </div>
               <h2 className="text-lg font-semibold text-gray-800">Create UGC videos</h2>
             </div>
-            <p className="text-gray-600">Create & publish UGC videos promoting your product demo</p>
+            <p className="text-gray-500">Create & publish UGC videos promoting your product demo</p>
           </div>
 
           {/* Card 2 */}
@@ -160,7 +190,7 @@ export default function Dashboard() {
               </div>
               <h2 className="text-lg font-semibold text-gray-800">Create Greenscreen Meme videos</h2>
             </div>
-            <p className="text-gray-600">Create relatable meme videos about your product / business</p>
+            <p className="text-gray-500">Create relatable meme videos about your product / business</p>
           </div>
 
           {/* Card 3 */}
@@ -171,7 +201,7 @@ export default function Dashboard() {
               </div>
               <h2 className="text-lg font-semibold text-gray-800">UGC Avatar Generator</h2>
             </div>
-            <p className="text-gray-600">Create custom AI avatars for the UGC</p>
+            <p className="text-gray-500">Create custom AI avatars for the UGC</p>
           </div>
 
           {/* Card 4 */}
@@ -182,7 +212,7 @@ export default function Dashboard() {
               </div>
               <h2 className="text-lg font-semibold text-gray-800">Hook Generator</h2>
             </div>
-            <p className="text-gray-600">Auto-magically generate and save viral hooks</p>
+            <p className="text-gray-500">Auto-magically generate and save viral hooks</p>
           </div>
         </div>
 
@@ -200,13 +230,12 @@ export default function Dashboard() {
                   <p className="text-gray-500 text-sm">Estimated 2–3 minutes</p>
                 </div>
               </div>
-            <Link href="/#pricing">
-               <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition flex items-center gap-2">
-                 Upgrade now
+              <Link href="/#pricing">
+                <button className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition flex items-center gap-2">
+                  Upgrade now
                   <span>➔</span>
                 </button>
-            </Link>
-
+              </Link>
             </div>
 
             <div className="bg-white p-6 rounded-lg shadow-sm flex items-center justify-between">
