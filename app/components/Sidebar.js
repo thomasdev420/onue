@@ -38,18 +38,18 @@ export default function Sidebar() {
         <nav className="mt-4 px-4 flex-1">
           <ul className="space-y-1">
             <SidebarLink href="/dashboard" icon={<Home size={18} />} label="Home" currentPath={pathname} />
-            <SidebarLink href="/videos" icon={<Video size={18} />} label="Videos" currentPath={pathname} />
-            <SidebarLink href="/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} />
-            <SidebarLink href="/campaigns" icon={<Megaphone size={18} />} label="Campaigns" currentPath={pathname} />
-            <SidebarLink href="/images" icon={<ImageIcon size={18} />} label="Images" currentPath={pathname} />
+            <SidebarLink href="/dashboard/videos" icon={<Video size={18} />} label="Videos" currentPath={pathname} />
+            <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} />
+            <SidebarLink href="/dashboard/campaigns" icon={<Megaphone size={18} />} label="Campaigns" currentPath={pathname} />
+            <SidebarLink href="/dashboard/images" icon={<ImageIcon size={18} />} label="Images" currentPath={pathname} />
 
             <li className="mt-3 text-gray-500 text-sm pl-5">Playground</li>
 
-            <SidebarLink href="/slides" icon={<Book size={18} />} label="Slides" currentPath={pathname} />
-            <SidebarLink href="/avatars" icon={<User size={18} />} label="Avatars" currentPath={pathname} />
-            <SidebarLink href="/hook-demo" icon={<Wand2 size={18} />} label="Hook & Demo" currentPath={pathname} />
-            <SidebarLink href="/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} />
-            <SidebarLink href="/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} />
+            <SidebarLink href="/dashboard/slides" icon={<Book size={18} />} label="Slides" currentPath={pathname} />
+            <SidebarLink href="/dashboard/avatars" icon={<User size={18} />} label="Avatars" currentPath={pathname} />
+            <SidebarLink href="/dashboard/hook-demo" icon={<Wand2 size={18} />} label="Hook & Demo" currentPath={pathname} />
+            <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} />
+            <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} />
           </ul>
         </nav>
       </div>
