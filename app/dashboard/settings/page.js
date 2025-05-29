@@ -2,6 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Settings() {
   const { data: session, status } = useSession();
@@ -13,33 +14,34 @@ export default function Settings() {
 
       <div className="max-w-md bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Account Information</h2>
+        {/* Display Google Account Details */}
         {status === "loading" ? (
           <p className="text-gray-800 font-semibold text-sm">Loading...</p>
         ) : user ? (
           <div className="flex items-center gap-4">
-            <div className="flex-shrink-0">
-              <Image 
-                src={user.image} 
-                alt="Profile" 
-                width={64} 
-                height={64} 
-                className="rounded-full border-2 border-gray-200"
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-gray-800 font-semibold text-base truncate">{user.name}</p>
-              <p className="text-gray-500 text-sm truncate mb-2">{user.email}</p>
+            <img
+              src={user.image}
+              alt="Google Profile"
+              className="w-10 h-10 rounded-full"
+            />
+            <div>
+              <p className="text-gray-800 font-semibold text-sm">{user.name}</p>
+              <p className="text-gray-500 text-xs">{user.email}</p>
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="text-[#ff4514] text-sm hover:underline"
+                className="text-blue-500 text-xs hover:underline mt-1"
               >
                 Sign out
               </button>
             </div>
           </div>
         ) : (
-          <p className="text-gray-600">Please sign in to view account information.</p>
+          <div>
+            <p className="text-gray-800 font-semibold text-sm">Not signed in</p>
+            <Link href="/api/auth/signin">
+              <span className="text-blue-500 text-xs hover:underline">Sign in with Google</span>
+            </Link>
+          </div>
         )}
       </div>
     </div>
