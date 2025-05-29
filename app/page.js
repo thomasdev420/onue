@@ -4,12 +4,50 @@ import Link from "next/link";
 import Box from "./component/box";
 import { Lightbulb, Rocket, Users } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
+import { useEffect, useRef, useState } from "react";
+import Image from 'next/image';
 
 export default function Home() {
   const { data: session } = useSession();
 
+  // Animated number state for header
+  const [headerNumber, setHeaderNumber] = useState(0);
+  const rafRef = useRef();
+
+  useEffect(() => {
+    let start = null;
+    const duration = 4000; // 4 seconds
+    const pause = 6000; // 6 seconds
+    const max = 100000;
+    function animate(ts) {
+      if (!start) start = ts;
+      const elapsed = ts - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease out: fast at the end
+      const eased = Math.pow(progress, 2.5);
+      const value = Math.floor(eased * max);
+      setHeaderNumber(value.toLocaleString());
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(animate);
+      } else {
+        setTimeout(() => {
+          setHeaderNumber(0);
+          start = null;
+          rafRef.current = requestAnimationFrame(animate);
+        }, pause);
+      }
+    }
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900 relative">
+      {/* Beta Version Box */}
+      <div className="absolute top-4 left-8 z-50 inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
+        <span className="text-gray-800 font-semibold text-sm">Beta V2.1</span>
+      </div>
+
       {/* Navigation Bar */}
       <nav className="absolute top-4 right-8 z-50">
         <ul className="flex gap-3 items-center text-sm">
@@ -48,7 +86,7 @@ export default function Home() {
           ) : (
             <li>
               <button
-                onClick={() => signIn("google")}
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                 className="bg-[#4285F4] text-white font-semibold px-3 py-1 rounded-full shadow-sm hover:bg-[#357ae8] transition text-sm"
               >
                 Sign In with Google
@@ -58,37 +96,32 @@ export default function Home() {
         </ul>
       </nav>
 
-      {/* Version 2.0 */}
-      <div className="absolute bottom-4 left-4 text-black font-medium text-gray-500 mb-5"> 
-        Version 2.0
-      </div>
-
       {/* Banner */}
-      <div className="inline-block bg-white text-gray-500 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-18 mb-5">
+      <div className="inline-block bg-white text-gray-500 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-24 mb-5">
         Over 100M+ views across all SwiftReel videos
       </div>
 
       {/* Header Section */}
       <header className="max-w-2xl text-center mb-12">
         <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-800">
-          Automate TikToks that drive traffic to your website
+          Automate TikToks that boost your website traffic
         </h1>
         <p className="text-lg font-semibold text-gray-500 mb-6">
-          like a gen z marketing team, but way cheaper
+          it&apos;s like a gen z marketing team, but way cheaper
         </p>
 
         {/* Buttons */}
         <div className="flex gap-4 justify-center">
           {session ? (
             <Link href="/dashboard">
-              <button className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition">
+              <button className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition start-glow">
                 Start Now
               </button>
             </Link>
           ) : (
             <button
-              onClick={() => signIn("google")}
-              className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition"
+              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+              className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition start-glow"
             >
               Start Now
             </button>
@@ -102,29 +135,90 @@ export default function Home() {
         </div>
       </header>
 
-      {/* 10K+ posts published for 750+ happy customers */}
-      <p className="pt-4 text-md font-medium text-gray-500 mb-5">
-        10K+ posts published for 750+ happy customers
-      </p>
+      {/* image */}
+      <Image
+        src="https://reel.farm/hero.png"
+        alt="Hero Image"
+        width={800}
+        height={400}
+        className="mx-auto max-w-full h-auto"
+      />
 
-      {/* Box Section */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-10">
-        <Box
-          icon={<Lightbulb size={32} />}
-          title="Built for Founders"
-          description="Tools tailored for ambitious creators who want to move fast."
-        />
-        <Box
-          icon={<Rocket size={32} />}
-          title="Launch Fast"
-          description="Ship ideas quickly without wasting time on boilerplate."
-        />
-        <Box
-          icon={<Users size={32} />}
-          title="Community Driven"
-          description="Made with feedback from real builders like you."
-        />
-      </section>
+      {/* The problem */}
+      <div
+        style={{
+          borderLeft: '4px solid #F05252',
+          borderRadius: 0,
+          padding: 'clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)',
+          marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
+          marginTop: 'clamp(3rem, 5vw, 6rem)',  // <-- added extra top margin here
+          backgroundColor: 'rgba(240, 82, 82, 0.1)',
+          textAlign: 'left',
+          display: 'inline-block',
+        }}
+      >
+        <p
+          style={{
+            fontSize: 'clamp(0.875rem, 1.25vw, 1.125rem)',
+            lineHeight: 1.2,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            color: '#F05252',
+            fontWeight: 700,
+          }}
+          className="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+        >
+          The Problem
+        </p>
+      </div>
+
+      {/* problem text */}
+      <h1
+        className="text-5xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
+        style={{ fontWeight: '800' }}
+      >
+        Making high converting content is
+        <br />
+        <span style={{ color: 'red', fontWeight: '900' }}>slow</span>{' '}
+        and{' '}
+        <span style={{ color: 'red', fontWeight: '900' }}>inconsistent</span>
+      </h1>
+
+      {/* The solution */}
+      <div
+        style={{
+          borderLeft: '4px solid #22C55E', // Green border
+          borderRadius: 0,
+          padding: 'clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)',
+          marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
+          marginTop: 'clamp(3rem, 5vw, 6rem)',
+          backgroundColor: 'rgba(34, 197, 94, 0.1)', // Green background
+          textAlign: 'left',
+          display: 'inline-block',
+        }}
+      >
+        <p
+          style={{
+            fontSize: 'clamp(0.875rem, 1.25vw, 1.125rem)',
+            lineHeight: 1.2,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            color: '#22C55E', // Green text
+            fontWeight: 700,
+          }}
+          className="mantine-focus-auto m_b6d8b162 mantine-Text-root"
+        >
+          The Solution
+        </p>
+      </div>
+
+      {/* solution text */}
+      <h1
+        className="text-5xl font-extrabold mb-16 tracking-tight text-center text-gray-800"
+        style={{ fontWeight: '800' }}
+      >
+        SwiftReel is <span style={{ color: '#22C55E', fontWeight: '900' }}>fast</span> and <span style={{ color: '#22C55E', fontWeight: '900' }}>consistent</span>
+      </h1>
 
       {/* Comparison Section */}
       <section className="max-w-4xl mx-auto mb-10 p-6">
@@ -305,6 +399,9 @@ export default function Home() {
         {`
           html {
             scroll-behavior: smooth;
+          }
+          .start-glow {
+            box-shadow: 0 0 16px 2px #ffb380, 0 0 8px 2px #ff4514;
           }
         `}
       </style>
