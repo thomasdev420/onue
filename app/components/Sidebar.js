@@ -62,34 +62,6 @@ export default function Sidebar() {
           </button>
         </Link>
 
-        <div className="mt-4 flex items-start gap-4 p-4 bg-white rounded-lg shadow-sm">
-          {status === "loading" ? (
-            <p className="text-gray-800 font-semibold text-sm">Loading...</p>
-          ) : user ? (
-            <>
-              <div className="flex-shrink-0">
-                <Image 
-                  src={user.image} 
-                  alt="Profile" 
-                  width={48} 
-                  height={48} 
-                  className="rounded-full border-2 border-gray-100"
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-              <div className="flex-1 min-w-0 space-y-1">
-                <p className="text-gray-800 font-semibold text-sm truncate">{user.name}</p>
-                <p className="text-gray-500 text-xs truncate">{user.email}</p>
-                <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-[#ff4514] text-xs hover:underline"
-                >
-                  Sign out
-                </button>
-              </div>
-            </>
-          ) : null}
-        </div>
       </div>
     </aside>
   );
