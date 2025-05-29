@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import {
   Home,
   Video,
@@ -16,29 +13,12 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  const { data: session } = useSession();
-
   return (
     <>
       {/* Header with Centered Welcome */}
       <div className="mb-8">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex justify-center">
           <h1 className="text-2xl font-bold text-gray-800">Welcome to SwiftReel</h1>
-          {session?.user && (
-            <div className="flex items-center gap-3 bg-white p-3 rounded-lg shadow-sm">
-              {session.user.image && (
-                <img 
-                  src={session.user.image} 
-                  alt={session.user.name || 'Profile'} 
-                  className="w-8 h-8 rounded-full"
-                />
-              )}
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-gray-800">{session.user.name}</span>
-                <span className="text-xs text-gray-500">{session.user.email}</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
