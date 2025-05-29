@@ -62,18 +62,24 @@ export default function Sidebar() {
           </button>
         </Link>
 
-        <div className="mt-4 flex items-center gap-3">
+        <div className="mt-4 flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm">
           {status === "loading" ? (
             <p className="text-gray-800 font-semibold text-sm">Loading...</p>
           ) : user ? (
             <>
-              <Image src={user.image} alt="Profile" width={40} height={40} className="w-10 h-10 rounded-full" />
-              <div>
-                <p className="text-gray-800 font-semibold text-sm">{user.name}</p>
-                <p className="text-gray-500 text-xs">{user.email}</p>
+              <Image 
+                src={user.image} 
+                alt="Profile" 
+                width={40} 
+                height={40} 
+                className="w-10 h-10 rounded-full border-2 border-gray-100" 
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-800 font-semibold text-sm truncate">{user.name}</p>
+                <p className="text-gray-500 text-xs truncate">{user.email}</p>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-blue-500 text-xs hover:underline mt-1"
+                  className="text-[#ff4514] text-xs hover:underline mt-1"
                 >
                   Sign out
                 </button>
