@@ -104,10 +104,10 @@ export default function Home() {
       {/* Header Section */}
       <header className="max-w-2xl text-center mb-12">
         <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-800">
-          Automate TikToks that boost your website traffic
+          Automate Reels that boost your website traffic
         </h1>
         <p className="text-lg font-semibold text-gray-500 mb-6">
-          it&apos;s like a gen z marketing team, but way cheaper
+        Viral marketing magic, without hiring a whole creative team.
         </p>
 
         {/* Buttons */}
@@ -402,6 +402,19 @@ export default function Home() {
           }
           .start-glow {
             box-shadow: 0 0 16px 2px #ffb380, 0 0 8px 2px #ff4514;
+            animation: glow-pulse 3s infinite alternate ease-in-out;
+          }
+
+          @keyframes glow-pulse {
+            0% {
+              box-shadow: 0 2px 12px 1px #ffb380, 0 1px 6px 1px #ff4514;
+            }
+            50% {
+              box-shadow: 0 -2px 20px 3px #ffb380, 0 -1px 10px 3px #ff4514;
+            }
+            100% {
+              box-shadow: 0 2px 12px 1px #ffb380, 0 1px 6px 1px #ff4514;
+            }
           }
         `}
       </style>
