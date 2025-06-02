@@ -2,49 +2,102 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { supabase } from '../../../supabaseClient';
+import { useRouter } from 'next/navigation';
 
 export default function Slides() {
   const [userPhotos, setUserPhotos] = useState([]);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const router = useRouter();
 
   // Load user's photos when component mounts
   useEffect(() => {
-    loadUserPhotos();
+    checkUser();
   }, []);
 
-  const loadUserPhotos = async () => {
+  const checkUser = async () => {
+    try {
+      setIsCheckingAuth(true);
+      setError(null);
+
+      // Get the current session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Failed to check authentication status');
+      }
+      
+      if (!session) {
+        // If no session, redirect to login
+        router.push('/login');
+        return;
+      }
+
+      // If we have a session, load the photos
+      await loadUserPhotos(session.user.id);
+    } catch (error) {
+      console.error('Error checking user:', error);
+      setError(error.message);
+    } finally {
+      setIsCheckingAuth(false);
+      setLoading(false);
+    }
+  };
+
+  const loadUserPhotos = async (userId) => {
     try {
       setLoading(true);
       setError(null);
-      
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (userError) throw userError;
-      if (!user) {
-        throw new Error('You must be logged in to view photos');
+
+      if (!userId) {
+        throw new Error('User ID is required');
       }
 
       // Get photos from the database
       const { data, error: photosError } = await supabase
         .from('photos')
         .select('file_path')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
-      if (photosError) throw photosError;
+      if (photosError) {
+        console.error('Database error:', photosError);
+        throw new Error('Failed to load photos from database');
+      }
+
       if (!data || data.length === 0) {
         setUserPhotos([]);
         return;
       }
 
       // Get public URLs for all photos
-      const photos = data.map(photo => ({
-        path: photo.file_path,
-        url: supabase.storage.from('user-photos').getPublicUrl(photo.file_path).data.publicUrl
+      const photos = await Promise.all(data.map(async (photo) => {
+        try {
+          const { data: urlData } = supabase.storage
+            .from('user-photos')
+            .getPublicUrl(photo.file_path);
+
+          if (!urlData?.publicUrl) {
+            console.warn('No public URL for photo:', photo.file_path);
+            return null;
+          }
+
+          return {
+            path: photo.file_path,
+            url: urlData.publicUrl
+          };
+        } catch (error) {
+          console.error('Error getting URL for photo:', photo.file_path, error);
+          return null;
+        }
       }));
 
-      setUserPhotos(photos);
+      // Filter out any null values from failed URL generations
+      const validPhotos = photos.filter(photo => photo !== null);
+      setUserPhotos(validPhotos);
+
     } catch (error) {
       console.error('Error loading photos:', error);
       setError(error.message);
@@ -54,6 +107,11 @@ export default function Slides() {
   };
 
   const togglePhotoSelection = (photo) => {
+    if (!photo?.path || !photo?.url) {
+      console.error('Invalid photo object:', photo);
+      return;
+    }
+
     setSelectedPhotos(prev => {
       const isSelected = prev.some(p => p.path === photo.path);
       if (isSelected) {
@@ -64,6 +122,18 @@ export default function Slides() {
     });
   };
 
+  // Show loading state while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="p-8">
+        <div className="text-center">
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state while fetching photos
   if (loading) {
     return (
       <div className="p-8">
@@ -74,13 +144,14 @@ export default function Slides() {
     );
   }
 
+  // Show error state
   if (error) {
     return (
       <div className="p-8">
         <div className="text-center">
           <p className="text-red-600">Error: {error}</p>
           <button 
-            onClick={loadUserPhotos}
+            onClick={checkUser}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Try Again
@@ -117,6 +188,8 @@ export default function Slides() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {userPhotos.map((photo) => {
+              if (!photo?.url) return null; // Skip invalid photos
+              
               const isSelected = selectedPhotos.some(p => p.path === photo.path);
               return (
                 <div 
@@ -129,6 +202,10 @@ export default function Slides() {
                     src={photo.url}
                     alt="Uploaded photo"
                     className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      console.error('Error loading image:', photo.url);
+                      e.target.src = '/placeholder-image.png'; // You might want to add a placeholder image
+                    }}
                   />
                   <div className={`absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 
                     transition-opacity duration-200 rounded-lg flex items-center justify-center`}>
@@ -159,6 +236,10 @@ export default function Slides() {
                     src={photo.url}
                     alt={`Selected photo ${index + 1}`}
                     className="w-full h-full object-cover rounded-lg"
+                    onError={(e) => {
+                      console.error('Error loading preview image:', photo.url);
+                      e.target.src = '/placeholder-image.png';
+                    }}
                   />
                   <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm">
                     Slide {index + 1}
