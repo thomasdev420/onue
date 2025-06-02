@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Slider from 'react-slick';
 import { toPng } from 'html-to-image';
 import { supabase } from '../../../supabaseClient';
@@ -11,8 +11,57 @@ export default function Slides() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [selectedPhotos, setSelectedPhotos] = useState([]);
+  const [userPhotos, setUserPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const sliderRef = useRef(null);
   const slideContainerRef = useRef(null);
+
+  // Load user's photos when component mounts
+  useEffect(() => {
+    loadUserPhotos();
+  }, []);
+
+  const loadUserPhotos = async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('You must be logged in to view photos');
+      }
+
+      // Get photos from the database
+      const { data, error } = await supabase
+        .from('photos')
+        .select('file_path')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      // Get public URLs for all photos
+      const photos = data.map(photo => ({
+        path: photo.file_path,
+        url: supabase.storage.from('user-photos').getPublicUrl(photo.file_path).data.publicUrl
+      }));
+
+      setUserPhotos(photos);
+    } catch (error) {
+      console.error('Error loading photos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const togglePhotoSelection = (photo) => {
+    setSelectedPhotos(prev => {
+      const isSelected = prev.some(p => p.path === photo.path);
+      if (isSelected) {
+        return prev.filter(p => p.path !== photo.path);
+      } else {
+        return [...prev, photo];
+      }
+    });
+  };
 
   const settings = {
     dots: true,
@@ -94,22 +143,61 @@ export default function Slides() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="text-center">
+          <p className="text-gray-600">Loading your photos...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Create Slides</h1>
         <p className="text-gray-600 mt-2">
-          Select photos from the Content tab to create slides for TikTok or Instagram
+          Select photos to create slides for TikTok or Instagram
         </p>
       </div>
 
-      {selectedPhotos.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-          <p className="text-gray-600">
-            Select photos from the Content tab to create slides
-          </p>
+      {/* Photo Selection Grid */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">Your Photos</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {userPhotos.map((photo) => {
+            const isSelected = selectedPhotos.some(p => p.path === photo.path);
+            return (
+              <div 
+                key={photo.path} 
+                className={`relative aspect-square group cursor-pointer
+                  ${isSelected ? 'ring-4 ring-blue-500' : ''}`}
+                onClick={() => togglePhotoSelection(photo)}
+              >
+                <img
+                  src={photo.url}
+                  alt="Uploaded photo"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+                <div className={`absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 
+                  transition-opacity duration-200 rounded-lg flex items-center justify-center`}>
+                  {isSelected && (
+                    <div className="bg-blue-500 text-white p-2 rounded-full">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
-      ) : (
+      </div>
+
+      {/* Slides Preview */}
+      {selectedPhotos.length > 0 && (
         <div className="space-y-6">
           <div className="flex gap-4">
             <button
