@@ -44,16 +44,8 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900 relative">
       {/* Beta Version Box */}
-      <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
-        <div className="inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
-          <span className="text-gray-800 font-semibold text-sm">Beta V2.1</span>
-        </div>
-        <Link
-          href="/dashboard"
-          className="text-sm text-gray-600 hover:text-gray-900 transition-colors"
-        >
-          Dev Access
-        </Link>
+      <div className="absolute top-4 left-8 z-50 inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
+        <span className="text-gray-800 font-semibold text-sm">Beta V2.1</span>
       </div>
 
       {/* Navigation Bar */}
@@ -119,13 +111,12 @@ export default function Home() {
         </p>
 
         {/* Buttons */}
-        <div className="relative flex justify-center">
+        <div className="flex justify-center">
           {session ? (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-[#ff4514] hover:bg-[#e63e12] transition-colors"
-            >
-              Start Now
+            <Link href="/dashboard">
+              <button className="bg-[#ff4514] text-white font-semibold px-7 py-3.5 rounded-full shadow hover:bg-[#e63e12] transition start-glow">
+                Start Now
+              </button>
             </Link>
           ) : (
             <button
