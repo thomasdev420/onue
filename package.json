@@ -1,12 +1,13 @@
 {
   "name": "onue",
-  "version": "0.1.0",
+  "version": "2.4.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "version": "node scripts/version.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.9",

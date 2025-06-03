@@ -1,241 +1,132 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Upload, Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react';
+import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { supabase } from '../../../supabaseClient';
-import { uploadPhoto, fetchUserPhotos } from '../../../photoService';
 
-export default function Content() {
+export default function ContentPage() {
   const { data: session } = useSession();
-  const [uploadedImages, setUploadedImages] = useState([]);
-  const [uploadedVideos, setUploadedVideos] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load user's content when component mounts
-  useEffect(() => {
-    const loadContent = async () => {
-      if (session?.supabaseUserId) {
-        try {
-          setIsLoading(true);
-          // Fetch photos from Supabase using the user ID from the session
-          const photos = await fetchUserPhotos(session.supabaseUserId);
-          setUploadedImages(photos);
-          
-          // TODO: Implement video fetching from Supabase
-          setUploadedVideos([]);
-        } catch (error) {
-          console.error('Error loading user content:', error);
-          setError('Failed to load content');
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    loadContent();
-  }, [session]);
-
-  const handleImageUpload = async (event) => {
+  const handleFileSelect = (event) => {
     const files = Array.from(event.target.files);
-    try {
-      if (!session?.supabaseUserId) {
-        throw new Error('You must be logged in to upload photos');
-      }
+    setSelectedFiles(files);
+    setError(null);
+  };
 
-      for (const file of files) {
-        await uploadPhoto(file, session.supabaseUserId);
-      }
-
-      // Reload photos after upload
-      const photos = await fetchUserPhotos(session.supabaseUserId);
-      setUploadedImages(photos);
-    } catch (error) {
-      console.error('Error uploading photos:', error);
-      setError('Failed to upload photos');
+  const handleUpload = async () => {
+    if (selectedFiles.length === 0) {
+      setError('Please select at least one file');
+      return;
     }
-  };
 
-  const handleVideoUpload = (event) => {
-    // TODO: Implement video upload to Supabase
-    setError('Video upload not implemented yet');
-  };
+    setUploading(true);
+    setError(null);
 
-  const removeImage = async (path) => {
     try {
-      if (!session?.supabaseUserId) return;
-
-      // Delete from storage
-      const { error: storageError } = await supabase.storage
-        .from('user-photos')
-        .remove([path]);
-
-      if (storageError) throw storageError;
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('photos')
-        .delete()
-        .eq('file_path', path)
-        .eq('user_id', session.supabaseUserId);
-
-      if (dbError) throw dbError;
-
-      // Update local state
-      setUploadedImages(prev => prev.filter(img => img.path !== path));
-    } catch (error) {
-      console.error('Error removing image:', error);
-      setError('Failed to remove image');
+      // Simulate upload delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Files to upload:', selectedFiles);
+      
+      // Clear selection after "upload"
+      setSelectedFiles([]);
+    } catch (err) {
+      setError('Failed to upload files');
+    } finally {
+      setUploading(false);
     }
-  };
-
-  const removeVideo = (id) => {
-    // TODO: Implement video removal from Supabase
-    setError('Video removal not implemented yet');
   };
 
   if (!session) {
     return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">Content</h1>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-gray-600">Please sign in to access your content.</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">Content</h1>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-gray-600">Loading your content...</p>
-        </div>
+      <div className="p-4 text-center">
+        <p className="text-gray-600">Please sign in to view and upload content.</p>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Content</h1>
-        <div className="text-sm text-gray-500">
-          Logged in as: {session.user.email}
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
-          {error}
-        </div>
-      )}
-      
-      {/* Upload Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        {/* Image Upload Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ImageIcon size={24} className="text-blue-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Image Upload</h2>
-          </div>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-            />
-            <label
-              htmlFor="image-upload"
-              className="cursor-pointer flex flex-col items-center gap-2"
-            >
-              <Upload size={24} className="text-gray-400" />
-              <span className="text-gray-600">Click to upload images</span>
-              <span className="text-sm text-gray-500">or drag and drop</span>
-            </label>
-          </div>
+    <div className="p-4">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold mb-4">Content Library</h2>
+        
+        <div className="flex items-center gap-4 mb-6">
+          <input
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            onChange={handleFileSelect}
+            className="block w-full text-sm text-gray-500
+              file:mr-4 file:py-2 file:px-4
+              file:rounded-full file:border-0
+              file:text-sm file:font-semibold
+              file:bg-blue-50 file:text-blue-700
+              hover:file:bg-blue-100"
+          />
+          
+          <button
+            onClick={handleUpload}
+            disabled={selectedFiles.length === 0 || uploading}
+            className={`px-4 py-2 rounded-md text-white font-medium
+              ${selectedFiles.length === 0 || uploading 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'}`}
+          >
+            {uploading ? 'Uploading...' : 'Upload'}
+          </button>
         </div>
 
-        {/* Video Upload Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <VideoIcon size={24} className="text-green-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Video Upload</h2>
-          </div>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <input
-              type="file"
-              accept="video/*"
-              multiple
-              onChange={handleVideoUpload}
-              className="hidden"
-              id="video-upload"
-            />
-            <label
-              htmlFor="video-upload"
-              className="cursor-pointer flex flex-col items-center gap-2"
-            >
-              <Upload size={24} className="text-gray-400" />
-              <span className="text-gray-600">Click to upload videos</span>
-              <span className="text-sm text-gray-500">or drag and drop</span>
-            </label>
-          </div>
-        </div>
-      </div>
+        {error && (
+          <p className="mt-2 text-red-600">{error}</p>
+        )}
 
-      {/* Display uploaded content */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Images Grid */}
-        {uploadedImages.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Images</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {uploadedImages.map((image) => (
-                <div key={image.path} className="relative group">
-                  <img
-                    src={image.url}
-                    alt="Uploaded content"
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <button
-                    onClick={() => removeImage(image.path)}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={16} />
-                  </button>
+        {selectedFiles.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <p className="text-blue-700">
+              {selectedFiles.length} file{selectedFiles.length !== 1 ? 's' : ''} selected
+            </p>
+            <div className="mt-2 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                  {file.type.startsWith('image/') ? (
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2 text-sm truncate">
+                    {file.name}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
+      </div>
 
-        {/* Videos Grid */}
-        {uploadedVideos.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Videos</h3>
-            <div className="grid grid-cols-1 gap-4">
-              {uploadedVideos.map((video) => (
-                <div key={video.id} className="relative group">
-                  <video
-                    src={video.url}
-                    controls
-                    className="w-full rounded-lg"
-                  />
-                  <button
-                    onClick={() => removeVideo(video.id)}
-                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
+      {/* Placeholder for uploaded content */}
+      <div className="mt-8">
+        <h3 className="text-xl font-semibold mb-4">Your Content</h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {/* Placeholder items */}
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden">
+              <div className="w-full h-full flex items-center justify-center">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
             </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
     </div>
   );
