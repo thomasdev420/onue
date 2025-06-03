@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { supabase } from '../../../supabaseClient';
+import { uploadPhoto, fetchUserPhotos } from '../../../photoService';
 
 export default function Content() {
   const { data: session } = useSession();
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedVideos, setUploadedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Load user's content when component mounts
   useEffect(() => {
@@ -16,16 +19,18 @@ export default function Content() {
       if (session?.user) {
         try {
           setIsLoading(true);
-          // Here you would typically fetch the user's content from your backend
-          // For now, we'll use localStorage as a temporary solution
-          const userContent = localStorage.getItem(`userContent_${session.user.email}`);
-          if (userContent) {
-            const { images, videos } = JSON.parse(userContent);
-            setUploadedImages(images);
-            setUploadedVideos(videos);
-          }
+          const { data: { user } } = await supabase.auth.getUser();
+          if (!user) return;
+
+          // Fetch photos from Supabase
+          const photos = await fetchUserPhotos(user.id);
+          setUploadedImages(photos);
+          
+          // TODO: Implement video fetching from Supabase
+          setUploadedVideos([]);
         } catch (error) {
           console.error('Error loading user content:', error);
+          setError('Failed to load content');
         } finally {
           setIsLoading(false);
         }
@@ -35,58 +40,62 @@ export default function Content() {
     loadContent();
   }, [session]);
 
-  const saveUserContent = async (images, videos) => {
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files);
     try {
-      // Here you would typically save to your backend
-      // For now, we'll use localStorage as a temporary solution
-      localStorage.setItem(
-        `userContent_${session.user.email}`,
-        JSON.stringify({ images, videos })
-      );
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('You must be logged in to upload photos');
+
+      for (const file of files) {
+        await uploadPhoto(file, user.id);
+      }
+
+      // Reload photos after upload
+      const photos = await fetchUserPhotos(user.id);
+      setUploadedImages(photos);
     } catch (error) {
-      console.error('Error saving user content:', error);
+      console.error('Error uploading photos:', error);
+      setError('Failed to upload photos');
     }
   };
 
-  const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const newImages = files.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      preview: URL.createObjectURL(file),
-      name: file.name,
-      uploadedAt: new Date().toISOString(),
-      userId: session?.user?.email
-    }));
-    const updatedImages = [...uploadedImages, ...newImages];
-    setUploadedImages(updatedImages);
-    saveUserContent(updatedImages, uploadedVideos);
-  };
-
   const handleVideoUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const newVideos = files.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      name: file.name,
-      uploadedAt: new Date().toISOString(),
-      userId: session?.user?.email
-    }));
-    const updatedVideos = [...uploadedVideos, ...newVideos];
-    setUploadedVideos(updatedVideos);
-    saveUserContent(uploadedImages, updatedVideos);
+    // TODO: Implement video upload to Supabase
+    setError('Video upload not implemented yet');
   };
 
-  const removeImage = (id) => {
-    const updatedImages = uploadedImages.filter(img => img.id !== id);
-    setUploadedImages(updatedImages);
-    saveUserContent(updatedImages, uploadedVideos);
+  const removeImage = async (path) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('user-photos')
+        .remove([path]);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('photos')
+        .delete()
+        .eq('file_path', path)
+        .eq('user_id', user.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setUploadedImages(prev => prev.filter(img => img.path !== path));
+    } catch (error) {
+      console.error('Error removing image:', error);
+      setError('Failed to remove image');
+    }
   };
 
   const removeVideo = (id) => {
-    const updatedVideos = uploadedVideos.filter(vid => vid.id !== id);
-    setUploadedVideos(updatedVideos);
-    saveUserContent(uploadedImages, updatedVideos);
+    // TODO: Implement video removal from Supabase
+    setError('Video removal not implemented yet');
   };
 
   if (!session) {
@@ -119,6 +128,12 @@ export default function Content() {
           Logged in as: {session.user.email}
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
+          {error}
+        </div>
+      )}
       
       {/* Upload Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -175,68 +190,54 @@ export default function Content() {
         </div>
       </div>
 
-      {/* Uploaded Content Preview */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Uploaded Content</h2>
-        
-        {/* Images Preview */}
+      {/* Display uploaded content */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Images Grid */}
         {uploadedImages.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Images</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Images</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {uploadedImages.map((image) => (
-                <div key={image.id} className="relative group">
+                <div key={image.path} className="relative group">
                   <img
-                    src={image.preview}
-                    alt={image.name}
+                    src={image.url}
+                    alt="Uploaded content"
                     className="w-full h-32 object-cover rounded-lg"
                   />
                   <button
-                    onClick={() => removeImage(image.id)}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={() => removeImage(image.path)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X size={16} />
                   </button>
-                  <div className="mt-2 text-sm text-gray-600 truncate">{image.name}</div>
-                  <div className="text-xs text-gray-400">
-                    {new Date(image.uploadedAt).toLocaleDateString()}
-                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {/* Videos Preview */}
+        {/* Videos Grid */}
         {uploadedVideos.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Videos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Videos</h3>
+            <div className="grid grid-cols-1 gap-4">
               {uploadedVideos.map((video) => (
-                <div key={video.id} className="relative group bg-gray-100 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <VideoIcon size={24} className="text-gray-400" />
-                    <div className="flex-1">
-                      <span className="text-gray-600 truncate block">{video.name}</span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(video.uploadedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => removeVideo(video.id)}
-                      className="ml-auto bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
+                <div key={video.id} className="relative group">
+                  <video
+                    src={video.url}
+                    controls
+                    className="w-full rounded-lg"
+                  />
+                  <button
+                    onClick={() => removeVideo(video.id)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
               ))}
             </div>
           </div>
-        )}
-
-        {uploadedImages.length === 0 && uploadedVideos.length === 0 && (
-          <p className="text-gray-500 text-center py-8">No content uploaded yet</p>
         )}
       </div>
     </div>
