@@ -3,14 +3,12 @@
 import { useState, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-import { supabase } from '../../../supabaseClient';
 
 export default function Content() {
   const { data: session } = useSession();
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploadedVideos, setUploadedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   // Load user's content when component mounts
   useEffect(() => {
@@ -18,29 +16,16 @@ export default function Content() {
       if (session?.user) {
         try {
           setIsLoading(true);
-          setError(null);
-
-          // Fetch photos from Supabase
-          const { data: photos, error: photosError } = await supabase
-            .from('photos')
-            .select('file_path')
-            .eq('user_id', session.user.id);
-
-          if (photosError) throw photosError;
-
-          // Generate URLs for photos
-          const imagesWithUrls = photos.map(photo => ({
-            id: photo.file_path,
-            path: photo.file_path,
-            url: supabase.storage.from('user-photos').getPublicUrl(photo.file_path).data.publicUrl,
-            name: photo.file_path.split('/').pop(),
-            uploadedAt: new Date().toISOString()
-          }));
-
-          setUploadedImages(imagesWithUrls);
+          // Here you would typically fetch the user's content from your backend
+          // For now, we'll use localStorage as a temporary solution
+          const userContent = localStorage.getItem(`userContent_${session.user.email}`);
+          if (userContent) {
+            const { images, videos } = JSON.parse(userContent);
+            setUploadedImages(images);
+            setUploadedVideos(videos);
+          }
         } catch (error) {
-          console.error('Error loading content:', error);
-          setError(error.message);
+          console.error('Error loading user content:', error);
         } finally {
           setIsLoading(false);
         }
@@ -50,135 +35,58 @@ export default function Content() {
     loadContent();
   }, [session]);
 
-  const handleImageUpload = async (event) => {
+  const saveUserContent = async (images, videos) => {
+    try {
+      // Here you would typically save to your backend
+      // For now, we'll use localStorage as a temporary solution
+      localStorage.setItem(
+        `userContent_${session.user.email}`,
+        JSON.stringify({ images, videos })
+      );
+    } catch (error) {
+      console.error('Error saving user content:', error);
+    }
+  };
+
+  const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
-    setError(null);
-
-    try {
-      for (const file of files) {
-        // Upload to Supabase Storage
-        const filePath = `${session.user.id}/${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('user-photos')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        // Save metadata to database
-        const { error: dbError } = await supabase
-          .from('photos')
-          .insert([{ 
-            user_id: session.user.id, 
-            file_path: filePath 
-          }]);
-
-        if (dbError) throw dbError;
-
-        // Add to local state
-        const newImage = {
-          id: filePath,
-          path: filePath,
-          url: supabase.storage.from('user-photos').getPublicUrl(filePath).data.publicUrl,
-          name: file.name,
-          uploadedAt: new Date().toISOString()
-        };
-
-        setUploadedImages(prev => [...prev, newImage]);
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      setError(error.message);
-    }
+    const newImages = files.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      preview: URL.createObjectURL(file),
+      name: file.name,
+      uploadedAt: new Date().toISOString(),
+      userId: session?.user?.email
+    }));
+    const updatedImages = [...uploadedImages, ...newImages];
+    setUploadedImages(updatedImages);
+    saveUserContent(updatedImages, uploadedVideos);
   };
 
-  const handleVideoUpload = async (event) => {
+  const handleVideoUpload = (event) => {
     const files = Array.from(event.target.files);
-    setError(null);
-
-    try {
-      for (const file of files) {
-        // Upload to Supabase Storage
-        const filePath = `${session.user.id}/videos/${file.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from('user-videos')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        // Save metadata to database
-        const { error: dbError } = await supabase
-          .from('videos')
-          .insert([{ 
-            user_id: session.user.id, 
-            file_path: filePath 
-          }]);
-
-        if (dbError) throw dbError;
-
-        // Add to local state
-        const newVideo = {
-          id: filePath,
-          path: filePath,
-          name: file.name,
-          uploadedAt: new Date().toISOString()
-        };
-
-        setUploadedVideos(prev => [...prev, newVideo]);
-      }
-    } catch (error) {
-      console.error('Error uploading video:', error);
-      setError(error.message);
-    }
+    const newVideos = files.map(file => ({
+      id: Math.random().toString(36).substr(2, 9),
+      file,
+      name: file.name,
+      uploadedAt: new Date().toISOString(),
+      userId: session?.user?.email
+    }));
+    const updatedVideos = [...uploadedVideos, ...newVideos];
+    setUploadedVideos(updatedVideos);
+    saveUserContent(uploadedImages, updatedVideos);
   };
 
-  const removeImage = async (id) => {
-    try {
-      // Delete from Supabase Storage
-      const { error: storageError } = await supabase.storage
-        .from('user-photos')
-        .remove([id]);
-
-      if (storageError) throw storageError;
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('photos')
-        .delete()
-        .eq('file_path', id);
-
-      if (dbError) throw dbError;
-
-      // Update local state
-      setUploadedImages(prev => prev.filter(img => img.id !== id));
-    } catch (error) {
-      console.error('Error removing image:', error);
-      setError(error.message);
-    }
+  const removeImage = (id) => {
+    const updatedImages = uploadedImages.filter(img => img.id !== id);
+    setUploadedImages(updatedImages);
+    saveUserContent(updatedImages, uploadedVideos);
   };
 
-  const removeVideo = async (id) => {
-    try {
-      // Delete from Supabase Storage
-      const { error: storageError } = await supabase.storage
-        .from('user-videos')
-        .remove([id]);
-
-      if (storageError) throw storageError;
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('videos')
-        .delete()
-        .eq('file_path', id);
-
-      if (dbError) throw dbError;
-
-      // Update local state
-      setUploadedVideos(prev => prev.filter(vid => vid.id !== id));
-    } catch (error) {
-      console.error('Error removing video:', error);
-      setError(error.message);
-    }
+  const removeVideo = (id) => {
+    const updatedVideos = uploadedVideos.filter(vid => vid.id !== id);
+    setUploadedVideos(updatedVideos);
+    saveUserContent(uploadedImages, updatedVideos);
   };
 
   if (!session) {
@@ -211,12 +119,6 @@ export default function Content() {
           Logged in as: {session.user.email}
         </div>
       </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
-          {error}
-        </div>
-      )}
       
       {/* Upload Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
@@ -274,7 +176,7 @@ export default function Content() {
       </div>
 
       {/* Uploaded Content Preview */}
-      <div>
+      <div className="bg-white rounded-lg shadow-sm p-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Uploaded Content</h2>
         
         {/* Images Preview */}
@@ -285,7 +187,7 @@ export default function Content() {
               {uploadedImages.map((image) => (
                 <div key={image.id} className="relative group">
                   <img
-                    src={image.url}
+                    src={image.preview}
                     alt={image.name}
                     className="w-full h-32 object-cover rounded-lg"
                   />
