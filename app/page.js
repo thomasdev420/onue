@@ -44,8 +44,15 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900 relative">
       {/* Beta Version Box */}
-      <div className="absolute top-4 left-8 z-50 inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
-        <span className="text-gray-800 font-semibold text-sm">Beta V2.1</span>
+      <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
+        <div className="inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
+          <span className="text-gray-800 font-semibold text-sm">Beta V2.1</span>
+        </div>
+        <Link href="/dashboard">
+          <button className="px-3 py-1.5 rounded-full border-2 border-blue-500 bg-[#FAF9F6] hover:bg-blue-50 transition-colors">
+            <span className="text-blue-500 font-semibold text-sm">Dev Access</span>
+          </button>
+        </Link>
       </div>
 
       {/* Navigation Bar */}
