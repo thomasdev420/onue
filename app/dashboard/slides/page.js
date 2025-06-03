@@ -33,13 +33,20 @@ export default function SlidesPage() {
     try {
       setLoading(true);
       setError(null);
-      console.log('Loading photos for user:', session.user.id);
+      
+      // Get the user's email from the session
+      const userEmail = session?.user?.email;
+      if (!userEmail) {
+        throw new Error('No user email found in session');
+      }
+
+      console.log('Loading photos for user:', userEmail);
 
       // Fetch photos from Supabase
       const { data: photos, error: photosError } = await supabase
         .from('photos')
         .select('file_path')
-        .eq('user_id', session.user.id);
+        .eq('user_id', userEmail);
 
       if (photosError) {
         console.error('Supabase query error:', photosError);
@@ -119,13 +126,18 @@ export default function SlidesPage() {
     if (!croppedImage) return;
 
     try {
+      const userEmail = session?.user?.email;
+      if (!userEmail) {
+        throw new Error('No user email found in session');
+      }
+
       // Convert base64 to blob
       const response = await fetch(croppedImage);
       const blob = await response.blob();
       
       // Create a new file name with the aspect ratio
       const fileName = `${selectedPhoto.path.split('/').pop().split('.')[0]}_${currentAspectRatio}.jpg`;
-      const filePath = `${session.user.id}/${fileName}`;
+      const filePath = `${userEmail}/${fileName}`;
 
       // Upload the cropped image
       const { error: uploadError } = await supabase.storage
@@ -138,7 +150,7 @@ export default function SlidesPage() {
       const { error: dbError } = await supabase
         .from('photos')
         .insert([{ 
-          user_id: session.user.id, 
+          user_id: userEmail, 
           file_path: filePath,
           aspect_ratio: currentAspectRatio 
         }]);
