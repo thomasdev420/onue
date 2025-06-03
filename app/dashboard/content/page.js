@@ -16,14 +16,11 @@ export default function Content() {
   // Load user's content when component mounts
   useEffect(() => {
     const loadContent = async () => {
-      if (session?.user) {
+      if (session?.supabaseUserId) {
         try {
           setIsLoading(true);
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) return;
-
-          // Fetch photos from Supabase
-          const photos = await fetchUserPhotos(user.id);
+          // Fetch photos from Supabase using the user ID from the session
+          const photos = await fetchUserPhotos(session.supabaseUserId);
           setUploadedImages(photos);
           
           // TODO: Implement video fetching from Supabase
@@ -43,15 +40,16 @@ export default function Content() {
   const handleImageUpload = async (event) => {
     const files = Array.from(event.target.files);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('You must be logged in to upload photos');
+      if (!session?.supabaseUserId) {
+        throw new Error('You must be logged in to upload photos');
+      }
 
       for (const file of files) {
-        await uploadPhoto(file, user.id);
+        await uploadPhoto(file, session.supabaseUserId);
       }
 
       // Reload photos after upload
-      const photos = await fetchUserPhotos(user.id);
+      const photos = await fetchUserPhotos(session.supabaseUserId);
       setUploadedImages(photos);
     } catch (error) {
       console.error('Error uploading photos:', error);
@@ -66,8 +64,7 @@ export default function Content() {
 
   const removeImage = async (path) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!session?.supabaseUserId) return;
 
       // Delete from storage
       const { error: storageError } = await supabase.storage
@@ -81,7 +78,7 @@ export default function Content() {
         .from('photos')
         .delete()
         .eq('file_path', path)
-        .eq('user_id', user.id);
+        .eq('user_id', session.supabaseUserId);
 
       if (dbError) throw dbError;
 
