@@ -111,27 +111,32 @@ export default function Home() {
         </p>
 
         {/* Buttons */}
-        <div className="flex gap-4 justify-center">
+        <div className="flex justify-center items-center relative">
           {session ? (
             <Link href="/dashboard">
-              <button className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition start-glow">
+              <button className="bg-[#ff4514] text-white font-semibold px-7 py-3.5 rounded-full shadow hover:bg-[#e63e12] transition start-glow">
                 Start Now
               </button>
             </Link>
           ) : (
             <button
               onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-              className="bg-[#ff4514] text-white font-semibold px-6 py-3 rounded-full shadow hover:bg-[#e63e12] transition start-glow"
+              className="bg-[#ff4514] text-white font-semibold px-7 py-3.5 rounded-full shadow hover:bg-[#e63e12] transition start-glow"
             >
               Start Now
             </button>
           )}
-
-          <Link href="/dashboard">
-            <button className="bg-white text-gray-800 font-semibold px-6 py-3 rounded-full shadow hover:bg-gray-100 transition">
-              Watch Demo
-            </button>
-          </Link>
+          <div className="flex items-center gap-4">
+            <span className="px-2 py-1 text-xs font-semibold text-[#ff4514] bg-[#fff5f2] rounded-full">
+              Beta
+            </span>
+            <Link
+              href="/dashboard"
+              className="text-sm text-gray-600 hover:text-gray-900"
+            >
+              Dev Access
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -401,8 +406,22 @@ export default function Home() {
             scroll-behavior: smooth;
           }
           .start-glow {
+            position: relative;
             box-shadow: 0 0 16px 2px #ffb380, 0 0 8px 2px #ff4514;
             animation: glow-pulse 3s infinite alternate ease-in-out;
+          }
+
+          .start-glow::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 9999px;
+            background: linear-gradient(45deg, #ff4514, #ffb380, #ff4514);
+            z-index: -1;
+            animation: rotate-glow 3s linear infinite;
           }
 
           @keyframes glow-pulse {
@@ -414,6 +433,15 @@ export default function Home() {
             }
             100% {
               box-shadow: 0 2px 12px 1px #ffb380, 0 1px 6px 1px #ff4514;
+            }
+          }
+
+          @keyframes rotate-glow {
+            0% {
+              transform: rotate(0deg);
+            }
+            100% {
+              transform: rotate(360deg);
             }
           }
         `}
