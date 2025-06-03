@@ -32,22 +32,46 @@ export default function SlidesPage() {
   const loadUserPhotos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      setError(null);
+      console.log('Loading photos for user:', session.user.id);
+
+      // Fetch photos from Supabase
+      const { data: photos, error: photosError } = await supabase
         .from('photos')
         .select('file_path')
         .eq('user_id', session.user.id);
 
-      if (error) throw error;
+      if (photosError) {
+        console.error('Supabase query error:', photosError);
+        throw photosError;
+      }
 
-      const photosWithUrls = data.map(photo => ({
-        path: photo.file_path,
-        url: supabase.storage.from('user-photos').getPublicUrl(photo.file_path).data.publicUrl
-      }));
+      console.log('Photos data:', photos);
 
+      if (!photos || photos.length === 0) {
+        console.log('No photos found for user');
+        setPhotos([]);
+        return;
+      }
+
+      // Generate URLs for photos
+      const photosWithUrls = photos.map(photo => {
+        const url = supabase.storage.from('user-photos').getPublicUrl(photo.file_path).data.publicUrl;
+        console.log('Generated URL for photo:', photo.file_path, url);
+        return {
+          id: photo.file_path,
+          path: photo.file_path,
+          url: url,
+          name: photo.file_path.split('/').pop(),
+          uploadedAt: new Date().toISOString()
+        };
+      });
+
+      console.log('Processed photos with URLs:', photosWithUrls);
       setPhotos(photosWithUrls);
     } catch (err) {
-      console.error('Error loading photos:', err);
-      setError('Failed to load photos');
+      console.error('Detailed error loading photos:', err);
+      setError(err.message || 'Failed to load photos');
     } finally {
       setLoading(false);
     }
@@ -127,23 +151,36 @@ export default function SlidesPage() {
       setCroppedImage(null);
     } catch (err) {
       console.error('Error saving cropped image:', err);
-      setError('Failed to save cropped image');
+      setError(err.message || 'Failed to save cropped image');
     }
   };
+
+  if (!session) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-8">Slides</h1>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <p className="text-gray-600">Please sign in to access your slides.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Your Slides</h1>
         
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 text-red-600 rounded-lg">
+            {error}
+          </div>
+        )}
+        
         {loading ? (
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800 mx-auto"></div>
             <p className="mt-2 text-gray-600">Loading your photos...</p>
-          </div>
-        ) : error ? (
-          <div className="text-center py-8">
-            <p className="text-red-600">{error}</p>
           </div>
         ) : photos.length === 0 ? (
           <div className="text-center py-8">
@@ -154,7 +191,7 @@ export default function SlidesPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-8">
               {photos.map((photo, index) => (
                 <div 
-                  key={photo.path} 
+                  key={photo.id} 
                   className="relative aspect-square group cursor-pointer bg-gray-100 rounded-lg overflow-hidden"
                   onClick={() => handlePhotoSelect(photo)}
                 >
