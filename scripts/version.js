@@ -45,7 +45,11 @@ try {
   execSync(`git tag -a ${tagName} -m "Version ${newVersion}"`);
   execSync(`git push origin ${tagName}`);
   
+  // Push the changes to the main branch
+  execSync('git push origin main');
+  
   console.log(`Successfully created and pushed tag ${tagName}`);
+  console.log(`Version updated to ${newVersion}`);
 } catch (error) {
   console.error('Error creating tag:', error.message);
   process.exit(1);
