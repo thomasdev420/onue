@@ -4,49 +4,19 @@ import Link from "next/link";
 import Box from "./component/box";
 import { Lightbulb, Rocket, Users } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import { useEffect, useRef, useState } from "react";
 import Image from 'next/image';
+
+//Landing page
 
 export default function Home() {
   const { data: session } = useSession();
-
-  // Animated number state for header
-  const [headerNumber, setHeaderNumber] = useState(0);
-  const rafRef = useRef();
-
-  useEffect(() => {
-    let start = null;
-    const duration = 4000; // 4 seconds
-    const pause = 6000; // 6 seconds
-    const max = 100000;
-    function animate(ts) {
-      if (!start) start = ts;
-      const elapsed = ts - start;
-      const progress = Math.min(elapsed / duration, 1);
-      // Ease out: fast at the end
-      const eased = Math.pow(progress, 2.5);
-      const value = Math.floor(eased * max);
-      setHeaderNumber(value.toLocaleString());
-      if (progress < 1) {
-        rafRef.current = requestAnimationFrame(animate);
-      } else {
-        setTimeout(() => {
-          setHeaderNumber(0);
-          start = null;
-          rafRef.current = requestAnimationFrame(animate);
-        }, pause);
-      }
-    }
-    rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900 relative">
       {/* Beta Version Box */}
       <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
         <div className="inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
-          <span className="text-gray-800 font-semibold text-sm">Beta V2.6</span>
+          <span className="text-gray-800 font-semibold text-sm">Beta V2.6.1</span>
         </div>
         <Link href="/dashboard">
           <button className="px-3 py-1.5 rounded-full border-2 border-blue-500 bg-[#FAF9F6] hover:bg-blue-50 transition-colors">
@@ -178,11 +148,11 @@ export default function Home() {
         className="text-5xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
         style={{ fontWeight: '800' }}
       >
-        Making high converting content is
+        Creating content that converts takes
         <br />
-        <span style={{ color: 'red', fontWeight: '900' }}>slow</span>{' '}
-        and{' '}
-        <span style={{ color: 'red', fontWeight: '900' }}>inconsistent</span>
+        <span style={{ color: 'red', fontWeight: '900' }}>hours</span>{' '}
+        and often still{' '}
+        <span style={{ color: 'red', fontWeight: '900' }}>flops</span>
       </h1>
 
       {/* The solution */}
@@ -218,7 +188,7 @@ export default function Home() {
         className="text-5xl font-extrabold mb-16 tracking-tight text-center text-gray-800"
         style={{ fontWeight: '800' }}
       >
-        SwiftReel is <span style={{ color: '#22C55E', fontWeight: '900' }}>fast</span> and <span style={{ color: '#22C55E', fontWeight: '900' }}>consistent</span>
+        SwiftReel creates <span style={{ fontWeight: '900', color: '#22C55E' }}>self-improving</span> content, so you can post <span style={{ fontWeight: '900', color: '#22C55E' }}>faster</span> and grow <span style={{ fontWeight: '900', color: '#22C55E' }}>consistently</span> without the guesswork.
       </h1>
 
       {/* Comparison Section */}

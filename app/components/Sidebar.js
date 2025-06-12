@@ -2,23 +2,9 @@
 
 import Link from "next/link";
 import Image from 'next/image';
-import {
-  Home,
-  Video,
-  Calendar,
-  Megaphone,
-  Image as ImageIcon,
-  Book,
-  User,
-  HelpCircle,
-  Settings,
-  ArrowLeft,
-  Wand2,
-  Menu,
-  Sparkles
-} from 'lucide-react';
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from 'next/navigation';
+import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles } from 'lucide-react';
 
 export default function Sidebar({ isCollapsed, toggleSidebar }) {
   const { data: session, status } = useSession();
@@ -49,15 +35,10 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
             <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/magic" icon={<Wand2 size={18} />} label="Magic Mode" currentPath={pathname} isCollapsed={isCollapsed} />
-
-            {!isCollapsed && <li className="mt-3 text-gray-500 pl-5">Playground</li>}
-
             <SidebarLink href="/dashboard/slides" icon={<Book size={18} />} label="Slides" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/hook-demo" icon={<Sparkles size={18} />} label="Hook & Demo" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/memes" icon={<ImageIcon size={18} />} label="Memes" currentPath={pathname} isCollapsed={isCollapsed} />
-
-            <div className="mt-8"></div>
-
+            <div className="mt-4"></div>
             <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} isCollapsed={isCollapsed} />
           </ul>

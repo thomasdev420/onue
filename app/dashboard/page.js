@@ -1,32 +1,23 @@
+'use client';
+
 import Link from "next/link";
-import {
-  Home,
-  Video,
-  Calendar,
-  Megaphone,
-  Image as ImageIcon,
-  Book,
-  User,
-  HelpCircle,
-  Settings,
-  ArrowLeft,
-  Sparkles,
-  ImagePlus,
-  Lightbulb,
-  Camera,
-  CreditCard,
-  Pocket,
-  Package,
-  Upload
-} from 'lucide-react';
+import { useSession } from "next-auth/react";
+import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Sparkles, ImagePlus, Lightbulb, Camera, CreditCard, Pocket, Package, Upload } from 'lucide-react';
+
+//Dashboard page
 
 export default function Dashboard() {
+  const { data: session } = useSession();
+  const firstName = session?.user?.name?.split(' ')[0] || 'developer';
+
   return (
     <>
       {/* Header with Centered Welcome */}
       <div className="mb-8">
         <div className="flex justify-center">
-          <h1 className="text-2xl font-bold text-gray-800">Welcome to SwiftReel</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Welcome back, {firstName}
+          </h1>
         </div>
       </div>
 
