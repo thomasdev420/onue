@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession, signOut } from "next-auth/react";
-import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+import { Upload, X, CreditCard, Pocket, Package, User, Mail, Shield } from 'lucide-react';
 import Link from 'next/link';
-import { Upload, X } from 'lucide-react';
 
 export default function Settings() {
-  const { data: session, status } = useSession();
-  const user = session?.user;
+  const { data: session } = useSession();
   const [uploadedImages, setUploadedImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -54,16 +52,103 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Settings</h1>
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="flex items-center gap-3 mb-8">
+        <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+        <div className="h-6 w-px bg-gray-200"></div>
+        <p className="text-sm text-gray-500">Manage your account settings and preferences</p>
+      </div>
       
+      {/* Get Started Section */}
+      <div className="mb-12">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-1 h-6 bg-[#ff4514] rounded-full"></div>
+          <h2 className="text-xl font-semibold text-gray-800">Get Started</h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 text-blue-500">
+                <CreditCard size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-800">Subscription required</h3>
+                <p className="text-gray-500 text-sm">Estimated 2–3 minutes</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <Link href="/#pricing">
+                <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
+                  Upgrade now
+                  <span>➔</span>
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gray-50 text-gray-700">
+                <Pocket size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-800">Connect TikTok account</h3>
+                <p className="text-gray-500 text-sm">Estimated 30 seconds</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
+                Connect TikTok
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gray-50 text-gray-700">
+                <Package size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-800">Add your first product</h3>
+                <p className="text-gray-500 text-sm">Estimated 30 seconds</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
+                Add Product
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 text-blue-500">
+                <Upload size={24} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-semibold text-gray-800">Upload product demo video</h3>
+                <p className="text-gray-500 text-sm">Estimated 30 seconds</p>
+              </div>
+            </div>
+            <div className="mt-4">
+              <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
+                Upload Demo
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Image Upload Section */}
-      <div className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Content Images</h2>
+      <div className="mb-12">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-1 h-6 bg-[#ff4514] rounded-full"></div>
+          <h2 className="text-xl font-semibold text-gray-800">Content Images</h2>
+        </div>
         <div 
           className={`
-            border-2 border-dashed rounded-lg p-8 text-center
-            ${isDragging ? 'border-[#ff4514] bg-[#ff4514]/5' : 'border-gray-300'}
+            bg-white border-2 border-dashed rounded-xl p-8 text-center
+            ${isDragging ? 'border-[#ff4514] bg-[#ff4514]/5' : 'border-gray-200'}
             transition-colors duration-200
           `}
           onDragOver={handleDragOver}
@@ -82,8 +167,10 @@ export default function Settings() {
             htmlFor="image-upload"
             className="cursor-pointer"
           >
-            <div className="flex flex-col items-center gap-2">
-              <Upload className="w-8 h-8 text-gray-400" />
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
+                <Upload className="w-8 h-8 text-gray-400" />
+              </div>
               <div className="text-gray-600">
                 <span className="font-medium text-[#ff4514]">Click to upload</span> or drag and drop
               </div>
@@ -95,7 +182,7 @@ export default function Settings() {
         {/* Preview Grid */}
         {uploadedImages.length > 0 && (
           <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">Uploaded Images</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-4">Uploaded Images</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {uploadedImages.map(image => (
                 <div key={image.id} className="relative group">
@@ -106,7 +193,7 @@ export default function Settings() {
                   />
                   <button
                     onClick={() => removeImage(image.id)}
-                    className="absolute top-2 right-2 p-1 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <X className="w-4 h-4 text-white" />
                   </button>
@@ -117,31 +204,60 @@ export default function Settings() {
         )}
       </div>
 
-      {/* Existing Settings Content */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-lg font-semibold mb-4">Account Settings</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={session?.user?.email || ''}
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-            />
+      {/* Account Settings */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="flex items-center gap-2 mb-6">
+          <div className="w-1 h-6 bg-[#ff4514] rounded-full"></div>
+          <h2 className="text-xl font-semibold text-gray-800">Account Settings</h2>
+        </div>
+        <div className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+              <Mail className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
+              <input
+                type="email"
+                value={session?.user?.email || ''}
+                disabled
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name
-            </label>
-            <input
-              type="text"
-              value={session?.user?.name || ''}
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50"
-            />
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+              <User className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Name
+              </label>
+              <input
+                type="text"
+                value={session?.user?.name || ''}
+                disabled
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-gray-500" />
+            </div>
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Account Type
+              </label>
+              <input
+                type="text"
+                value="Free Trial"
+                disabled
+                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+              />
+            </div>
           </div>
         </div>
       </div>

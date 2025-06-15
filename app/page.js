@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import Box from "./component/box";
 import { Lightbulb, Rocket, Users } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import Image from 'next/image';
+import Image from "next/image";
 
-//Landing page
-
+// Landing page
 export default function Home() {
   const { data: session } = useSession();
 
@@ -15,12 +13,12 @@ export default function Home() {
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900 relative">
       {/* Beta Version Box */}
       <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
-        <div className="inline-block px-4 py-1.5 rounded-full border-2 border-[#ff4514] bg-[#FAF9F6]">
-          <span className="text-gray-800 font-semibold text-sm">Beta V2.6.1</span>
+        <div className="inline-block px-4 py-1.5 rounded-full bg-gray-200">
+          <span className="text-gray-800 font-semibold text-sm font-mono">Beta V2.6.2</span>
         </div>
         <Link href="/dashboard">
-          <button className="px-3 py-1.5 rounded-full border-2 border-blue-500 bg-[#FAF9F6] hover:bg-blue-50 transition-colors">
-            <span className="text-blue-500 font-semibold text-sm">Dev Access</span>
+          <button className="px-3 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors">
+            <span className="text-gray-800 font-semibold text-sm font-mono">Dev Access</span>
           </button>
         </Link>
       </div>
@@ -29,20 +27,15 @@ export default function Home() {
       <nav className="absolute top-4 right-8 z-50">
         <ul className="flex gap-3 items-center text-sm">
           <li>
-            <Link href="/product">
-              <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">
-                Product
-              </span>
+            <Link href="/#product">
+              <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">Product</span>
             </Link>
           </li>
           <li>
             <Link href="/#pricing">
-              <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">
-                Pricing
-              </span>
+              <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">Pricing</span>
             </Link>
           </li>
-
           {session ? (
             <>
               <li>
@@ -54,9 +47,7 @@ export default function Home() {
               </li>
               <li>
                 <Link href="/api/auth/signout">
-                  <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">
-                    Sign Out
-                  </span>
+                  <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">Sign Out</span>
                 </Link>
               </li>
             </>
@@ -73,21 +64,14 @@ export default function Home() {
         </ul>
       </nav>
 
-      {/* Banner */}
-      <div className="inline-block bg-white text-gray-500 font-medium text-sm px-4 py-1.5 rounded-full shadow-sm mt-24 mb-5">
-        Over 100M+ views across all SwiftReel videos
-      </div>
-
       {/* Header Section */}
-      <header className="max-w-2xl text-center mb-12">
+      <header className="max-w-2xl text-center mb-12 mt-24">
         <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-800">
-          Automate Reels that boost your website traffic
+          Automate Content that boost your website traffic
         </h1>
         <p className="text-lg font-semibold text-gray-500 mb-6">
-        Viral marketing magic, without hiring a whole creative team.
+          Viral marketing magic, without hiring a whole creative team.
         </p>
-
-        {/* Buttons */}
         <div className="flex justify-center">
           {session ? (
             <Link href="/dashboard">
@@ -100,13 +84,13 @@ export default function Home() {
               onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
               className="bg-[#ff4514] text-white font-semibold px-7 py-3.5 rounded-full shadow hover:bg-[#e63e12] transition start-glow"
             >
-              Start Now
+              Unlock Now
             </button>
           )}
         </div>
       </header>
 
-      {/* image */}
+      {/* Hero Image */}
       <Image
         src="https://reel.farm/hero.png"
         alt="Hero Image"
@@ -115,26 +99,27 @@ export default function Home() {
         className="mx-auto max-w-full h-auto"
       />
 
-      {/* The problem */}
+      {/* The Problem */}
       <div
+        id="product"
         style={{
-          borderLeft: '4px solid #F05252',
+          borderLeft: "4px solid #F05252",
           borderRadius: 0,
-          padding: 'clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)',
-          marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
-          marginTop: 'clamp(3rem, 5vw, 6rem)',  // <-- added extra top margin here
-          backgroundColor: 'rgba(240, 82, 82, 0.1)',
-          textAlign: 'left',
-          display: 'inline-block',
+          padding: "clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)",
+          marginBottom: "clamp(1rem, 2vw, 1.5rem)",
+          marginTop: "clamp(3rem, 5vw, 6rem)",
+          backgroundColor: "rgba(240, 82, 82, 0.1)",
+          textAlign: "left",
+          display: "inline-block",
         }}
       >
         <p
           style={{
-            fontSize: 'clamp(0.875rem, 1.25vw, 1.125rem)',
+            fontSize: "clamp(0.875rem, 1.25vw, 1.125rem)",
             lineHeight: 1.2,
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-            color: '#F05252',
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            color: "#F05252",
             fontWeight: 700,
           }}
           className="mantine-focus-auto m_b6d8b162 mantine-Text-root"
@@ -143,38 +128,37 @@ export default function Home() {
         </p>
       </div>
 
-      {/* problem text */}
+      {/* Problem Text */}
       <h1
         className="text-5xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
-        style={{ fontWeight: '800' }}
+        style={{ fontWeight: "800" }}
       >
         Creating content that converts takes
         <br />
-        <span style={{ color: 'red', fontWeight: '900' }}>hours</span>{' '}
-        and often still{' '}
-        <span style={{ color: 'red', fontWeight: '900' }}>flops</span>
+        <span style={{ color: "red", fontWeight: "900" }}>hours</span> and often
+        still <span style={{ color: "red", fontWeight: "900" }}>flops</span>
       </h1>
 
-      {/* The solution */}
+      {/* The Solution */}
       <div
         style={{
-          borderLeft: '4px solid #22C55E', // Green border
+          borderLeft: "4px solid #22C55E",
           borderRadius: 0,
-          padding: 'clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)',
-          marginBottom: 'clamp(1rem, 2vw, 1.5rem)',
-          marginTop: 'clamp(3rem, 5vw, 6rem)',
-          backgroundColor: 'rgba(34, 197, 94, 0.1)', // Green background
-          textAlign: 'left',
-          display: 'inline-block',
+          padding: "clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)",
+          marginBottom: "clamp(1rem, 2vw, 1.5rem)",
+          marginTop: "clamp(3rem, 5vw, 6rem)",
+          backgroundColor: "rgba(34, 197, 94, 0.1)",
+          textAlign: "left",
+          display: "inline-block",
         }}
       >
         <p
           style={{
-            fontSize: 'clamp(0.875rem, 1.25vw, 1.125rem)',
+            fontSize: "clamp(0.875rem, 1.25vw, 1.125rem)",
             lineHeight: 1.2,
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-            color: '#22C55E', // Green text
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            color: "#22C55E",
             fontWeight: 700,
           }}
           className="mantine-focus-auto m_b6d8b162 mantine-Text-root"
@@ -183,12 +167,18 @@ export default function Home() {
         </p>
       </div>
 
-      {/* solution text */}
+      {/* Solution Text */}
       <h1
         className="text-5xl font-extrabold mb-16 tracking-tight text-center text-gray-800"
-        style={{ fontWeight: '800' }}
+        style={{ fontWeight: "800" }}
       >
-        SwiftReel creates <span style={{ fontWeight: '900', color: '#22C55E' }}>self-improving</span> content, so you can post <span style={{ fontWeight: '900', color: '#22C55E' }}>faster</span> and grow <span style={{ fontWeight: '900', color: '#22C55E' }}>consistently</span> without the guesswork.
+        SwiftReel creates{" "}
+        <span style={{ fontWeight: "900", color: "#22C55E" }}>self-improving</span>{" "}
+        content, so you can post{" "}
+        <span style={{ fontWeight: "900", color: "#22C55E" }}>faster</span> and
+        grow{" "}
+        <span style={{ fontWeight: "900", color: "#22C55E" }}>consistently</span>{" "}
+        without the guesswork.
       </h1>
 
       {/* Comparison Section */}
@@ -198,9 +188,7 @@ export default function Home() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-red-50 p-4 rounded-lg border border-red-300">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
-              UGC Agencies
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">UGC Agencies</h3>
             <p className="text-gray-600 mb-2">
               Expensive, charging $60-$120 per video, going upwards of $4000 to
               $6000 a month.
@@ -218,7 +206,7 @@ export default function Home() {
             </ul>
           </div>
           <div className="bg-red-50 p-4 rounded-lg border border-red-300">
-            <h2 className="text-lg font-semibold text-gray-800 mb-2">DIY Approach</h2>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">DIY Approach</h3>
             <p className="text-gray-600 mb-2">
               Time-consuming process: research, plan, record, edit, schedule,
               iterate, re-purpose, analyze...
@@ -258,16 +246,16 @@ export default function Home() {
         <h3 className="mt-6 text-base font-bold text-gray-800">What can it do?</h3>
         <p className="pt-2 text-md font-medium">
           <span className="text-gray-800">
-            SwiftReel&apos;s goal is to automate content that drives traffic to
-            your business.{" "}
+            SwiftReel's goal is to automate content that drives traffic to your
+            business.{" "}
           </span>
           <span className="text-gray-600">
             The differentiating factor between SwiftReel and competitors is that
             SwiftReel takes the approach of using faceless content to automate
             videos. While other services require you to upload all of your video
-            & image assets in order to create &quot;AI ads&quot;, SwiftReel
-            believes in organic content with TikTok distribution as a means of
-            getting leads/inbound.
+            & image assets in order to create "AI ads", SwiftReel believes in
+            organic content with TikTok distribution as a means of getting
+            leads/inbound.
           </span>
         </p>
       </section>
@@ -298,7 +286,6 @@ export default function Home() {
                 </li>
               </ul>
             </div>
-
             <div className="bg-white p-8 rounded-xl shadow-sm border-2 border-[#ff4514] flex flex-col items-start relative">
               <span className="absolute top-4 left-4 bg-[#ff4514] text-white text-xs font-semibold px-2 py-1 rounded-full">
                 Most Popular
@@ -332,7 +319,6 @@ export default function Home() {
                 </li>
               </ul>
             </div>
-
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Scale</h3>
               <p className="mb-4">

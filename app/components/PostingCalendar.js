@@ -238,68 +238,65 @@ export default function PostingCalendar({ selectedDate }) {
     return hour > 12 ? `${hour - 12} PM` : `${hour} AM`;
   };
 
-  const handleSlotClick = (day, hour) => {
-    setSelectedSlot({ day, hour });
+  const handleSlotClick = (hour) => {
+    setSelectedSlot(hour);
     // TODO: Implement scheduling logic
   };
 
   // Get the day of the week from the selected date
   const selectedDay = selectedDate ? days[selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1] : null;
 
+  if (!selectedDay) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6 text-center text-gray-500">
+        Select a day to view optimal posting times
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
-      {/* Calendar Grid */}
-      <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
-          {/* Header Row */}
-          <div className="grid grid-cols-8 gap-2 mb-2">
-            <div className="text-sm font-medium text-gray-500">Time</div>
-            {days.map(day => (
-              <div 
-                key={day} 
-                className="text-sm font-medium text-gray-500 text-center py-2"
-              >
-                {day}
-              </div>
-            ))}
-          </div>
+      {/* Selected Day Header */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">{selectedDay}</h2>
+      </div>
 
-          {/* Time Slots */}
-          {hours.map(hour => (
-            <div key={hour} className="grid grid-cols-8 gap-2 mb-1">
-              <div className="text-sm text-gray-500 py-2">
+      {/* Time Slots */}
+      <div className="space-y-2">
+        {hours.map(hour => {
+          const platform = getPlatformForTime(selectedDay, hour);
+          const colors = platform ? platformColors[platform] : {
+            bg: 'bg-gray-50',
+            border: 'border-gray-200',
+            hover: 'hover:bg-gray-100'
+          };
+
+          return (
+            <button
+              key={hour}
+              onClick={() => handleSlotClick(hour)}
+              className={`
+                w-full p-3 rounded-lg transition-colors
+                ${colors.bg} ${colors.border} ${colors.hover}
+                ${selectedSlot === hour ? 'ring-2 ring-blue-500' : ''}
+                flex items-center justify-between
+              `}
+            >
+              <span className="text-sm font-medium text-gray-700">
                 {formatHour(hour)}
-              </div>
-              {days.map(day => {
-                const platform = getPlatformForTime(day, hour);
-                const colors = platform ? platformColors[platform] : {
-                  bg: 'bg-gray-50',
-                  border: 'border-gray-200',
-                  hover: 'hover:bg-gray-100'
-                };
-
-                return (
-                  <button
-                    key={`${day}-${hour}`}
-                    onClick={() => handleSlotClick(day, hour)}
-                    className={`
-                      py-2 rounded transition-colors
-                      ${colors.bg} ${colors.border} ${colors.hover}
-                      ${selectedSlot?.day === day && selectedSlot?.hour === hour 
-                        ? 'ring-2 ring-blue-500' 
-                        : ''
-                      }
-                    `}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
+              </span>
+              {platform && (
+                <span className="text-sm text-gray-600">
+                  {platform}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-col gap-4">
+      <div className="mt-6 flex flex-col gap-4">
         <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
           {Object.entries(platformColors).map(([platform, colors]) => (
             <div key={platform} className="flex items-center gap-2">
