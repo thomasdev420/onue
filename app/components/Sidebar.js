@@ -60,9 +60,11 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
           <p className={`text-gray-800 font-semibold text-sm ${isCollapsed ? 'text-center' : 'mt-4'}`}>Loading...</p>
         ) : user ? (
           <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center mt-4' : 'mt-4'}`}>
-            <img
+            <Image
               src={user.image}
               alt="Google Profile"
+              width={40}
+              height={40}
               className={`w-10 h-10 rounded-full ${isCollapsed ? '' : 'mr-3'}`}
             />
             {!isCollapsed && (

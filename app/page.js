@@ -246,14 +246,14 @@ export default function Home() {
         <h3 className="mt-6 text-base font-bold text-gray-800">What can it do?</h3>
         <p className="pt-2 text-md font-medium">
           <span className="text-gray-800">
-            SwiftReel's goal is to automate content that drives traffic to your
+            SwiftReel&apos;s goal is to automate content that drives traffic to your
             business.{" "}
           </span>
           <span className="text-gray-600">
             The differentiating factor between SwiftReel and competitors is that
             SwiftReel takes the approach of using faceless content to automate
             videos. While other services require you to upload all of your video
-            & image assets in order to create "AI ads", SwiftReel believes in
+            & image assets in order to create &quot;AI ads&quot;, SwiftReel believes in
             organic content with TikTok distribution as a means of getting
             leads/inbound.
           </span>

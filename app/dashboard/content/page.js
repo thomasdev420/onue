@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 
 export default function Content() {
   const { data: session } = useSession();
@@ -186,10 +187,13 @@ export default function Content() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {uploadedImages.map((image) => (
                 <div key={image.id} className="relative group">
-                  <img
+                  <Image
                     src={image.preview}
                     alt={image.name}
-                    className="w-full h-32 object-cover rounded-lg"
+                    fill={true}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    style={{objectFit: "cover"}}
+                    className="rounded-lg"
                   />
                   <button
                     onClick={() => removeImage(image.id)}

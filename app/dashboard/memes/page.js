@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { Upload, Shuffle, ChevronLeft, ChevronRight, Download } from "lucide-react";
+import Image from "next/image";
 
 export default function Memes() {
   const [selectedMeme, setSelectedMeme] = useState(null);
@@ -24,16 +25,16 @@ export default function Memes() {
 
   const dragState = useRef({ isDragging: false, isMeme: false, start: { x: 0, y: 0 }, lastPos: { x: 0, y: 0 } });
 
-  const memeThumbnails = [
+  const memeThumbnails = useMemo(() => [
     { id: 1, src: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHg3MTQyNThqdm1sbXYxMHEzd2t6MnY2NGszZjVwMnJtbnU0aGVhdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/v1uV0oxObr9ZT48Kpa/giphy.gif", alt: "Chipi Chipi Cat" },
-    { id: 2, src: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/3f4ec842-6f7a-4d31-ab32-a35b7c42e7d8/dgvd6bj-d8c21830-800a-4642-954f-249381540aae.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzNmNGVjODQyLTZmN2EtNGQzMS1hYjMyLWEzNWI3YzQyZTdkOFwvZGd2ZDZiai1kOGMyMTgzMC04MDBhLTQ2NDItOTU0Zi0yNDkzODE1NDBhYWUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.DXNYAFrTUPlJjEfgUpPXR_YY_znMJ4qNWyu2QEG442E", alt: "Huh Cat" },
+    { id: 2, src: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/3f4ec842-6f7a-4d31-ab32-a35b7c42e7d8/dgvd6bj-d8c21830-800a-4642-954f-249381540aae.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzNmNGVjODQyLTZmN2EtNGQzMS1hYjMyLWEzNWI3YzQyZTdkOFwvZGd2ZDZiai1dOGMyMTgzMC04MDBhLTQ2NDItOTU0Zi0yNDkzODE1NDBhYWUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.DXNYAFrTUPlJjEfgUpPXR_YY_znMJ4qNWyu2QEG442E", alt: "Huh Cat" },
     { id: 3, src: "https://lh6.googleusercontent.com/proxy/5GBEY_L_Wv2AZR95S1FPNJhKJPDgcbKahA1s1yaPl_SXBZAYeRr618__M5bJzqRo6w", alt: "Tenor" },
     { id: 4, src: "https://cdn.cdnstep.com/fVskBJxBMpEvZhUnfoXE/cover-6.thumb256.png", alt: "Meme 4" },
     { id: 5, src: "https://media.tenor.com/L4ncxhqryfQAAAAi/cat.gif", alt: "Cat Meme" },
-    { id: 6, src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGc2dmZ3NTA1YW40aml4aDJlN20xNDR1MGUyOHUwdzQ3OWtlMGo1ayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/1r1srgmIN9icL74lBR/giphy.gif", alt: "Funny Cat" },
-  ];
+    { id: 6, src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGc2dmZ3NTA1YW40aml4aDJlN20xNDR1MGUyOHUwdzQ3OWtlMGo1ayZlcD12MV9pbnRlcm5uYWxfnaWZfYnlfaWQmY3Q9cw/1r1srgmIN9icL74lBR/giphy.gif", alt: "Funny Cat" },
+  ], []);
 
-  const backgroundImages = [
+  const backgroundImages = useMemo(() => [
     { id: 1, src: "https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?cs=srgb&dl=pexels-asadphoto-457882.jpg&fm=jpg", alt: "Beach Sunset" },
     { id: 2, src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80", alt: "Snowy Mountains" },
     { id: 3, src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=800&q=80", alt: "Dense Forest" },
@@ -43,7 +44,19 @@ export default function Memes() {
     { id: 7, src: "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=800&q=80", alt: "Autumn Park" },
     { id: 8, src: "https://eatsleepworkrepeat.com/wp-content/uploads/2020/06/office.jpg", alt: "Modern Office" },
     { id: 9, src: "https://www.nelincs.gov.uk/assets/uploads/2024/01/Weelsby-woods-area-page-1024x683.jpg", alt: "Green Park" },
-  ];
+  ], []);
+
+  const selectedMemeData = useMemo(() => {
+    return customGif
+      ? { src: customGif, alt: "Custom GIF" }
+      : memeThumbnails.find((meme) => meme.id === selectedMeme);
+  }, [customGif, selectedMeme, memeThumbnails]);
+
+  const selectedBackgroundData = useMemo(() => {
+    return customBackground
+      ? { src: customBackground, alt: "Custom Background" }
+      : backgroundImages.find((bg) => bg.id === selectedBackground);
+  }, [customBackground, selectedBackground, backgroundImages]);
 
   const handleMemeUpload = useCallback((event) => {
     const file = event.target.files[0];
@@ -60,9 +73,6 @@ export default function Memes() {
       setSelectedBackground(1);
     }
   }, []);
-
-  const selectedMemeData = customGif ? { src: customGif, alt: "Custom GIF" } : memeThumbnails.find((meme) => meme.id === selectedMeme);
-  const selectedBackgroundData = customBackground ? { src: customBackground, alt: "Custom Background" } : backgroundImages.find((bg) => bg.id === selectedBackground);
 
   const handleDragStart = useCallback((e, isMeme) => {
     e.stopPropagation();
@@ -171,7 +181,7 @@ export default function Memes() {
                     onClick={() => setSelectedMeme(meme.id)}
                     className={`relative w-32 h-20 rounded-lg overflow-hidden transition hover:scale-105 ${selectedMeme === meme.id ? "ring-4 ring-gray-600 ring-offset-2" : "hover:ring-2 hover:ring-orange-600"}`}
                   >
-                    <img src={meme.src} alt={meme.alt} className="w-full h-full object-cover" />
+                    <Image src={meme.src} alt={meme.alt} fill={true} style={{objectFit: "cover"}} />
                   </button>
                 ))}
                 <button
@@ -226,7 +236,7 @@ export default function Memes() {
                     onClick={() => setSelectedBackground(bg.id)}
                     className={`relative w-32 h-20 rounded-lg overflow-hidden transition hover:scale-105 ${selectedBackground === bg.id ? "ring-4 ring-gray-600 ring-offset-2" : "hover:ring-2 hover:ring-orange-600"}`}
                   >
-                    <img src={bg.src} alt={bg.alt} className="w-full h-full object-cover" />
+                    <Image src={bg.src} alt={bg.alt} fill={true} style={{objectFit: "cover"}} />
                     <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition" />
                     <span className="absolute bottom-1 left-1 text-white text-xs font-medium drop-shadow">{bg.alt}</span>
                   </button>
@@ -270,27 +280,40 @@ export default function Memes() {
               onMouseUp={handleDragEnd}
               onMouseLeave={handleDragEnd}
             >
-              {selectedBackgroundData && <img src={selectedBackgroundData.src} alt={selectedBackgroundData.alt} className="absolute inset-0 w-full h-full object-cover" />}
+              {selectedBackgroundData && <Image src={selectedBackgroundData.src} alt={selectedBackgroundData.alt} fill={true} style={{objectFit: "cover"}} />}
               {selectedMemeData && (
-                <div style={{ transform: `translate(${memePosition.x}px, ${memePosition.y}px)`, zIndex: 10 }}>
-                  <img
+                <div 
+                  style={{ 
+                    transform: `translate(${memePosition.x}px, ${memePosition.y}px)`,
+                    position: 'absolute',
+                    zIndex: 10,
+                    cursor: 'move'
+                  }}
+                  onMouseDown={(e) => handleDragStart(e, true)}
+                >
+                  <Image
                     ref={memeRef}
                     src={selectedMemeData.src}
                     alt={selectedMemeData.alt}
-                    style={{ width: `${memeSize}%`, height: `${memeSize}%`, cursor: "move" }}
-                    onMouseDown={(e) => handleDragStart(e, true)}
-                    onMouseMove={(e) => (memeRef.current.style.cursor = getCursor(e, true))}
+                    width={previewRef.current ? memeSize * previewRef.current.offsetWidth / 100 : 0}
+                    height={previewRef.current ? memeSize * previewRef.current.offsetHeight / 100 : 0}
+                    style={{objectFit: "contain"}}
                   />
                 </div>
               )}
               {captionText && (
-                <div style={{ transform: `translate(${textPosition.x}px, ${textPosition.y}px)`, zIndex: 20 }}>
+                <div 
+                  style={{ 
+                    transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
+                    position: 'absolute',
+                    zIndex: 20,
+                    cursor: 'move'
+                  }}
+                  onMouseDown={(e) => handleDragStart(e, false)}
+                >
                   <div
                     ref={textRef}
                     className="px-2"
-                    style={{ cursor: "move" }}
-                    onMouseDown={(e) => handleDragStart(e, false)}
-                    onMouseMove={(e) => (textRef.current.style.cursor = getCursor(e, false))}
                   >
                     <p className="text-white text-center font-bold drop-shadow-lg" style={{ fontSize: `${textSize}px` }}>
                       {captionText}
