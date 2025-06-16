@@ -257,9 +257,9 @@ export default function PostingCalendar({ selectedDate }) {
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       {/* Selected Day Header */}
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800">{selectedDay}</h2>
-      </div>
+      </div> */}
 
       {/* Time Slots */}
       <div className="space-y-2">

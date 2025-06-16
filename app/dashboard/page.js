@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Sparkles, ImagePlus, Lightbulb, Camera, CreditCard, Pocket, Package, Upload } from 'lucide-react';
+import ChatBar from "./components/ChatBar";
 
 //Dashboard page
 
@@ -13,60 +14,40 @@ export default function Dashboard() {
   return (
     <>
       {/* Header with Centered Welcome */}
-      <div className="mb-8">
+      <div className="mb-8 mt-8">
         <div className="flex justify-center">
           <h1 className="text-2xl font-bold text-gray-800">
             Welcome back, {firstName}
           </h1>
         </div>
+        <ChatBar
+          actions={[
+            {
+              label: 'Create UGC videos',
+              icon: <Camera size={18} className="text-blue-500" />,
+              href: '/dashboard/videos',
+            },
+            {
+              label: 'Create Greenscreen Meme videos',
+              icon: <Sparkles size={18} className="text-green-500" />,
+              href: '/dashboard/memes',
+            },
+            {
+              label: 'UGC Avatar Generator',
+              icon: <ImagePlus size={18} className="text-purple-500" />,
+              href: '/dashboard/avatars',
+            },
+            {
+              label: 'Slides',
+              icon: <Book size={18} className="text-blue-500" />,
+              href: '/dashboard/slides',
+            },
+          ]}
+        />
       </div>
 
-      {/* Feature Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
-        {/* Card 1 */}
-        <div className="bg-white pt-4 px-4 pb-3 rounded-lg shadow-sm h-40 flex flex-col">
-          <div className="mb-4">
-            <Camera size={24} className="text-blue-500" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-800 mb-1">Create UGC videos</h2>
-            <p className="text-gray-600 text-base">Create & publish UGC videos promoting your product demo</p>
-          </div>
-        </div>
-
-        {/* Card 2 */}
-        <div className="bg-white pt-4 px-4 pb-3 rounded-lg shadow-sm h-40 flex flex-col">
-           <div className="mb-4">
-             <Sparkles size={24} className="text-green-500" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-800 mb-1">Create Greenscreen Meme videos</h2>
-            <p className="text-gray-600 text-base">Create relatable meme videos about your product / business</p>
-          </div>
-        </div>
-
-        {/* Card 3 */}
-        <div className="bg-white pt-4 px-4 pb-3 rounded-lg shadow-sm h-40 flex flex-col">
-          <div className="mb-4">
-            <ImagePlus size={24} className="text-purple-500" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-800 mb-1">UGC Avatar Generator</h2>
-            <p className="text-gray-600 text-base">Create custom AI avatars for the UGC</p>
-          </div>
-        </div>
-
-        {/* Card 4 - Hook Generator */}
-        <div className="bg-white pt-4 px-4 pb-3 rounded-lg shadow-sm h-40 flex flex-col">
-          <div className="mb-4">
-            <Lightbulb size={24} className="text-orange-500" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-gray-800 mb-1">Hook Generator</h2>
-            <p className="text-gray-600 text-base">Auto-magically generate and save viral hooks</p>
-          </div>
-        </div>
-      </div>
+      {/* Spacer between chat bar and sections below */}
+      <div className="h-12" />
 
       {/* Get Started Section */}
       <div className="mt-20 max-w-2xl mx-auto">

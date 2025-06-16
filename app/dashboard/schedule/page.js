@@ -1,6 +1,6 @@
 'use client';
 
-import MonthlyCalendar from '../../components/MonthlyCalendar';
+import MonthlyCalendar from './components/MonthlyCalendar';
 
 export default function Schedule() {
   return (

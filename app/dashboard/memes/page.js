@@ -3,6 +3,11 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { Upload, Shuffle, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import Image from "next/image";
+import CaptionInput from "./components/CaptionInput";
+import MemeSelector from "./components/MemeSelector";
+import BackgroundSelector from "./components/BackgroundSelector";
+import MemePreview from "./components/MemePreview";
+import useDrag from "./hooks/useDrag";
 
 export default function Memes() {
   const [selectedMeme, setSelectedMeme] = useState(null);
@@ -27,11 +32,10 @@ export default function Memes() {
 
   const memeThumbnails = useMemo(() => [
     { id: 1, src: "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExeHg3MTQyNThqdm1sbXYxMHEzd2t6MnY2NGszZjVwMnJtbnU0aGVhdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9cw/v1uV0oxObr9ZT48Kpa/giphy.gif", alt: "Chipi Chipi Cat" },
-    { id: 2, src: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/3f4ec842-6f7a-4d31-ab32-a35b7c42e7d8/dgvd6bj-d8c21830-800a-4642-954f-249381540aae.gif?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7InBhdGgiOiJcL2ZcLzNmNGVjODQyLTZmN2EtNGQzMS1hYjMyLWEzNWI3YzQyZTdkOFwvZGd2ZDZiai1dOGMyMTgzMC04MDBhLTQ2NDItOTU0Zi0yNDkzODE1NDBhYWUuZ2lmIn1dXSwiYXVkIjpbInVybjpzZXJ2aWNlOmZpbGUuZG93bmxvYWQiXX0.DXNYAFrTUPlJjEfgUpPXR_YY_znMJ4qNWyu2QEG442E", alt: "Huh Cat" },
-    { id: 3, src: "https://lh6.googleusercontent.com/proxy/5GBEY_L_Wv2AZR95S1FPNJhKJPDgcbKahA1s1yaPl_SXBZAYeRr618__M5bJzqRo6w", alt: "Tenor" },
-    { id: 4, src: "https://cdn.cdnstep.com/fVskBJxBMpEvZhUnfoXE/cover-6.thumb256.png", alt: "Meme 4" },
-    { id: 5, src: "https://media.tenor.com/L4ncxhqryfQAAAAi/cat.gif", alt: "Cat Meme" },
-    { id: 6, src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGc2dmZ3NTA1YW40aml4aDJlN20xNDR1MGUyOHUwdzQ3OWtlMGo1ayZlcD12MV9pbnRlcm5uYWxfnaWZfYnlfaWQmY3Q9cw/1r1srgmIN9icL74lBR/giphy.gif", alt: "Funny Cat" },
+    { id: 2, src: "https://lh6.googleusercontent.com/proxy/5GBEY_L_Wv2AZR95S1FPNJhKJPDgcbKahA1s1yaPl_SXBZAYeRr618__M5bJzqRo6w", alt: "Tenor" },
+    { id: 3, src: "https://cdn.cdnstep.com/fVskBJxBMpEvZhUnfoXE/cover-6.thumb256.png", alt: "Meme 4" },
+    { id: 4, src: "https://media.tenor.com/L4ncxhqryfQAAAAi/cat.gif", alt: "Cat Meme" },
+    { id: 5, src: "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExMGc2dmZ3NTA1YW40aml4aDJlN20xNDR1MGUyOHUwdzQ3OWtlMGo1ayZlcD12MV9pbnRlcm5uYWxfnaWZfYnlfaWQmY3Q9cw/1r1srgmIN9icL74lBR/giphy.gif", alt: "Funny Cat" },
   ], []);
 
   const backgroundImages = useMemo(() => [
@@ -74,43 +78,15 @@ export default function Memes() {
     }
   }, []);
 
-  const handleDragStart = useCallback((e, isMeme) => {
-    e.stopPropagation();
-    e.preventDefault();
-    const rect = (isMeme ? memeRef : textRef).current?.getBoundingClientRect();
-    if (!rect) return;
-
-    dragState.current = {
-      isDragging: true,
-      isMeme,
-      start: { x: e.clientX, y: e.clientY },
-      lastPos: { x: (isMeme ? memePosition : textPosition).x, y: (isMeme ? memePosition : textPosition).y },
-    };
-  }, [memePosition, textPosition]);
-
-  const handleDragMove = useCallback((e) => {
-    if (!dragState.current.isDragging) return;
-
-    const previewRect = previewRef.current?.getBoundingClientRect();
-    if (!previewRect) return;
-
-    const dx = e.clientX - dragState.current.start.x;
-    const dy = e.clientY - dragState.current.start.y;
-
-    const setPos = dragState.current.isMeme ? setMemePosition : setTextPosition;
-    setPos({
-      x: Math.max(-previewRect.width / 2, Math.min(dragState.current.lastPos.x + dx, previewRect.width / 2)),
-      y: Math.max(-previewRect.height / 2, Math.min(dragState.current.lastPos.y + dy, previewRect.height / 2)),
-    });
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    if (dragState.current.isDragging) {
-      const pos = dragState.current.isMeme ? memePosition : textPosition;
-      dragState.current.lastPos = { x: pos.x, y: pos.y };
-      dragState.current.isDragging = false;
-    }
-  }, [memePosition, textPosition]);
+  const { handleDragStart, handleDragMove, handleDragEnd } = useDrag(
+    memeRef,
+    textRef,
+    previewRef,
+    memePosition,
+    setMemePosition,
+    textPosition,
+    setTextPosition
+  );
 
   const getCursor = useCallback((e, isMeme) => {
     const ref = isMeme ? memeRef : textRef;
@@ -144,199 +120,47 @@ export default function Memes() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Controls */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Text Caption */}
-          <div className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">1. Add Caption</h2>
-            <input
-              type="text"
-              value={captionText}
-              onChange={(e) => setCaptionText(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#ff4514]/20 focus:border-[#ff4514] transition"
-              placeholder="Enter your caption..."
-            />
-          </div>
-
-          {/* Meme Selection */}
-          <div className="bg-white rounded-lg shadow p-4 relative">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">2. Choose Meme</h2>
-            <button
-              onClick={() => {
-                const randomIndex = Math.floor(Math.random() * memeThumbnails.length);
-                setSelectedMeme(memeThumbnails[randomIndex].id);
-                setCustomGif(null);
-              }}
-              className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-              title="Random Meme"
-            >
-              <Shuffle className="w-5 h-5" />
-            </button>
-            <div className="relative overflow-hidden">
-              <div
-                className="flex gap-4 py-2 overflow-x-auto scrollbar-hide"
-                style={{ transform: `translateX(-${memeStartIndex * 128}px)` }}
-              >
-                {memeThumbnails.map((meme) => (
-                  <button
-                    key={meme.id}
-                    onClick={() => setSelectedMeme(meme.id)}
-                    className={`relative w-32 h-20 rounded-lg overflow-hidden transition hover:scale-105 ${selectedMeme === meme.id ? "ring-4 ring-gray-600 ring-offset-2" : "hover:ring-2 hover:ring-orange-600"}`}
-                  >
-                    <Image src={meme.src} alt={meme.alt} fill={true} style={{objectFit: "cover"}} />
-                  </button>
-                ))}
-                <button
-                  onClick={() => memeFileInputRef.current?.click()}
-                  className="w-32 h-20 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-orange-600 transition"
-                >
-                  <Upload className="w-8 h-8" />
-                </button>
-              </div>
-              {memeStartIndex > 0 && (
-                <button
-                  onClick={() => setMemeStartIndex((prev) => Math.max(0, prev - 3))}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full opacity-75 hover:opacity-100 transition"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-              )}
-              {memeStartIndex + 3 < memeThumbnails.length + 1 && (
-                <button
-                  onClick={() => setMemeStartIndex((prev) => Math.min(prev + 3, memeThumbnails.length - (memeThumbnails.length % 3 || 3) + 1))}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full opacity-75 hover:opacity-100 transition"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-            <input type="file" ref={memeFileInputRef} onChange={handleMemeUpload} accept="image/gif" className="hidden" />
-          </div>
-
-          {/* Background Selection */}
-          <div className="bg-white rounded-lg shadow p-4 relative">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">3. Pick Background</h2>
-            <button
-              onClick={() => {
-                const randomIndex = Math.floor(Math.random() * backgroundImages.length);
-                setSelectedBackground(backgroundImages[randomIndex].id);
-                setCustomBackground(null);
-              }}
-              className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition"
-              title="Random Background"
-            >
-              <Shuffle className="w-5 h-5" />
-            </button>
-            <div className="relative overflow-hidden">
-              <div
-                className="flex gap-4 py-2 overflow-x-auto scrollbar-hide"
-                style={{ transform: `translateX(-${backgroundStartIndex * 128}px)` }}
-              >
-                {backgroundImages.map((bg) => (
-                  <button
-                    key={bg.id}
-                    onClick={() => setSelectedBackground(bg.id)}
-                    className={`relative w-32 h-20 rounded-lg overflow-hidden transition hover:scale-105 ${selectedBackground === bg.id ? "ring-4 ring-gray-600 ring-offset-2" : "hover:ring-2 hover:ring-orange-600"}`}
-                  >
-                    <Image src={bg.src} alt={bg.alt} fill={true} style={{objectFit: "cover"}} />
-                    <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition" />
-                    <span className="absolute bottom-1 left-1 text-white text-xs font-medium drop-shadow">{bg.alt}</span>
-                  </button>
-                ))}
-                <button
-                  onClick={() => backgroundFileInputRef.current?.click()}
-                  className="w-32 h-20 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:border-orange-600 transition"
-                >
-                  <Upload className="w-8 h-8" />
-                </button>
-              </div>
-              {backgroundStartIndex > 0 && (
-                <button
-                  onClick={() => setBackgroundStartIndex((prev) => Math.max(0, prev - 3))}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full opacity-75 hover:opacity-100 transition"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-              )}
-              {backgroundStartIndex + 3 < backgroundImages.length + 1 && (
-                <button
-                  onClick={() => setBackgroundStartIndex((prev) => Math.min(prev + 3, backgroundImages.length - (backgroundImages.length % 3 || 3) + 1))}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 p-2 bg-gray-700 text-white rounded-full opacity-75 hover:opacity-100 transition"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              )}
-            </div>
-            <input type="file" ref={backgroundFileInputRef} onChange={handleBackgroundUpload} accept="image/*" className="hidden" />
-          </div>
+          <CaptionInput captionText={captionText} setCaptionText={setCaptionText} />
+          <MemeSelector
+            memeThumbnails={memeThumbnails}
+            selectedMeme={selectedMeme}
+            setSelectedMeme={setSelectedMeme}
+            memeFileInputRef={memeFileInputRef}
+            handleMemeUpload={handleMemeUpload}
+            memeStartIndex={memeStartIndex}
+            setMemeStartIndex={setMemeStartIndex}
+            setCustomGif={setCustomGif}
+          />
+          <BackgroundSelector
+            backgroundImages={backgroundImages}
+            selectedBackground={selectedBackground}
+            setSelectedBackground={setSelectedBackground}
+            backgroundFileInputRef={backgroundFileInputRef}
+            handleBackgroundUpload={handleBackgroundUpload}
+            backgroundStartIndex={backgroundStartIndex}
+            setBackgroundStartIndex={setBackgroundStartIndex}
+            setCustomBackground={setCustomBackground}
+          />
         </div>
 
         {/* Preview */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-lg shadow px-4 pb-4 sticky top-0">
-            <h2 className="text-lg font-semibold text-gray-800 mb-5">Live Preview</h2>
-            <div
-              ref={previewRef}
-              className="relative w-full aspect-[9/16] rounded-lg overflow-hidden bg-gray-100"
-              onMouseMove={handleDragMove}
-              onMouseUp={handleDragEnd}
-              onMouseLeave={handleDragEnd}
-            >
-              {selectedBackgroundData && <Image src={selectedBackgroundData.src} alt={selectedBackgroundData.alt} fill={true} style={{objectFit: "cover"}} />}
-              {selectedMemeData && (
-                <div 
-                  style={{ 
-                    transform: `translate(${memePosition.x}px, ${memePosition.y}px)`,
-                    position: 'absolute',
-                    zIndex: 10,
-                    cursor: 'move'
-                  }}
-                  onMouseDown={(e) => handleDragStart(e, true)}
-                >
-                  <Image
-                    ref={memeRef}
-                    src={selectedMemeData.src}
-                    alt={selectedMemeData.alt}
-                    width={previewRef.current ? memeSize * previewRef.current.offsetWidth / 100 : 0}
-                    height={previewRef.current ? memeSize * previewRef.current.offsetHeight / 100 : 0}
-                    style={{objectFit: "contain"}}
-                  />
-                </div>
-              )}
-              {captionText && (
-                <div 
-                  style={{ 
-                    transform: `translate(${textPosition.x}px, ${textPosition.y}px)`,
-                    position: 'absolute',
-                    zIndex: 20,
-                    cursor: 'move'
-                  }}
-                  onMouseDown={(e) => handleDragStart(e, false)}
-                >
-                  <div
-                    ref={textRef}
-                    className="px-2"
-                  >
-                    <p className="text-white text-center font-bold drop-shadow-lg" style={{ fontSize: `${textSize}px` }}>
-                      {captionText}
-                    </p>
-                  </div>
-                </div>
-              )}
-              {!selectedBackgroundData && !selectedMemeData && (
-                <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  Select a background and meme to see preview
-                </div>
-              )}
-            </div>
-            <button
-              onClick={handleDownload}
-              disabled={!selectedMemeData}
-              className={`mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md transition ${
-                !selectedMemeData ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-[#ff4514] text-white hover:bg-[#ff4514]/90"
-              }`}
-            >
-              <Download className="w-5 h-5" /> Download Meme
-            </button>
-          </div>
+          <MemePreview
+            previewRef={previewRef}
+            selectedBackgroundData={selectedBackgroundData}
+            selectedMemeData={selectedMemeData}
+            memePosition={memePosition}
+            memeRef={memeRef}
+            memeSize={memeSize}
+            textPosition={textPosition}
+            textRef={textRef}
+            captionText={captionText}
+            textSize={textSize}
+            handleDragMove={handleDragMove}
+            handleDragEnd={handleDragEnd}
+            handleDragStart={handleDragStart}
+            handleDownload={handleDownload}
+          />
         </div>
       </div>
     </div>
