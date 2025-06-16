@@ -13,7 +13,8 @@ const nextConfig = {
       'media2.giphy.com',
       'images.unsplash.com',
       'eatsleepworkrepeat.com',
-      'www.nelincs.gov.uk'
+      'www.nelincs.gov.uk',
+      'lh3.googleusercontent.com',
     ],
   },
 }

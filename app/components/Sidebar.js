@@ -61,7 +61,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
         ) : user ? (
           <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center mt-4' : 'mt-4'}`}>
             <Image
-              src={user.image}
+              src={user.image || '/default-profile.png'}
               alt="Google Profile"
               width={40}
               height={40}
