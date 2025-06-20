@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
+import { supabase } from '../../../supabaseClient';
 
 export default function Content() {
   const { data: session } = useSession();
@@ -11,37 +12,40 @@ export default function Content() {
   const [uploadedVideos, setUploadedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user's content when component mounts
   useEffect(() => {
     const loadContent = async () => {
-      if (session?.user) {
-        try {
-          setIsLoading(true);
-          // Here you would typically fetch the user's content from your backend
-          // For now, we'll use localStorage as a temporary solution
-          const userContent = localStorage.getItem(`userContent_${session.user.email}`);
-          if (userContent) {
-            const { images, videos } = JSON.parse(userContent);
-            setUploadedImages(images);
-            setUploadedVideos(videos);
-          }
-        } catch (error) {
-          console.error('Error loading user content:', error);
-        } finally {
-          setIsLoading(false);
-        }
+      try {
+        setIsLoading(true);
+        const { data: images, error } = await supabase
+          .from('images')
+          .select('id, title, image_url, uploaded_at');
+
+        if (error) throw error;
+
+        const imageUrls = images.map((image) => ({
+          id: image.id,
+          preview: image.image_url,
+          name: image.title,
+          uploadedAt: image.uploaded_at,
+        }));
+
+        const uniqueImageUrls = Array.from(new Map(imageUrls.map(item => [item.id, item])).values());
+        
+        setUploadedImages(uniqueImageUrls);
+      } catch (error) {
+        console.error('Error loading user content:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadContent();
-  }, [session]);
+  }, []);
 
   const saveUserContent = async (images, videos) => {
     try {
-      // Here you would typically save to your backend
-      // For now, we'll use localStorage as a temporary solution
       localStorage.setItem(
-        `userContent_${session.user.email}`,
+        `userContent_${session?.user?.email}`,
         JSON.stringify({ images, videos })
       );
     } catch (error) {
@@ -90,17 +94,6 @@ export default function Content() {
     saveUserContent(uploadedImages, updatedVideos);
   };
 
-  if (!session) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">Content</h1>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-gray-600">Please sign in to access your content.</p>
-        </div>
-      </div>
-    );
-  }
-
   if (isLoading) {
     return (
       <div className="p-8">
@@ -116,11 +109,13 @@ export default function Content() {
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Content</h1>
-        <div className="text-sm text-gray-500">
-          Logged in as: {session.user.email}
-        </div>
+        {session && (
+            <div className="text-sm text-gray-500">
+                Logged in as: {session.user.email}
+            </div>
+        )}
       </div>
-      
+
       {/* Upload Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Image Upload Section */}
@@ -178,37 +173,27 @@ export default function Content() {
 
       {/* Uploaded Content Preview */}
       <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Your Uploaded Content</h2>
-        
+        <div className="flex items-center gap-2 mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">Your Uploaded Content</h2>
+        </div>
+
         {/* Images Preview */}
-        {uploadedImages.length > 0 && (
+        {uploadedImages.length > 0 ? (
           <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Images</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {uploadedImages.map((image) => (
-                <div key={image.id} className="relative group">
-                  <Image
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {uploadedImages.map((image, index) => (
+                <div key={`${image.id}-${index}`} className="relative group aspect-w-1 aspect-h-1">
+                  <img
                     src={image.preview}
                     alt={image.name}
-                    fill={true}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{objectFit: "cover"}}
-                    className="rounded-lg"
+                    className="w-full h-full object-cover rounded-lg"
                   />
-                  <button
-                    onClick={() => removeImage(image.id)}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X size={16} />
-                  </button>
-                  <div className="mt-2 text-sm text-gray-600 truncate">{image.name}</div>
-                  <div className="text-xs text-gray-400">
-                    {new Date(image.uploadedAt).toLocaleDateString()}
-                  </div>
                 </div>
               ))}
             </div>
           </div>
+        ) : !isLoading && (
+          <p className="text-gray-500 text-center py-8">No images found.</p>
         )}
 
         {/* Videos Preview */}
@@ -239,10 +224,10 @@ export default function Content() {
           </div>
         )}
 
-        {uploadedImages.length === 0 && uploadedVideos.length === 0 && (
+        {uploadedImages.length === 0 && uploadedVideos.length === 0 && !isLoading && (
           <p className="text-gray-500 text-center py-8">No content uploaded yet</p>
         )}
       </div>
     </div>
   );
-} 
+}

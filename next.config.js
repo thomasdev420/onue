@@ -1,22 +1,33 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: [
-      'reel.farm',
-      'media1.tenor.com',
-      'images.pexels.com',
-      'media3.giphy.com',
-      'images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com',
-      'lh6.googleusercontent.com',
-      'cdn.cdnstep.com',
-      'media.tenor.com',
-      'media2.giphy.com',
-      'images.unsplash.com',
-      'eatsleepworkrepeat.com',
-      'www.nelincs.gov.uk',
-      'lh3.googleusercontent.com',
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'jfcrtllnklpyqunlhiet.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+      { protocol: 'https', hostname: 'reel.farm' },
+      { protocol: 'https', hostname: 'media1.tenor.com' },
+      { protocol: 'https', hostname: 'images.pexels.com' },
+      { protocol: 'https', hostname: 'media3.giphy.com' },
+      {
+        protocol: 'https',
+        hostname: 'images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com',
+      },
+      { protocol: 'https', hostname: 'lh6.googleusercontent.com' },
+      { protocol: 'https', hostname: 'cdn.cdnstep.com' },
+      { protocol: 'https', hostname: 'media.tenor.com' },
+      { protocol: 'https', hostname: 'media2.giphy.com' },
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+      { protocol: 'https', hostname: 'eatsleepworkrepeat.com' },
+      { protocol: 'https', hostname: 'www.nelincs.gov.uk' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      
+      // ADD THIS:
+      { protocol: 'https', hostname: 'cdn.mos.cms.futurecdn.net' },
     ],
   },
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig

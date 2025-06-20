@@ -207,64 +207,6 @@ export default function Settings() {
           </div>
         )}
       </div>
-
-      {/* Account Settings */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-[#ff4514] rounded-full"></div>
-          <h2 className="text-xl font-semibold text-gray-800">Account Settings</h2>
-        </div>
-        <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-              <Mail className="w-5 h-5 text-gray-500" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                value={session?.user?.email || ''}
-                disabled
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-              <User className="w-5 h-5 text-gray-500" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Name
-              </label>
-              <input
-                type="text"
-                value={session?.user?.name || ''}
-                disabled
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-50 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-gray-500" />
-            </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Account Type
-              </label>
-              <input
-                type="text"
-                value="Free Trial"
-                disabled
-                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
-} 
+}

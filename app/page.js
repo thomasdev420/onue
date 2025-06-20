@@ -14,7 +14,7 @@ export default function Home() {
       {/* Beta Version Box */}
       <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
         <div className="inline-block px-4 py-1.5 rounded-full bg-gray-200">
-          <span className="text-gray-800 font-semibold text-sm font-mono">Beta V2.6.2</span>
+          <span className="text-gray-800 font-semibold text-sm font-mono">Beta V2.6.3</span>
         </div>
         <Link href="/dashboard">
           <button className="px-3 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors">
@@ -67,7 +67,7 @@ export default function Home() {
       {/* Header Section */}
       <header className="max-w-2xl text-center mb-12 mt-24">
         <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-800">
-          Automate Content that boost your website traffic
+          Automate content that boost your website traffic
         </h1>
         <p className="text-lg font-semibold text-gray-500 mb-6">
           Viral marketing magic, without hiring a whole creative team.

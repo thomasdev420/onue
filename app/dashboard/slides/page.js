@@ -1,129 +1,324 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { supabase } from "../../../supabaseClient";
+import { Input } from './../../components/ui/Input';
+import { Button } from './../../components/ui/Button';
+import { Trash2 } from 'lucide-react';
 
-const SLIDESHOW_TYPES = [
-  { label: "Educational Listicle", slides: "4-5 slides", color: "#a78bfa", icon: "\u{1F4D6}" },
-  { label: "Personal Relatable", slides: "1-2 slides", color: "#60a5fa", icon: "\u{1F464}" },
-  { label: "Poetic/Emotional", slides: "2-3 slides", color: "#34d399", icon: "\u{1F49C}" },
-  { label: "AI Narrative", slides: "5 slides", color: "#818cf8", icon: "\u{1F916}", soon: true },
-  { label: "Text Wall", slides: "1 slide", color: "#fbbf24", icon: "\u{1F4DD}", soon: true },
-  { label: "Hook + Demo", slides: "2 slides", color: "#f472b6", icon: "\u{1F4A1}", soon: true },
-];
+export default function SlidesEditor() {
+  const [libraryImages, setLibraryImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-const SLIDES = [
-  { img: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80", text: "INFJ + INTJ are power couples" },
-  { img: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=400&q=80", text: "1. We balance each other perfectly\n\nWe both see logic in the other's way, and we help each other grow emotionally and logically." },
-  { img: "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=400&q=80", text: "2. We both need alone time\n\nWe totally get when the other person says they need space to recharge and never take it personally." },
-];
+  const [slides, setSlides] = useState([
+    { id: Date.now(), image: null, texts: [] }
+  ]);
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
-export default function Slides() {
-  const [prompt, setPrompt] = useState("MBTI Test");
-  const [context, setContext] = useState("");
-  const [typeIdx, setTypeIdx] = useState(0);
-  const [selectedSlide, setSelectedSlide] = useState(0);
+  const [draggingInfo, setDraggingInfo] = useState({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
+  const canvasRef = useRef(null);
+  
+  const textRefs = useRef([]);
+  const imageRefs = useRef([]);
+  const slideItemRefs = useRef([]);
+
+  const activeSlide = slides[activeSlideIndex];
+
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase.from('images').select('id, title, image_url');
+        if (error) throw error;
+        setLibraryImages(data);
+      } catch (error) { console.error("Error fetching images:", error); } 
+      finally { setIsLoading(false); }
+    };
+    fetchImages();
+  }, []);
+
+  const goToPrevSlide = useCallback(() => setActiveSlideIndex(p => (p === 0 ? 0 : p - 1)), []);
+  const goToNextSlide = useCallback(() => setActiveSlideIndex(p => (p < slides.length ? p + 1 : p)), [slides.length]);
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') goToPrevSlide();
+      else if (e.key === 'ArrowRight') goToNextSlide();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToPrevSlide, goToNextSlide]);
+
+  const updateSlide = useCallback((slideIndex, newProps) => {
+    setSlides(currentSlides =>
+      currentSlides.map((slide, i) => (i === slideIndex ? { ...slide, ...newProps } : slide))
+    );
+  }, []);
+
+  const addSlide = () => {
+    const newSlide = { id: Date.now(), image: null, texts: [] };
+    setSlides([...slides, newSlide]);
+    setActiveSlideIndex(slides.length);
+  };
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [text, setText] = useState('');
+
+  const startEditing = useCallback((index) => {
+    if (index === null || !activeSlide.texts[index]) return;
+    setIsEditing(true);
+    setEditingIndex(index);
+    setText(activeSlide.texts[index].content);
+  }, [activeSlide.texts]);
+
+  const handleSelectImageForSlide = (image) => updateSlide(activeSlideIndex, { image });
+  
+  const addText = () => {
+    if (!activeSlide.image) {
+      alert("Please select an image before adding text.");
+      return;
+    }
+    const content = text.trim() || 'New Text';
+
+    const imageEl = imageRefs.current[activeSlideIndex];
+    const slideItemEl = slideItemRefs.current[activeSlideIndex];
+    
+    if (imageEl && slideItemEl) {
+        const imageRect = imageEl.getBoundingClientRect();
+        const slideItemRect = slideItemEl.getBoundingClientRect();
+
+        const imageX_in_slide = imageRect.left - slideItemRect.left;
+        const imageY_in_slide = imageRect.top - slideItemRect.top;
+        
+        const centerX = imageX_in_slide + imageRect.width / 2;
+        const centerY = imageY_in_slide + imageRect.height / 2;
+
+        const newText = {
+          id: Date.now(),
+          content: content,
+          position: { x: centerX - 50, y: centerY - 20 }
+        };
+        const newTexts = [...activeSlide.texts, newText];
+        updateSlide(activeSlideIndex, { texts: newTexts });
+        setText('');
+    }
+  };
+  
+  const handleMouseDown = (e, textIndex) => {
+    if (textRefs.current[textIndex]) {
+      const textRect = textRefs.current[textIndex].getBoundingClientRect();
+      setDraggingInfo({
+        isDragging: true,
+        textIndex,
+        initialX: e.clientX,
+        initialY: e.clientY,
+        offset: {
+          x: e.clientX - textRect.left,
+          y: e.clientY - textRect.top,
+        }
+      });
+    }
+  };
+
+  const handleMouseUp = useCallback((e) => {
+    if (draggingInfo.isDragging) {
+      const { initialX, initialY, textIndex } = draggingInfo;
+      if (initialX !== undefined && initialY !== undefined) {
+        const finalX = e.clientX;
+        const finalY = e.clientY;
+        const distance = Math.sqrt(Math.pow(finalX - initialX, 2) + Math.pow(finalY - initialY, 2));
+        
+        if (distance < 5) { // Threshold for click vs drag
+          startEditing(textIndex);
+        }
+      }
+    }
+    setDraggingInfo({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
+  }, [draggingInfo, startEditing]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!draggingInfo.isDragging || draggingInfo.textIndex === -1) return;
+
+    const { textIndex, offset } = draggingInfo;
+    const slideItemEl = slideItemRefs.current[activeSlideIndex];
+    
+    if(!slideItemEl) return;
+
+    const slideItemRect = slideItemEl.getBoundingClientRect();
+    
+    let newX = e.clientX - slideItemRect.left - offset.x;
+    let newY = e.clientY - slideItemRect.top - offset.y;
+    
+    /*
+    const textRect = textRefs.current[textIndex]?.getBoundingClientRect();
+    const imageEl = imageRefs.current[activeSlideIndex];
+
+    if (textRect && imageEl) {
+      const imageRect = imageEl.getBoundingClientRect();
+
+      const imageX_in_slide = imageRect.left - slideItemRect.left;
+      const imageY_in_slide = imageRect.top - slideItemRect.top;
+
+      const minX = imageX_in_slide;
+      const minY = imageY_in_slide;
+      const maxX = imageX_in_slide + imageRect.width - textRect.width;
+      const maxY = imageY_in_slide + imageRect.height - textRect.height;
+      
+      newX = Math.max(minX, Math.min(newX, maxX));
+      newY = Math.max(minY, Math.min(newY, maxY));
+
+    } else if (textRect) {
+      // Fallback if no image, contain to slide-item
+      newX = Math.max(0, Math.min(newX, slideItemRect.width - textRect.width));
+      newY = Math.max(0, Math.min(newY, slideItemRect.height - textRect.height));
+    }
+    */
+    
+    const newTexts = activeSlide.texts.map((text, i) => 
+      i === textIndex ? { ...text, position: { x: newX, y: newY } } : text
+    );
+    updateSlide(activeSlideIndex, { texts: newTexts });
+  }, [activeSlide.texts, activeSlideIndex, draggingInfo, updateSlide]);
+  
+  useEffect(() => {
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [handleMouseMove, handleMouseUp]);
+
+  const handleTextChange = (e) => {
+    setText(e.target.value);
+  };
+
+  const updateText = () => {
+    if (editingIndex !== null) {
+      const newTexts = activeSlide.texts.map((t, i) =>
+        i === editingIndex ? { ...t, content: text } : t
+      );
+      updateSlide(activeSlideIndex, { texts: newTexts });
+    }
+    setIsEditing(false);
+    setEditingIndex(null);
+    setText('');
+  };
+
+  const deleteText = () => {
+    if (editingIndex !== null) {
+      const newTexts = activeSlide.texts.filter((_, i) => i !== editingIndex);
+      updateSlide(activeSlideIndex, { texts: newTexts });
+    }
+    setIsEditing(false);
+    setEditingIndex(null);
+    setText('');
+  };
 
   return (
-    <div className="flex flex-col md:flex-row bg-[#f7f7f4] min-h-screen">
-      {/* Sidebar */}
-      <aside className="w-full md:w-96 bg-white rounded-2xl shadow-md m-4 md:mr-0 md:ml-8 p-6 flex flex-col gap-8 max-w-md">
-        <div>
-          <h2 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">1. Prompt / Product Context</h2>
-          <select
-            className="w-full rounded-lg border border-gray-200 p-2 mb-3 text-gray-800 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-200"
-            value={prompt}
-            onChange={e => setPrompt(e.target.value)}
-          >
-            <option>MBTI Test</option>
-            <option>Product Launch</option>
-            <option>Travel Guide</option>
-          </select>
-          <textarea
-            className="w-full rounded-lg border border-gray-200 p-3 text-gray-700 bg-gray-50 min-h-[80px] focus:outline-none focus:ring-2 focus:ring-orange-200"
-            placeholder="Describe your prompt or context..."
-            value={context}
-            onChange={e => setContext(e.target.value)}
-          />
-        </div>
-        <div>
-          <h2 className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">2. Slideshow Type</h2>
-          <div className="flex flex-col gap-2">
-            {SLIDESHOW_TYPES.map((type, idx) => (
-              <button
-                key={type.label}
-                disabled={type.soon}
-                onClick={() => setTypeIdx(idx)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition text-left ${
-                  idx === typeIdx ? "border-orange-500 bg-orange-50" : "border-gray-200 bg-white hover:bg-gray-50"
-                } ${type.soon ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-              >
-                <span className="text-2xl" style={{ color: type.color }}>{type.icon}</span>
-                <span className="flex-1">
-                  <span className="block font-semibold text-gray-800">{type.label}</span>
-                  <span className="block text-xs text-gray-500">{type.slides}</span>
-                </span>
-                {type.soon && <span className="text-xs text-gray-400 ml-2">Coming soon</span>}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex gap-2 mt-4">
-          <button className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-medium hover:bg-gray-200 transition">Images</button>
-          <button className="flex-1 bg-gray-100 text-gray-600 py-2 rounded-lg font-medium hover:bg-gray-200 transition">Sound</button>
-        </div>
-        <button className="w-full bg-orange-500 text-white font-bold py-3 rounded-xl mt-6 hover:bg-orange-600 transition text-lg flex items-center justify-center gap-2">
-          <span>Generate</span>
-        </button>
-      </aside>
-
-      {/* Preview Editor */}
-      <main className="flex-1 flex flex-col items-center justify-start p-4 md:p-12">
-        <h2 className="text-lg font-semibold text-gray-500 mb-6 mt-2">Preview Editor</h2>
-        <div className="flex flex-col items-center w-full max-w-3xl">
-          {/* Slides Preview */}
-          <div className="flex gap-6 w-full justify-center mb-6 overflow-x-auto pb-2">
-            {SLIDES.map((slide, idx) => (
-              <div
-                key={idx}
-                className={`relative rounded-xl overflow-hidden shadow-md bg-gray-200 aspect-[3/4] w-48 flex-shrink-0 border-2 transition-all duration-200 ${
-                  idx === selectedSlide ? "border-orange-500 scale-105" : "border-transparent"
-                }`}
-                onClick={() => setSelectedSlide(idx)}
-                style={{ cursor: "pointer" }}
-              >
-                <Image src={slide.img} alt="slide" width={192} height={256} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center px-4 py-6">
-                  <p className="text-white text-center text-base font-semibold drop-shadow-lg whitespace-pre-line">
-                    {slide.text}
-                  </p>
+    <>
+      <div style={{ display: "flex", height: "90vh", padding: "0px 8px", boxSizing: "border-box", fontFamily: "'Inter', sans-serif" }}>
+      {/* Left Panel */}
+        <div style={{ flexBasis: "30%", backgroundColor: "#FFF", borderRadius: 8, padding: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div>
+              <h3 style={{ margin: 0, fontWeight: "600", color: "#111" }}>Your Content</h3>
+              {isLoading ? <p>Loading images...</p> : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px', marginTop: '8px' }}>
+                  {libraryImages.map(image => (
+                    <div key={image.id} onClick={() => handleSelectImageForSlide(image)} style={{ cursor: 'pointer', borderRadius: '12px', overflow: 'hidden', position: 'relative', width: '100%', height: '100px' }}>
+                      <Image fill src={image.image_url} alt={image.title} style={{ objectFit: 'cover' }} />
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
-          {/* Thumbnails */}
-          <div className="flex gap-2 mb-8 mt-2">
-            {SLIDES.map((slide, idx) => (
-              <button
-                key={idx}
-                className={`w-10 h-10 rounded-lg overflow-hidden border-2 ${
-                  idx === selectedSlide ? "border-orange-500" : "border-gray-200"
-                }`}
-                onClick={() => setSelectedSlide(idx)}
-              >
-                <Image src={slide.img} alt="thumb" width={40} height={40} className="w-full h-full object-cover" />
-              </button>
-            ))}
-            <button className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400 bg-white hover:border-orange-400 ml-2">
-              <span className="text-2xl">+</span>
-            </button>
-          </div>
-          {/* Create Button */}
-          <button className="w-full max-w-xs bg-orange-500 text-white font-bold py-3 rounded-xl hover:bg-orange-600 transition text-lg flex items-center justify-center gap-2">
-            <span>Create</span>
-          </button>
+      </div>
+
+      {/* Right Panel */}
+        <div style={{ flexBasis: "70%", marginLeft: 10, display: "flex", flexDirection: "column" }}>
+          <div ref={canvasRef} className="editor-canvas" style={{ flexGrow: 1, backgroundColor: "#F4F4F4", display: "flex", alignItems: 'center', position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
+            <div className="slides-track" style={{
+              display: 'flex',
+              height: '100%',
+              width: '100%',
+              transform: `translateX(calc(50% - 20% - (${activeSlideIndex} * 40%)))`,
+              transition: 'transform 0.5s ease-in-out'
+            }}>
+              {slides.map((slide, index) => (
+                <div 
+                  key={slide.id} 
+                  ref={el => slideItemRefs.current[index] = el}
+                  onClick={() => setActiveSlideIndex(index)} 
+                  className="slide-item" style={{ width: '40%', height: '100%', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out', transform: `scale(${index === activeSlideIndex ? 1 : 0.8})`, opacity: index === activeSlideIndex ? 1 : 0.6 }}>
+                  {slide.image ? (
+                    <div style={{width: '100%', height: '100%', position: 'relative', borderRadius: '12px', overflow: 'hidden'}}>
+                      <Image 
+                        ref={el => imageRefs.current[index] = el}
+                        fill
+                        src={slide.image.image_url} 
+                        alt={slide.image.title} 
+                        style={{ objectFit: 'contain' }} 
+                      />
+                      {slide.texts.map((textItem, textIndex) => (
+                        <div
+                          key={textItem.id}
+                          ref={el => textRefs.current[textIndex] = el}
+                          onMouseDown={(e) => index === activeSlideIndex && handleMouseDown(e, textIndex)}
+          style={{
+                            position: 'absolute',
+                            left: `${textItem.position.x}px`,
+                            top: `${textItem.position.y}px`,
+                            color: 'white',
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            padding: '5px 10px',
+                            borderRadius: '5px',
+                            cursor: index === activeSlideIndex ? 'move' : 'default',
+                            whiteSpace: 'nowrap',
+                            userSelect: 'none',
+                          }}
+                        >
+                          {textItem.content}
+                        </div>
+                      ))}
         </div>
-      </main>
-    </div>
+                  ) : ( <div style={{ color: "#777", fontWeight: "600" }}>Select an image</div> )}
+                  
+                </div>
+              ))}
+              {/* Add New Slide Button */}
+              <div onClick={addSlide} className="slide-item" style={{ width: '40%', height: '100%', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out', transform: `scale(${activeSlideIndex === slides.length ? 1 : 0.8})`, opacity: activeSlideIndex === slides.length ? 1 : 0.6, cursor: 'pointer' }}>
+                <button style={{ all: 'unset', width: '80px', height: '80px', borderRadius: '50%', border: '2px dashed #bbb', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '40px', color: '#888', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>+</button>
+              </div>
+            </div>
+          </div>
+           <div className="flex items-center p-2 mt-2 bg-gray-100 rounded-lg shadow-inner">
+                <Input
+                    type="text"
+                    value={text}
+                    onChange={handleTextChange}
+                    placeholder="Click text on slide to edit, or type to add"
+                    className="flex-grow bg-transparent border-0 focus:ring-0 text-sm"
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            isEditing ? updateText() : addText();
+                        }
+                    }}
+                />
+                <Button onClick={isEditing ? updateText : addText} className="ml-2 px-3 py-1 text-sm">
+                    {isEditing ? 'Update' : 'Add'}
+                </Button>
+                {isEditing && (
+                    <Button onClick={deleteText} className="ml-2 p-2 text-sm bg-red-600 hover:bg-red-700 rounded-full">
+                        <Trash2 size={16} />
+                    </Button>
+                )}
+            </div>
+        </div>
+      </div>
+    </>
   );
-} 
+}
