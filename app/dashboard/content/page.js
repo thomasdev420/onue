@@ -1,16 +1,39 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { supabase } from '../../../supabaseClient';
+import { usePersistence } from '../../services/persistenceService';
+import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 
 export default function Content() {
   const { data: session } = useSession();
-  const [uploadedImages, setUploadedImages] = useState([]);
-  const [uploadedVideos, setUploadedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Use persistence hook for content data
+  const defaultContentData = {
+    uploadedImages: [],
+    uploadedVideos: []
+  };
+
+  const { 
+    data: contentData, 
+    updateData: setContentData, 
+    resetData: resetContentData,
+    saveStatus, 
+    isLoading: isLoadingContentData 
+  } = usePersistence('content', defaultContentData);
+
+  // Extract individual state from contentData
+  const uploadedImages = contentData.uploadedImages;
+  const uploadedVideos = contentData.uploadedVideos;
+
+  // Helper function to update specific fields
+  const updateContentData = useCallback((updates) => {
+    setContentData({ ...contentData, ...updates });
+  }, [contentData, setContentData]);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -31,7 +54,7 @@ export default function Content() {
 
         const uniqueImageUrls = Array.from(new Map(imageUrls.map(item => [item.id, item])).values());
         
-        setUploadedImages(uniqueImageUrls);
+        updateContentData({ uploadedImages: uniqueImageUrls });
       } catch (error) {
         console.error('Error loading user content:', error);
       } finally {
@@ -40,18 +63,7 @@ export default function Content() {
     };
 
     loadContent();
-  }, []);
-
-  const saveUserContent = async (images, videos) => {
-    try {
-      localStorage.setItem(
-        `userContent_${session?.user?.email}`,
-        JSON.stringify({ images, videos })
-      );
-    } catch (error) {
-      console.error('Error saving user content:', error);
-    }
-  };
+  }, [updateContentData]);
 
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
@@ -64,8 +76,7 @@ export default function Content() {
       userId: session?.user?.email
     }));
     const updatedImages = [...uploadedImages, ...newImages];
-    setUploadedImages(updatedImages);
-    saveUserContent(updatedImages, uploadedVideos);
+    updateContentData({ uploadedImages: updatedImages });
   };
 
   const handleVideoUpload = (event) => {
@@ -78,23 +89,20 @@ export default function Content() {
       userId: session?.user?.email
     }));
     const updatedVideos = [...uploadedVideos, ...newVideos];
-    setUploadedVideos(updatedVideos);
-    saveUserContent(uploadedImages, updatedVideos);
+    updateContentData({ uploadedVideos: updatedVideos });
   };
 
   const removeImage = (id) => {
     const updatedImages = uploadedImages.filter(img => img.id !== id);
-    setUploadedImages(updatedImages);
-    saveUserContent(updatedImages, uploadedVideos);
+    updateContentData({ uploadedImages: updatedImages });
   };
 
   const removeVideo = (id) => {
     const updatedVideos = uploadedVideos.filter(vid => vid.id !== id);
-    setUploadedVideos(updatedVideos);
-    saveUserContent(uploadedImages, updatedVideos);
+    updateContentData({ uploadedVideos: updatedVideos });
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingContentData) {
     return (
       <div className="p-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-8">Content</h1>
@@ -107,6 +115,8 @@ export default function Content() {
 
   return (
     <div className="p-8">
+      <SaveStatusIndicator saveStatus={saveStatus} />
+
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold text-gray-800">Content</h1>
         {session && (
@@ -188,6 +198,12 @@ export default function Content() {
                     alt={image.name}
                     className="w-full h-full object-cover rounded-lg"
                   />
+                  <button
+                    onClick={() => removeImage(image.id)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={12} />
+                  </button>
                 </div>
               ))}
             </div>
@@ -198,36 +214,27 @@ export default function Content() {
 
         {/* Videos Preview */}
         {uploadedVideos.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Videos</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {uploadedVideos.map((video) => (
-                <div key={video.id} className="relative group bg-gray-100 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <VideoIcon size={24} className="text-gray-400" />
-                    <div className="flex-1">
-                      <span className="text-gray-600 truncate block">{video.name}</span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(video.uploadedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => removeVideo(video.id)}
-                      className="ml-auto bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={16} />
-                    </button>
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Videos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {uploadedVideos.map((video, index) => (
+                <div key={`${video.id}-${index}`} className="relative group bg-gray-100 rounded-lg p-4">
+                  <div className="flex items-center gap-2">
+                    <VideoIcon size={20} className="text-gray-500" />
+                    <span className="text-sm text-gray-700 truncate">{video.name}</span>
                   </div>
+                  <button
+                    onClick={() => removeVideo(video.id)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X size={12} />
+                  </button>
                 </div>
               ))}
             </div>
           </div>
         )}
-
-        {uploadedImages.length === 0 && uploadedVideos.length === 0 && !isLoading && (
-          <p className="text-gray-500 text-center py-8">No content uploaded yet</p>
-        )}
       </div>
     </div>
   );
-}
+} 

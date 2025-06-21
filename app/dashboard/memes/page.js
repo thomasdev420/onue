@@ -8,19 +8,50 @@ import MemeSelector from "./components/MemeSelector";
 import BackgroundSelector from "./components/BackgroundSelector";
 import MemePreview from "./components/MemePreview";
 import useDrag from "./hooks/useDrag";
+import { usePersistence } from '../../services/persistenceService';
+import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 
 export default function Memes() {
-  const [selectedMeme, setSelectedMeme] = useState(null);
-  const [selectedBackground, setSelectedBackground] = useState(null);
-  const [customGif, setCustomGif] = useState(null);
-  const [customBackground, setCustomBackground] = useState(null);
-  const [captionText, setCaptionText] = useState("Edit text here");
-  const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
-  const [memePosition, setMemePosition] = useState({ x: 0, y: 0 });
-  const [memeSize, setMemeSize] = useState(100); // Default size in percentage
-  const [textSize, setTextSize] = useState(20); // Default text size in pixels
-  const [memeStartIndex, setMemeStartIndex] = useState(0);
-  const [backgroundStartIndex, setBackgroundStartIndex] = useState(0);
+  // Use persistence hook for meme data
+  const defaultMemeData = {
+    selectedMeme: null,
+    selectedBackground: null,
+    customGif: null,
+    customBackground: null,
+    captionText: "Edit text here",
+    textPosition: { x: 0, y: 0 },
+    memePosition: { x: 0, y: 0 },
+    memeSize: 100,
+    textSize: 20,
+    memeStartIndex: 0,
+    backgroundStartIndex: 0
+  };
+
+  const { 
+    data: memeData, 
+    updateData: setMemeData, 
+    resetData: resetMemeData,
+    saveStatus, 
+    isLoading: isLoadingMemeData 
+  } = usePersistence('memes', defaultMemeData);
+
+  // Extract individual state from memeData
+  const selectedMeme = memeData.selectedMeme;
+  const selectedBackground = memeData.selectedBackground;
+  const customGif = memeData.customGif;
+  const customBackground = memeData.customBackground;
+  const captionText = memeData.captionText;
+  const textPosition = memeData.textPosition;
+  const memePosition = memeData.memePosition;
+  const memeSize = memeData.memeSize;
+  const textSize = memeData.textSize;
+  const memeStartIndex = memeData.memeStartIndex;
+  const backgroundStartIndex = memeData.backgroundStartIndex;
+
+  // Helper function to update specific fields
+  const updateMemeData = useCallback((updates) => {
+    setMemeData({ ...memeData, ...updates });
+  }, [memeData, setMemeData]);
 
   const memeFileInputRef = useRef(null);
   const backgroundFileInputRef = useRef(null);
@@ -65,27 +96,25 @@ export default function Memes() {
   const handleMemeUpload = useCallback((event) => {
     const file = event.target.files[0];
     if (file && file.type === "image/gif") {
-      setCustomGif(URL.createObjectURL(file));
-      setSelectedMeme(1);
+      updateMemeData({ customGif: URL.createObjectURL(file), selectedMeme: 1 });
     }
-  }, []);
+  }, [updateMemeData]);
 
   const handleBackgroundUpload = useCallback((event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("image/")) {
-      setCustomBackground(URL.createObjectURL(file));
-      setSelectedBackground(1);
+      updateMemeData({ customBackground: URL.createObjectURL(file), selectedBackground: 1 });
     }
-  }, []);
+  }, [updateMemeData]);
 
   const { handleDragStart, handleDragMove, handleDragEnd } = useDrag(
     memeRef,
     textRef,
     previewRef,
     memePosition,
-    setMemePosition,
+    (newPosition) => updateMemeData({ memePosition: newPosition }),
     textPosition,
-    setTextPosition
+    (newPosition) => updateMemeData({ textPosition: newPosition })
   );
 
   const getCursor = useCallback((e, isMeme) => {
@@ -113,33 +142,49 @@ export default function Memes() {
     document.body.removeChild(a);
   }, [selectedMemeData]);
 
+  if (isLoadingMemeData) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <h1 className="text-3xl font-bold text-gray-800 mb-6">Meme Creator</h1>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <p className="text-gray-600">Loading your meme...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
+      <SaveStatusIndicator saveStatus={saveStatus} />
+
       <h1 className="text-3xl font-bold text-gray-800 mb-6">Meme Creator</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Controls */}
         <div className="lg:col-span-2 space-y-6">
-          <CaptionInput captionText={captionText} setCaptionText={setCaptionText} />
+          <CaptionInput 
+            captionText={captionText} 
+            setCaptionText={(text) => updateMemeData({ captionText: text })} 
+          />
           <MemeSelector
             memeThumbnails={memeThumbnails}
             selectedMeme={selectedMeme}
-            setSelectedMeme={setSelectedMeme}
+            setSelectedMeme={(meme) => updateMemeData({ selectedMeme: meme })}
             memeFileInputRef={memeFileInputRef}
             handleMemeUpload={handleMemeUpload}
             memeStartIndex={memeStartIndex}
-            setMemeStartIndex={setMemeStartIndex}
-            setCustomGif={setCustomGif}
+            setMemeStartIndex={(index) => updateMemeData({ memeStartIndex: index })}
+            setCustomGif={(gif) => updateMemeData({ customGif: gif })}
           />
           <BackgroundSelector
             backgroundImages={backgroundImages}
             selectedBackground={selectedBackground}
-            setSelectedBackground={setSelectedBackground}
+            setSelectedBackground={(bg) => updateMemeData({ selectedBackground: bg })}
             backgroundFileInputRef={backgroundFileInputRef}
             handleBackgroundUpload={handleBackgroundUpload}
             backgroundStartIndex={backgroundStartIndex}
-            setBackgroundStartIndex={setBackgroundStartIndex}
-            setCustomBackground={setCustomBackground}
+            setBackgroundStartIndex={(index) => updateMemeData({ backgroundStartIndex: index })}
+            setCustomBackground={(bg) => updateMemeData({ customBackground: bg })}
           />
         </div>
 

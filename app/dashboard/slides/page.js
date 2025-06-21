@@ -5,7 +5,9 @@ import Image from "next/image";
 import { supabase } from "../../../supabaseClient";
 import { Input } from './../../components/ui/Input';
 import { Button } from './../../components/ui/Button';
-import { Trash2, ChevronDown, PanelLeft, X } from 'lucide-react';
+import { Trash2, ChevronDown, PanelLeft, X, Image as ImageIcon, Expand, Minimize, ArrowRight } from 'lucide-react';
+import { usePersistence } from '../../services/persistenceService';
+import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 
 export default function SlidesEditor() {
   const [libraryImages, setLibraryImages] = useState([]);
@@ -14,9 +16,16 @@ export default function SlidesEditor() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // New state for dropdown open/close
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
 
-  const [slides, setSlides] = useState([
-    { id: Date.now(), image: null, texts: [], ratio: '16:9' }
-  ]);
+  // Use persistence hook for slides
+  const defaultSlides = [{ id: Date.now(), image: null, texts: [], ratio: '16:9' }];
+  const { 
+    data: slides, 
+    updateData: setSlides, 
+    resetData: resetSlides,
+    saveStatus, 
+    isLoading: isLoadingSlides 
+  } = usePersistence('slides', defaultSlides);
+
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
   const [draggingInfo, setDraggingInfo] = useState({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
@@ -28,6 +37,14 @@ export default function SlidesEditor() {
   const imageContainerRefs = useRef([]);
 
   const activeSlide = slides[activeSlideIndex];
+
+  // Inline editing state
+  const [inlineEditing, setInlineEditing] = useState({ isEditing: false, textIndex: -1, slideIndex: -1 });
+  const [inlineEditText, setInlineEditText] = useState('');
+  const inlineEditRef = useRef(null);
+
+  // Expand/collapse state for slide section
+  const [isSlideSectionExpanded, setIsSlideSectionExpanded] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -58,7 +75,7 @@ export default function SlidesEditor() {
     setSlides(currentSlides =>
       currentSlides.map((slide, i) => (i === slideIndex ? { ...slide, ...newProps } : slide))
     );
-  }, []);
+  }, [setSlides]);
 
   const addSlide = () => {
     const newSlide = { id: Date.now(), image: null, texts: [], ratio: '16:9' };
@@ -94,17 +111,6 @@ export default function SlidesEditor() {
     updateSlide(slideIndex, { ratio: ratios[nextIndex] });
   };
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [text, setText] = useState('');
-
-  const startEditing = useCallback((index) => {
-    if (index === null || !activeSlide.texts[index]) return;
-    setIsEditing(true);
-    setEditingIndex(index);
-    setText(activeSlide.texts[index].content);
-  }, [activeSlide.texts]);
-
   const handleSelectImageForSlide = (image) => {
     updateSlide(activeSlideIndex, { image, ratio: '9:16' });
     setIsContentModalOpen(false);
@@ -115,7 +121,6 @@ export default function SlidesEditor() {
       alert("Please select an image before adding text.");
       return;
     }
-    const content = text.trim() || 'New Text';
 
     const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
     
@@ -126,30 +131,52 @@ export default function SlidesEditor() {
 
         const newText = {
           id: Date.now(),
-          content: content,
-          position: { x: centerX - 50, y: centerY - 20 }
+          content: 'New Text',
+          position: { x: centerX, y: centerY }
         };
         const newTexts = [...activeSlide.texts, newText];
         updateSlide(activeSlideIndex, { texts: newTexts });
-        setText('');
     }
   };
   
   const handleMouseDown = (e, textIndex) => {
     if (textRefs.current[textIndex]) {
       const textRect = textRefs.current[textIndex].getBoundingClientRect();
+      const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
+      const imageContainerRect = imageContainerEl.getBoundingClientRect();
+      
+      // Calculate the center of the text element
+      const textCenterX = textRect.left + textRect.width / 2;
+      const textCenterY = textRect.top + textRect.height / 2;
+      
       setDraggingInfo({
         isDragging: true,
         textIndex,
         initialX: e.clientX,
         initialY: e.clientY,
         offset: {
-          x: e.clientX - textRect.left,
-          y: e.clientY - textRect.top,
+          x: e.clientX - textCenterX,
+          y: e.clientY - textCenterY,
         }
       });
     }
   };
+
+  // Inline editing functions - moved before handleMouseUp
+  const startInlineEditing = useCallback((slideIndex, textIndex) => {
+    if (slideIndex === -1 || textIndex === -1 || !slides[slideIndex]?.texts[textIndex]) return;
+    
+    setInlineEditing({ isEditing: true, textIndex, slideIndex });
+    setInlineEditText(slides[slideIndex].texts[textIndex].content);
+    
+    // Focus the input after a short delay to ensure it's rendered
+    setTimeout(() => {
+      if (inlineEditRef.current) {
+        inlineEditRef.current.focus();
+        inlineEditRef.current.select();
+      }
+    }, 10);
+  }, [slides]);
 
   const handleMouseUp = useCallback((e) => {
     if (draggingInfo.isDragging) {
@@ -160,12 +187,13 @@ export default function SlidesEditor() {
         const distance = Math.sqrt(Math.pow(finalX - initialX, 2) + Math.pow(finalY - initialY, 2));
         
         if (distance < 5) { // Threshold for click vs drag
-          startEditing(textIndex);
+          // Start inline editing instead of the old editing system
+          startInlineEditing(activeSlideIndex, textIndex);
         }
       }
     }
     setDraggingInfo({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
-  }, [draggingInfo, startEditing]);
+  }, [draggingInfo, activeSlideIndex, startInlineEditing]);
 
   const handleMouseMove = useCallback((e) => {
     if (!draggingInfo.isDragging || draggingInfo.textIndex === -1) return;
@@ -182,8 +210,20 @@ export default function SlidesEditor() {
     
     const textRect = textRefs.current[textIndex]?.getBoundingClientRect();
     if (textRect) {
-      newX = Math.max(0, Math.min(newX, imageContainerRect.width - textRect.width));
-      newY = Math.max(0, Math.min(newY, imageContainerRect.height - textRect.height));
+      // Account for the centered positioning - the position represents the center
+      const halfWidth = textRect.width / 2;
+      const halfHeight = textRect.height / 2;
+      
+      // Magnetic snapping to vertical center
+      const centerX = imageContainerRect.width / 2;
+      const snapThreshold = 20; // pixels from center to trigger snap
+      
+      if (Math.abs(newX - centerX) < snapThreshold) {
+        newX = centerX; // Snap to center
+      }
+      
+      newX = Math.max(halfWidth, Math.min(newX, imageContainerRect.width - halfWidth));
+      newY = Math.max(halfHeight, Math.min(newY, imageContainerRect.height - halfHeight));
     }
     
     const newTexts = activeSlide.texts.map((text, i) => 
@@ -201,31 +241,60 @@ export default function SlidesEditor() {
     };
   }, [handleMouseMove, handleMouseUp]);
 
-  const handleTextChange = (e) => {
-    setText(e.target.value);
-  };
-
-  const updateText = () => {
-    if (editingIndex !== null) {
-      const newTexts = activeSlide.texts.map((t, i) =>
-        i === editingIndex ? { ...t, content: text } : t
-      );
-      updateSlide(activeSlideIndex, { texts: newTexts });
+  const saveInlineEdit = useCallback(() => {
+    if (inlineEditing.isEditing && inlineEditing.textIndex !== -1 && inlineEditing.slideIndex !== -1) {
+      const trimmedText = inlineEditText.trim();
+      
+      if (trimmedText === '') {
+        // If the text is empty, delete the caption
+        const newTexts = slides[inlineEditing.slideIndex].texts.filter((_, i) => i !== inlineEditing.textIndex);
+        updateSlide(inlineEditing.slideIndex, { texts: newTexts });
+      } else {
+        // Save the trimmed text
+        const newTexts = slides[inlineEditing.slideIndex].texts.map((text, i) =>
+          i === inlineEditing.textIndex ? { ...text, content: trimmedText } : text
+        );
+        updateSlide(inlineEditing.slideIndex, { texts: newTexts });
+      }
     }
-    setIsEditing(false);
-    setEditingIndex(null);
-    setText('');
-  };
+    setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
+    setInlineEditText('');
+  }, [inlineEditing.isEditing, inlineEditing.textIndex, inlineEditing.slideIndex, inlineEditText, slides, updateSlide]);
 
-  const deleteText = () => {
-    if (editingIndex !== null) {
-      const newTexts = activeSlide.texts.filter((_, i) => i !== editingIndex);
-      updateSlide(activeSlideIndex, { texts: newTexts });
+  const cancelInlineEdit = useCallback(() => {
+    setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
+    setInlineEditText('');
+  }, []);
+
+  const deleteInlineText = useCallback(() => {
+    if (inlineEditing.isEditing && inlineEditing.textIndex !== -1 && inlineEditing.slideIndex !== -1) {
+      const newTexts = slides[inlineEditing.slideIndex].texts.filter((_, i) => i !== inlineEditing.textIndex);
+      updateSlide(inlineEditing.slideIndex, { texts: newTexts });
     }
-    setIsEditing(false);
-    setEditingIndex(null);
-    setText('');
-  };
+    setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
+    setInlineEditText('');
+  }, [inlineEditing.isEditing, inlineEditing.textIndex, inlineEditing.slideIndex, slides, updateSlide]);
+
+  // Handle keyboard events for inline editing
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!inlineEditing.isEditing) return;
+      
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        saveInlineEdit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelInlineEdit();
+      } else if (e.key === 'Delete' && e.ctrlKey) {
+        e.preventDefault();
+        deleteInlineText();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [inlineEditing.isEditing, saveInlineEdit, cancelInlineEdit, deleteInlineText]);
 
   // Render content based on selected dropdown option
   const renderContent = () => {
@@ -263,8 +332,21 @@ export default function SlidesEditor() {
 
   const slideWidth = 35;
 
+  if (isLoadingSlides) {
+    return (
+      <div className="p-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-8">Slides Editor</h1>
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <p className="text-gray-600">Loading your slides...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
+      <SaveStatusIndicator saveStatus={saveStatus} />
+
       {isContentModalOpen && (
         <div
           style={{
@@ -394,11 +476,55 @@ export default function SlidesEditor() {
       <div style={{ display: "flex", height: "90vh", padding: "0px 8px", boxSizing: "border-box", fontFamily: "'Inter', sans-serif" }}>
       {/* Right Panel */}
         <div style={{ 
-          flexBasis: "100%", 
+          flexBasis: isSlideSectionExpanded ? "100%" : "100%", 
           display: "flex", 
-          flexDirection: "column"
+          flexDirection: "column",
+          position: "relative"
         }}>
-          <div ref={canvasRef} className="editor-canvas" style={{ flexGrow: 1, display: "flex", alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+          {/* Expand/Collapse Button */}
+          <button
+            onClick={() => setIsSlideSectionExpanded(!isSlideSectionExpanded)}
+            style={{
+              position: 'absolute',
+              top: '10px',
+              right: '10px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+              border: '1px solid #E5E5E5',
+              cursor: 'pointer',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s ease',
+              zIndex: 1000,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F3F4F6';
+              e.currentTarget.style.borderColor = '#D1D5DB';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+              e.currentTarget.style.borderColor = '#E5E5E5';
+            }}
+          >
+            {isSlideSectionExpanded ? (
+              <Minimize size={16} color="#374151" />
+            ) : (
+              <Expand size={16} color="#374151" />
+            )}
+          </button>
+
+          <div ref={canvasRef} className="editor-canvas" style={{ 
+            flexGrow: 1, 
+            display: "flex", 
+            alignItems: 'center', 
+            position: 'relative', 
+            overflow: 'hidden',
+            height: isSlideSectionExpanded ? '100%' : 'calc(100% - 100px)' // Leave space for input bar when collapsed
+          }}>
             <div className="slides-track" style={{
               display: 'flex',
               height: '100%',
@@ -443,27 +569,116 @@ export default function SlidesEditor() {
                         alt={slide.image.title}
                         style={{ objectFit: 'cover' }}
                       />
-                      {slide.texts.map((textItem, textIndex) => (
+                      {slide.texts.map((textItem, textIndex) => {
+                        const isInlineEditing = inlineEditing.isEditing && 
+                          inlineEditing.slideIndex === index && 
+                          inlineEditing.textIndex === textIndex;
+                        
+                        // Calculate the width based on text content to maintain consistent sizing
+                        const textLength = textItem.content.length;
+                        const baseWidth = Math.min(Math.max(textLength * 8, 50), 250); // 8px per character, min 50px, max 250px
+                        
+                        return (
                         <div
                           key={textItem.id}
                           ref={el => textRefs.current[textIndex] = el}
-                          onMouseDown={(e) => index === activeSlideIndex && handleMouseDown(e, textIndex)}
+                            onMouseDown={(e) => index === activeSlideIndex && !isInlineEditing && handleMouseDown(e, textIndex)}
           style={{
                             position: 'absolute',
                             left: `${textItem.position.x}px`,
                             top: `${textItem.position.y}px`,
+                              transform: 'translate(-50%, -50%)',
                             color: 'white',
                             backgroundColor: 'rgba(0,0,0,0.5)',
                             padding: '5px 10px',
                             borderRadius: '5px',
                             cursor: index === activeSlideIndex ? 'move' : 'default',
-                            whiteSpace: 'nowrap',
                             userSelect: 'none',
-                          }}
-                        >
+                              minWidth: '20px',
+                              minHeight: '20px',
+                              width: isInlineEditing ? 'auto' : `${baseWidth}px`,
+                              maxWidth: isInlineEditing ? '400px' : '250px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              wordWrap: 'break-word',
+                              overflowWrap: 'break-word',
+                              hyphens: 'auto',
+                            }}
+                          >
+                            {isInlineEditing ? (
+                              <textarea
+                                ref={inlineEditRef}
+                                value={inlineEditText}
+                                onChange={(e) => setInlineEditText(e.target.value)}
+                                onBlur={saveInlineEdit}
+                                style={{
+                                  background: 'transparent',
+                                  border: 'none',
+                                  outline: 'none',
+                                  color: 'white',
+                                  fontSize: 'inherit',
+                                  fontFamily: 'inherit',
+                                  fontWeight: 'inherit',
+                                  textAlign: 'center',
+                                  width: '100%',
+                                  minWidth: '100px',
+                                  maxWidth: '400px',
+                                  padding: '0',
+                                  margin: '0',
+                                  lineHeight: 'inherit',
+                                  resize: 'none',
+                                  overflow: 'hidden',
+                                  wordWrap: 'break-word',
+                                  overflowWrap: 'break-word',
+                                  hyphens: 'auto',
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    saveInlineEdit();
+                                  } else if (e.key === 'Escape') {
+                                    e.preventDefault();
+                                    cancelInlineEdit();
+                                  }
+                                }}
+                                onInput={(e) => {
+                                  // Auto-resize the textarea to fit content
+                                  e.target.style.height = 'auto';
+                                  e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
+                              />
+                            ) : (
+                              <span style={{ 
+                                textAlign: 'center', 
+                                width: '100%',
+                                wordWrap: 'break-word',
+                                overflowWrap: 'break-word',
+                                hyphens: 'auto',
+                              }}>
                           {textItem.content}
+                              </span>
+                            )}
                         </div>
-                      ))}
+                        );
+                      })}
+                      
+                      {/* Center Guides - Vertical line with magnetic snapping */}
+                      {draggingInfo.isDragging && draggingInfo.textIndex !== -1 && index === activeSlideIndex && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '0',
+                            width: '1px',
+                            height: '100%',
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            transform: 'translateX(-50%)',
+                            pointerEvents: 'none',
+                            zIndex: 1000,
+                          }}
+                        />
+                      )}
                     </div>
                   ) : ( 
                     <div 
@@ -596,7 +811,41 @@ export default function SlidesEditor() {
                         e.currentTarget.style.borderColor = '#E5E5E5';
                       }}
                     >
-                      <PanelLeft size={16} color="#374151" />
+                      <ImageIcon size={16} color="#374151" />
+                    </button>
+
+                    {/* Add Text Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addText();
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        color: '#374151',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F3F4F6';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        e.currentTarget.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      T
                     </button>
                   </div>
                 </div>
@@ -607,28 +856,39 @@ export default function SlidesEditor() {
               </div>
             </div>
           </div>
-           <div className="flex items-center p-2 mt-8 bg-gray-100 rounded-lg shadow-inner">
+
+          {/* Text Input Bar - Only shown when collapsed */}
+          {!isSlideSectionExpanded && (
+            <div className="flex items-center p-4 mt-8">
+              <div className="relative flex-grow">
                 <Input
                     type="text"
-                    value={text}
-                    onChange={handleTextChange}
-                    placeholder="Click text on slide to edit, or type to add"
-                    className="flex-grow bg-transparent border-0 focus:ring-0 text-sm"
+                  placeholder="Enter your prompt here..."
+                  className="w-full bg-transparent border-2 border-gray-300 focus:border focus:border-blue-500 focus:ring-0 text-sm pr-12"
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                            isEditing ? updateText() : addText();
+                      // TODO: Add prompt functionality later
+                      console.log('Prompt submitted:', e.target.value);
+                      e.target.value = '';
                         }
                     }}
                 />
-                <Button onClick={isEditing ? updateText : addText} className="ml-2 px-3 py-1 text-sm">
-                    {isEditing ? 'Update' : 'Add'}
-                </Button>
-                {isEditing && (
-                    <Button onClick={deleteText} className="ml-2 p-2 text-sm bg-red-600 hover:bg-red-700 rounded-full">
-                        <Trash2 size={16} />
-                    </Button>
-                )}
+                <button
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
+                  onClick={() => {
+                    // TODO: Add prompt functionality later
+                    const input = document.querySelector('input[placeholder="Enter your prompt here..."]');
+                    if (input) {
+                      console.log('Prompt submitted:', input.value);
+                      input.value = '';
+                    }
+                  }}
+                >
+                  <ArrowRight size={16} color="black" />
+                </button>
+              </div>
             </div>
+          )}
         </div>
       </div>
     </>
