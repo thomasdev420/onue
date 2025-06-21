@@ -5,14 +5,14 @@ import Image from "next/image";
 import { supabase } from "../../../supabaseClient";
 import { Input } from './../../components/ui/Input';
 import { Button } from './../../components/ui/Button';
-import { Trash2, ChevronDown, PanelLeft } from 'lucide-react';
+import { Trash2, ChevronDown, PanelLeft, X } from 'lucide-react';
 
 export default function SlidesEditor() {
   const [libraryImages, setLibraryImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [contentType, setContentType] = useState('stock'); // New state for dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // New state for dropdown open/close
-  const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
+  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
 
   const [slides, setSlides] = useState([
     { id: Date.now(), image: null, texts: [], ratio: '16:9' }
@@ -105,7 +105,10 @@ export default function SlidesEditor() {
     setText(activeSlide.texts[index].content);
   }, [activeSlide.texts]);
 
-  const handleSelectImageForSlide = (image) => updateSlide(activeSlideIndex, { image });
+  const handleSelectImageForSlide = (image) => {
+    updateSlide(activeSlideIndex, { image, ratio: '9:16' });
+    setIsContentModalOpen(false);
+  };
   
   const addText = () => {
     if (!activeSlide.image) {
@@ -258,110 +261,142 @@ export default function SlidesEditor() {
     return null;
   };
 
-  const slideWidth = isLeftPanelVisible ? 40 : 30;
+  const slideWidth = 35;
 
   return (
     <>
-      <div style={{ display: "flex", height: "90vh", padding: "0px 8px", boxSizing: "border-box", fontFamily: "'Inter', sans-serif" }}>
-      {/* Left Panel */}
-        <div style={{ 
-          flexBasis: "30%", 
-          backgroundColor: "#FFF", 
-          borderRadius: 8, 
-          padding: 8, 
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)", 
-          display: isLeftPanelVisible ? "flex" : "none", 
-          flexDirection: "column", 
-          gap: 16 
-        }}>
-          <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div>
-              {/* Dropdown Menu */}
-              <div style={{ position: 'relative' }}>
-                <div 
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 12px',
-                    backgroundColor: '#F4F4F4',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontFamily: "'Inter', sans-serif",
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#333',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                    border: '1px solid #E5E5E5'
-                  }}
-                >
-                  <span>{contentType === 'stock' ? 'Stock' : 'Your Photos'}</span>
-                  <ChevronDown size={16} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
-                </div>
-                
-                {isDropdownOpen && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    right: 0,
-                    backgroundColor: '#FFF',
-                    borderRadius: '6px',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                    border: '1px solid #E5E5E5',
-                    zIndex: 10,
-                    marginTop: '2px'
-                  }}>
-                    <div 
-                      onClick={() => {
-                        setContentType('stock');
-                        setIsDropdownOpen(false);
-                      }}
-                      style={{
-                        padding: '8px 12px',
-                        cursor: 'pointer',
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: '14px',
-                        color: '#333',
-                        backgroundColor: contentType === 'stock' ? '#F0F0F0' : 'transparent',
-                        borderBottom: '1px solid #F0F0F0'
-                      }}
-                    >
-                      Stock
+      {isContentModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setIsContentModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFF',
+              padding: '20px',
+              borderRadius: '12px',
+              boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+              width: '80%',
+              maxWidth: '1000px',
+              height: '80vh',
+              display: 'flex',
+              flexDirection: 'column',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setIsContentModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '15px',
+                right: '15px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '5px',
+              }}
+            >
+              <X size={24} color="#555" />
+            </button>
+            <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '30px' }}>
+              <div>
+                <div style={{ position: 'relative', marginBottom: '16px' }}>
+                  <div
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      backgroundColor: '#F4F4F4',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontFamily: "'Inter', sans-serif",
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#333',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      border: '1px solid #E5E5E5',
+                    }}
+                  >
+                    <span>{contentType === 'stock' ? 'Stock' : 'Your Photos'}</span>
+                    <ChevronDown size={16} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
+                  </div>
+
+                  {isDropdownOpen && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      backgroundColor: '#FFF',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                      border: '1px solid #E5E5E5',
+                      zIndex: 10,
+                      marginTop: '2px',
+                    }}>
+                      <div
+                        onClick={() => {
+                          setContentType('stock');
+                          setIsDropdownOpen(false);
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: '14px',
+                          color: '#333',
+                          backgroundColor: contentType === 'stock' ? '#F0F0F0' : 'transparent',
+                          borderBottom: '1px solid #F0F0F0',
+                        }}
+                      >
+                        Stock
+                      </div>
+                      <div
+                        onClick={() => {
+                          setContentType('your-photos');
+                          setIsDropdownOpen(false);
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          fontFamily: "'Inter', sans-serif",
+                          fontSize: '14px',
+                          color: '#333',
+                          backgroundColor: contentType === 'your-photos' ? '#F0F0F0' : 'transparent',
+                        }}
+                      >
+                        Your Photos
+                      </div>
                     </div>
-                    <div 
-                      onClick={() => {
-                        setContentType('your-photos');
-                        setIsDropdownOpen(false);
-                      }}
-                      style={{
-                        padding: '8px 12px',
-                        cursor: 'pointer',
-                        fontFamily: "'Inter', sans-serif",
-                        fontSize: '14px',
-                        color: '#333',
-                        backgroundColor: contentType === 'your-photos' ? '#F0F0F0' : 'transparent'
-                      }}
-                    >
-                      Your Photos
-                    </div>
+                  )}
                 </div>
-              )}
+
+                {renderContent()}
               </div>
-              
-              {renderContent()}
             </div>
           </div>
-      </div>
-
+        </div>
+      )}
+      <div style={{ display: "flex", height: "90vh", padding: "0px 8px", boxSizing: "border-box", fontFamily: "'Inter', sans-serif" }}>
       {/* Right Panel */}
         <div style={{ 
-          flexBasis: isLeftPanelVisible ? "70%" : "100%", 
-          marginLeft: isLeftPanelVisible ? 10 : 0, 
+          flexBasis: "100%", 
           display: "flex", 
-          flexDirection: "column",
-          transition: 'all 0.5s ease-in-out'
+          flexDirection: "column"
         }}>
           <div ref={canvasRef} className="editor-canvas" style={{ flexGrow: 1, display: "flex", alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
             <div className="slides-track" style={{
@@ -430,117 +465,135 @@ export default function SlidesEditor() {
                         </div>
                       ))}
                     </div>
-                  ) : ( <div style={{ color: "#777", fontWeight: "600", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>Select an image</div> )}
+                  ) : ( 
+                    <div 
+                      onClick={() => setIsContentModalOpen(true)}
+                      style={{ 
+                        color: "#777", 
+                        fontWeight: "600", 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        width: '100%', 
+                        height: '100%',
+                        cursor: 'pointer',
+                        borderRadius: '12px'
+                      }}
+                    >
+                      Select an image
+                    </div> 
+                  )}
                   
-                    {/* Action Buttons */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      display: 'flex',
-                      gap: '8px',
-                      opacity: index === activeSlideIndex ? 1 : 0,
-                      visibility: index === activeSlideIndex ? 'visible' : 'hidden',
-                      transition: 'opacity 0.3s ease, visibility 0.3s ease',
-                      zIndex: 10
-                    }}>
-                      {/* Delete Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSlide(index);
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #E5E5E5',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#FEF2F2';
-                          e.currentTarget.style.borderColor = '#FCA5A5';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                          e.currentTarget.style.borderColor = '#E5E5E5';
-                        }}
-                      >
-                        <Trash2 size={16} color="#EF4444" />
-                      </button>
+                  {/* Action Buttons */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '10px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    gap: '8px',
+                    opacity: index === activeSlideIndex ? 1 : 0,
+                    visibility: index === activeSlideIndex ? 'visible' : 'hidden',
+                    transition: 'opacity 0.3s ease, visibility 0.3s ease',
+                    zIndex: 10
+                  }}>
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSlide(index);
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#FEF2F2';
+                        e.currentTarget.style.borderColor = '#FCA5A5';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        e.currentTarget.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      <Trash2 size={16} color="#EF4444" />
+                    </button>
 
-                      {/* Ratio Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          changeRatio(index);
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #E5E5E5',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          color: '#374151',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F3F4F6';
-                          e.currentTarget.style.borderColor = '#D1D5DB';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                          e.currentTarget.style.borderColor = '#E5E5E5';
-                        }}
-                      >
-                        {slide.ratio}
-                      </button>
+                    {/* Ratio Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        changeRatio(index);
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#374151',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F3F4F6';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        e.currentTarget.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      {slide.ratio}
+                    </button>
 
-                      {/* Toggle Panel Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsLeftPanelVisible(!isLeftPanelVisible);
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #E5E5E5',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F3F4F6';
-                          e.currentTarget.style.borderColor = '#D1D5DB';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                          e.currentTarget.style.borderColor = '#E5E5E5';
-                        }}
-                      >
-                        <PanelLeft size={16} color="#374151" />
-                      </button>
-                    </div>
+                    {/* Toggle Panel Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsContentModalOpen(true);
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F3F4F6';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        e.currentTarget.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      <PanelLeft size={16} color="#374151" />
+                    </button>
+                  </div>
                 </div>
               ))}
               {/* Add New Slide Button */}
