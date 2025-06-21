@@ -468,17 +468,22 @@ export default function SlidesEditor() {
                   ) : ( 
                     <div 
                       onClick={() => setIsContentModalOpen(true)}
-                      style={{ 
-                        color: "#777", 
-                        fontWeight: "600", 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        width: '100%', 
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0F0F0'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F7F7F7'; }}
+                      style={{
+                        color: "#777",
+                        fontWeight: "600",
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%',
                         height: '100%',
                         cursor: 'pointer',
-                        borderRadius: '12px'
+                        borderRadius: '12px',
+                        backgroundColor: '#F7F7F7',
+                        border: '1px solid #EAEAEA',
+                        transition: 'background-color 0.2s ease',
                       }}
                     >
                       Select an image
