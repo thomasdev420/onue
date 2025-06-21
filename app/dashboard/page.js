@@ -26,17 +26,17 @@ export default function Dashboard() {
         <ChatBar
           actions={[
             {
-              label: 'Create UGC videos',
+              label: 'UGC videos',
               icon: <Camera size={18} className="text-gray-500" />,
               href: '/dashboard/videos',
             },
             {
-              label: 'Create Greenscreen Meme videos',
+              label: 'Create Memes',
               icon: <Sparkles size={18} className="text-gray-500" />,
               href: '/dashboard/memes',
             },
             {
-              label: 'UGC Avatar Generator',
+              label: 'Avatar Generator',
               icon: <ImagePlus size={18} className="text-gray-500" />,
               href: '/dashboard/avatars',
             },

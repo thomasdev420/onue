@@ -14,7 +14,7 @@ export default function Memes() {
   const [selectedBackground, setSelectedBackground] = useState(null);
   const [customGif, setCustomGif] = useState(null);
   const [customBackground, setCustomBackground] = useState(null);
-  const [captionText, setCaptionText] = useState("edit ur text here");
+  const [captionText, setCaptionText] = useState("Edit text here");
   const [textPosition, setTextPosition] = useState({ x: 0, y: 0 });
   const [memePosition, setMemePosition] = useState({ x: 0, y: 0 });
   const [memeSize, setMemeSize] = useState(100); // Default size in percentage

@@ -14,7 +14,7 @@ export default function Home() {
       {/* Beta Version Box */}
       <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
         <div className="inline-block px-4 py-1.5 rounded-full bg-gray-200">
-          <span className="text-gray-800 font-semibold text-sm font-mono">Beta V2.6.3</span>
+          <span className="text-gray-800 font-semibold text-sm font-mono">Beta V2.6.4</span>
         </div>
         <Link href="/dashboard">
           <button className="px-3 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors">

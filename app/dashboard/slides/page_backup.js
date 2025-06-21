@@ -5,14 +5,13 @@ import Image from "next/image";
 import { supabase } from "../../../supabaseClient";
 import { Input } from './../../components/ui/Input';
 import { Button } from './../../components/ui/Button';
-import { Trash2, ChevronDown, PanelLeft } from 'lucide-react';
+import { Trash2, ChevronDown } from 'lucide-react';
 
 export default function SlidesEditor() {
   const [libraryImages, setLibraryImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [contentType, setContentType] = useState('stock'); // New state for dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // New state for dropdown open/close
-  const [isLeftPanelVisible, setIsLeftPanelVisible] = useState(true);
 
   const [slides, setSlides] = useState([
     { id: Date.now(), image: null, texts: [], ratio: '16:9' }
@@ -25,7 +24,6 @@ export default function SlidesEditor() {
   const textRefs = useRef([]);
   const imageRefs = useRef([]);
   const slideItemRefs = useRef([]);
-  const imageContainerRefs = useRef([]);
 
   const activeSlide = slides[activeSlideIndex];
 
@@ -114,12 +112,18 @@ export default function SlidesEditor() {
     }
     const content = text.trim() || 'New Text';
 
-    const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
+    const imageEl = imageRefs.current[activeSlideIndex];
+    const slideItemEl = slideItemRefs.current[activeSlideIndex];
     
-    if (imageContainerEl) {
-        const imageContainerRect = imageContainerEl.getBoundingClientRect();
-        const centerX = imageContainerRect.width / 2;
-        const centerY = imageContainerRect.height / 2;
+    if (imageEl && slideItemEl) {
+        const imageRect = imageEl.getBoundingClientRect();
+        const slideItemRect = slideItemEl.getBoundingClientRect();
+
+        const imageX_in_slide = imageRect.left - slideItemRect.left;
+        const imageY_in_slide = imageRect.top - slideItemRect.top;
+        
+        const centerX = imageX_in_slide + imageRect.width / 2;
+        const centerY = imageY_in_slide + imageRect.height / 2;
 
         const newText = {
           id: Date.now(),
@@ -168,20 +172,39 @@ export default function SlidesEditor() {
     if (!draggingInfo.isDragging || draggingInfo.textIndex === -1) return;
 
     const { textIndex, offset } = draggingInfo;
-    const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
+    const slideItemEl = slideItemRefs.current[activeSlideIndex];
     
-    if(!imageContainerEl) return;
+    if(!slideItemEl) return;
 
-    const imageContainerRect = imageContainerEl.getBoundingClientRect();
+    const slideItemRect = slideItemEl.getBoundingClientRect();
     
-    let newX = e.clientX - imageContainerRect.left - offset.x;
-    let newY = e.clientY - imageContainerRect.top - offset.y;
+    let newX = e.clientX - slideItemRect.left - offset.x;
+    let newY = e.clientY - slideItemRect.top - offset.y;
     
+    /*
     const textRect = textRefs.current[textIndex]?.getBoundingClientRect();
-    if (textRect) {
-      newX = Math.max(0, Math.min(newX, imageContainerRect.width - textRect.width));
-      newY = Math.max(0, Math.min(newY, imageContainerRect.height - textRect.height));
+    const imageEl = imageRefs.current[activeSlideIndex];
+
+    if (textRect && imageEl) {
+      const imageRect = imageEl.getBoundingClientRect();
+
+      const imageX_in_slide = imageRect.left - slideItemRect.left;
+      const imageY_in_slide = imageRect.top - slideItemRect.top;
+
+      const minX = imageX_in_slide;
+      const minY = imageY_in_slide;
+      const maxX = imageX_in_slide + imageRect.width - textRect.width;
+      const maxY = imageY_in_slide + imageRect.height - textRect.height;
+      
+      newX = Math.max(minX, Math.min(newX, maxX));
+      newY = Math.max(minY, Math.min(newY, maxY));
+
+    } else if (textRect) {
+      // Fallback if no image, contain to slide-item
+      newX = Math.max(0, Math.min(newX, slideItemRect.width - textRect.width));
+      newY = Math.max(0, Math.min(newY, slideItemRect.height - textRect.height));
     }
+    */
     
     const newTexts = activeSlide.texts.map((text, i) => 
       i === textIndex ? { ...text, position: { x: newX, y: newY } } : text
@@ -258,22 +281,11 @@ export default function SlidesEditor() {
     return null;
   };
 
-  const slideWidth = isLeftPanelVisible ? 40 : 30;
-
   return (
     <>
       <div style={{ display: "flex", height: "90vh", padding: "0px 8px", boxSizing: "border-box", fontFamily: "'Inter', sans-serif" }}>
       {/* Left Panel */}
-        <div style={{ 
-          flexBasis: "30%", 
-          backgroundColor: "#FFF", 
-          borderRadius: 8, 
-          padding: 8, 
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)", 
-          display: isLeftPanelVisible ? "flex" : "none", 
-          flexDirection: "column", 
-          gap: 16 
-        }}>
+        <div style={{ flexBasis: "30%", backgroundColor: "#FFF", borderRadius: 8, padding: 8, boxShadow: "0 1px 3px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
               {/* Dropdown Menu */}
@@ -356,19 +368,13 @@ export default function SlidesEditor() {
       </div>
 
       {/* Right Panel */}
-        <div style={{ 
-          flexBasis: isLeftPanelVisible ? "70%" : "100%", 
-          marginLeft: isLeftPanelVisible ? 10 : 0, 
-          display: "flex", 
-          flexDirection: "column",
-          transition: 'all 0.5s ease-in-out'
-        }}>
-          <div ref={canvasRef} className="editor-canvas" style={{ flexGrow: 1, display: "flex", alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ flexBasis: "70%", marginLeft: 10, display: "flex", flexDirection: "column" }}>
+          <div ref={canvasRef} className="editor-canvas" style={{ flexGrow: 1, backgroundColor: "#F4F4F4", display: "flex", alignItems: 'center', position: 'relative', overflow: 'hidden', borderRadius: '8px' }}>
             <div className="slides-track" style={{
               display: 'flex',
               height: '100%',
               width: '100%',
-              transform: `translateX(calc(50% - ${slideWidth / 2}% - (${activeSlideIndex} * ${slideWidth}%)))`,
+              transform: `translateX(calc(50% - 20% - (${activeSlideIndex} * 40%)))`,
               transition: 'transform 0.5s ease-in-out'
             }}>
               {slides.map((slide, index) => (
@@ -376,43 +382,22 @@ export default function SlidesEditor() {
                   key={slide.id} 
                   ref={el => slideItemRefs.current[index] = el}
                   onClick={() => setActiveSlideIndex(index)} 
-                  className="slide-item" style={{
-                    width: `${slideWidth}%`,
-                    height: '100%',
-                    flexShrink: 0,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    position: 'relative',
-                    transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out',
-                    transform: `scale(${index === activeSlideIndex ? 1 : 0.8})`,
-                    opacity: index === activeSlideIndex ? 1 : 0.6
-                  }}>
-                  {slide.image ? (
-                    <div
-                      ref={el => imageContainerRefs.current[index] = el}
-                      style={{
-                        position: 'relative',
-                        width: '100%',
-                        aspectRatio: slide.ratio.replace(':', ' / '),
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        borderRadius: '12px',
-                        overflow: 'hidden',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                      }}>
-                      <Image
-                        ref={el => imageRefs.current[index] = el}
-                        fill
-                        src={slide.image.image_url}
-                        alt={slide.image.title}
-                        style={{ objectFit: 'cover' }}
-                      />
-                      {slide.texts.map((textItem, textIndex) => (
-                        <div
-                          key={textItem.id}
-                          ref={el => textRefs.current[textIndex] = el}
-                          onMouseDown={(e) => index === activeSlideIndex && handleMouseDown(e, textIndex)}
+                  className="slide-item" style={{ width: '40%', height: '100%', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out', transform: `scale(${index === activeSlideIndex ? 1 : 0.8})`, opacity: index === activeSlideIndex ? 1 : 0.6 }}>
+                  <div style={{ flex: 1, width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    {slide.image ? (
+                      <div style={{width: '100%', height: '100%', position: 'relative', borderRadius: '12px', overflow: 'hidden'}}>
+                        <Image 
+                          ref={el => imageRefs.current[index] = el}
+                          fill
+                          src={slide.image.image_url} 
+                          alt={slide.image.title} 
+                          style={{ objectFit: 'contain' }} 
+                        />
+                        {slide.texts.map((textItem, textIndex) => (
+                          <div
+                            key={textItem.id}
+                            ref={el => textRefs.current[textIndex] = el}
+                            onMouseDown={(e) => index === activeSlideIndex && handleMouseDown(e, textIndex)}
           style={{
                             position: 'absolute',
                             left: `${textItem.position.x}px`,
@@ -429,127 +414,93 @@ export default function SlidesEditor() {
                           {textItem.content}
                         </div>
                       ))}
-                    </div>
-                  ) : ( <div style={{ color: "#777", fontWeight: "600", display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>Select an image</div> )}
+        </div>
+                  ) : ( <div style={{ color: "#777", fontWeight: "600" }}>Select an image</div> )}
+                  </div>
                   
-                    {/* Action Buttons */}
-                    <div style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      left: '50%',
-                      transform: 'translateX(-50%)',
-                      display: 'flex',
-                      gap: '8px',
-                      opacity: index === activeSlideIndex ? 1 : 0,
-                      visibility: index === activeSlideIndex ? 'visible' : 'hidden',
-                      transition: 'opacity 0.3s ease, visibility 0.3s ease',
-                      zIndex: 10
-                    }}>
-                      {/* Delete Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteSlide(index);
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #E5E5E5',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#FEF2F2';
-                          e.currentTarget.style.borderColor = '#FCA5A5';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                          e.currentTarget.style.borderColor = '#E5E5E5';
-                        }}
-                      >
-                        <Trash2 size={16} color="#EF4444" />
-                      </button>
-
-                      {/* Ratio Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          changeRatio(index);
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #E5E5E5',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          fontSize: '11px',
-                          fontWeight: '600',
-                          color: '#374151',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F3F4F6';
-                          e.currentTarget.style.borderColor = '#D1D5DB';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                          e.currentTarget.style.borderColor = '#E5E5E5';
-                        }}
-                      >
-                        {slide.ratio}
-                      </button>
-
-                      {/* Toggle Panel Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsLeftPanelVisible(!isLeftPanelVisible);
-                        }}
-                        style={{
-                          width: '40px',
-                          height: '40px',
-                          borderRadius: '50%',
-                          backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                          border: '1px solid #E5E5E5',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          justifyContent: 'center',
-                          alignItems: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          transition: 'all 0.2s ease'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#F3F4F6';
-                          e.currentTarget.style.borderColor = '#D1D5DB';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-                          e.currentTarget.style.borderColor = '#E5E5E5';
-                        }}
-                      >
-                        <PanelLeft size={16} color="#374151" />
-                      </button>
-                    </div>
+                  {/* Action Buttons */}
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    marginTop: '8px', 
+                    justifyContent: 'center',
+                    opacity: index === activeSlideIndex ? 1 : 0.3,
+                    transition: 'opacity 0.3s ease'
+                  }}>
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSlide(index);
+                      }}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFF',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#FEF2F2';
+                        e.target.style.borderColor = '#FCA5A5';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#FFF';
+                        e.target.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      <Trash2 size={14} color="#EF4444" />
+                    </button>
+                    
+                    {/* Ratio Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        changeRatio(index);
+                      }}
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: '#FFF',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                        color: '#374151',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = '#F3F4F6';
+                        e.target.style.borderColor = '#D1D5DB';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = '#FFF';
+                        e.target.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      {slide.ratio}
+                    </button>
+                  </div>
                 </div>
               ))}
               {/* Add New Slide Button */}
-              <div onClick={addSlide} className="slide-item" style={{ width: `${slideWidth}%`, height: '100%', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out', transform: `scale(${activeSlideIndex === slides.length ? 1 : 0.8})`, opacity: activeSlideIndex === slides.length ? 1 : 0.6, cursor: 'pointer' }}>
+              <div onClick={addSlide} className="slide-item" style={{ width: '40%', height: '100%', flexShrink: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out', transform: `scale(${activeSlideIndex === slides.length ? 1 : 0.8})`, opacity: activeSlideIndex === slides.length ? 1 : 0.6, cursor: 'pointer' }}>
                 <button style={{ all: 'unset', width: '80px', height: '80px', borderRadius: '50%', border: '2px dashed #bbb', backgroundColor: 'rgba(255,255,255,0.5)', fontSize: '40px', color: '#888', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>+</button>
               </div>
             </div>
           </div>
-           <div className="flex items-center p-2 mt-8 bg-gray-100 rounded-lg shadow-inner">
+           <div className="flex items-center p-2 mt-2 bg-gray-100 rounded-lg shadow-inner">
                 <Input
                     type="text"
                     value={text}
