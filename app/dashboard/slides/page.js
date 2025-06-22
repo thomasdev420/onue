@@ -184,8 +184,12 @@ export default function SlidesEditor() {
     // Focus the input after a short delay to ensure it's rendered
     setTimeout(() => {
       if (inlineEditRef.current) {
-        inlineEditRef.current.focus();
-        inlineEditRef.current.select();
+        const textarea = inlineEditRef.current;
+        textarea.focus();
+        textarea.select();
+        // Adjust height to fit content on load
+        textarea.style.height = 'auto';
+        textarea.style.height = `${textarea.scrollHeight}px`;
       }
     }, 10);
   }, [slides]);
@@ -324,7 +328,8 @@ export default function SlidesEditor() {
 
   const slideWidth = 35;
 
-  if (isLoadingSlides) {
+  // Add a guard to prevent rendering with invalid slide data
+  if (isLoadingSlides || !slides || slides.length === 0 || !activeSlide) {
     return (
       <div className="p-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-8">Slides Editor</h1>
@@ -699,8 +704,9 @@ export default function SlidesEditor() {
                             cursor: index === activeSlideIndex ? 'move' : 'default',
                             userSelect: 'none',
                             width: isBeingDragged ? `${draggingInfo.elementWidth}px` : 'auto',
+                            height: isBeingDragged ? `${draggingInfo.elementHeight}px` : 'auto',
                             minWidth: '50px', // A reasonable minimum width
-                            maxWidth: isInlineEditing ? '400px' : '300px', // Max width before wrapping
+                            maxWidth: '300px', // Max width before wrapping
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -733,7 +739,8 @@ export default function SlidesEditor() {
                                 onKeyDown={handleKeyDown}
                                 onInput={(e) => {
                                   // Auto-resize the textarea to fit content
-                                  e.target.style.height = e.target.scrollHeight + 'px';
+                                  e.target.style.height = 'auto';
+                                  e.target.style.height = `${e.target.scrollHeight}px`;
                                 }}
                               />
                             ) : (
