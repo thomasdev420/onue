@@ -5,6 +5,7 @@ import { Upload, Image as ImageIcon, Video as VideoIcon, X, Loader2, CheckCircle
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { supabase } from '../../../supabaseClient';
+import { usePersistence } from '../../services/persistenceService';
 
 // A simple component to display status messages
 const StatusMessage = ({ message, type }) => {
@@ -20,7 +21,7 @@ const StatusMessage = ({ message, type }) => {
 
 export default function Content() {
   const { data: session, status } = useSession();
-  const [uploadedImages, setUploadedImages] = useState([]);
+  const { data: uploadedImages, updateData: setUploadedImages } = usePersistence('userImages', []);
   const [uploadedVideos, setUploadedVideos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -42,15 +43,7 @@ export default function Content() {
       try {
         setIsLoading(true);
         
-        // Load images from user_work table
-        const { data: imageWork, error: imageError } = await supabase
-          .from('user_work')
-          .select('work_data')
-          .eq('user_id', session.user.email)
-          .eq('page_type', 'content_images')
-          .single();
-
-        // Load videos from user_work table
+        // Videos are loaded separately and not part of the persistence hook for now.
         const { data: videoWork, error: videoError } = await supabase
           .from('user_work')
           .select('work_data')
@@ -58,19 +51,11 @@ export default function Content() {
           .eq('page_type', 'content_videos')
           .single();
 
-        if (imageError && imageError.code !== 'PGRST116') {
-          console.error('Error loading images:', imageError);
-        }
-
         if (videoError && videoError.code !== 'PGRST116') {
           console.error('Error loading videos:', videoError);
         }
 
-        // Set images from database or empty array
-        const images = imageWork?.work_data || [];
         const videos = videoWork?.work_data || [];
-
-        setUploadedImages(images);
         setUploadedVideos(videos);
       } catch (error) {
         console.error('Error loading user content:', error);
@@ -82,22 +67,10 @@ export default function Content() {
     loadContent();
   }, [session?.user?.email, isAuthenticated]);
 
-  const saveContentToDatabase = async (images, videos) => {
+  const saveVideosToDatabase = async (videos) => {
     if (!session?.user?.email) return;
 
     try {
-      // Save images
-      const { error: imageError } = await supabase
-        .from('user_work')
-        .upsert({
-          user_id: session.user.email,
-          page_type: 'content_images',
-          work_data: images,
-          updated_at: new Date().toISOString()
-        });
-
-      if (imageError) throw imageError;
-
       // Save videos
       const { error: videoError } = await supabase
         .from('user_work')
@@ -158,7 +131,7 @@ export default function Content() {
         return {
           id: Math.random().toString(36).substr(2, 9),
           name: file.name,
-          preview: uploadResult.url,
+          url: uploadResult.url,
           path: uploadResult.path,
           uploadedAt: new Date().toISOString(),
           userId: session.user.email,
@@ -167,9 +140,7 @@ export default function Content() {
         };
       }));
 
-      const updatedImages = [...uploadedImages, ...newImageUploads];
-      setUploadedImages(updatedImages);
-      await saveContentToDatabase(updatedImages, uploadedVideos);
+      setUploadedImages(prev => [...prev, ...newImageUploads]);
       
       showStatus(`${newImageUploads.length} image(s) uploaded successfully!`);
 
@@ -208,7 +179,7 @@ export default function Content() {
 
       const updatedVideos = [...uploadedVideos, ...newVideoUploads];
       setUploadedVideos(updatedVideos);
-      await saveContentToDatabase(uploadedImages, updatedVideos);
+      await saveVideosToDatabase(updatedVideos);
 
       showStatus(`${newVideoUploads.length} video(s) uploaded successfully!`);
       
@@ -234,7 +205,6 @@ export default function Content() {
 
       const updatedImages = uploadedImages.filter(img => img.id !== id);
       setUploadedImages(updatedImages);
-      await saveContentToDatabase(updatedImages, uploadedVideos);
       showStatus('Image removed successfully.');
     } catch (error) {
       const errorMessage = error?.message || 'An unknown error occurred.';
@@ -256,7 +226,7 @@ export default function Content() {
 
       const updatedVideos = uploadedVideos.filter(vid => vid.id !== id);
       setUploadedVideos(updatedVideos);
-      await saveContentToDatabase(uploadedImages, updatedVideos);
+      await saveVideosToDatabase(updatedVideos);
       showStatus('Video removed successfully.');
     } catch (error) {
       const errorMessage = error?.message || 'An unknown error occurred.';
@@ -305,32 +275,33 @@ export default function Content() {
       {/* Upload Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
         {/* Image Upload Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <ImageIcon size={24} className="text-blue-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Image Upload</h2>
-            {uploading && <Loader2 className="animate-spin h-5 w-5 text-blue-500" />}
-          </div>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
-              disabled={uploading || !isAuthenticated}
-            />
-            <label
-              htmlFor="image-upload"
-              className={`cursor-pointer flex flex-col items-center gap-2 ${uploading || !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Upload size={24} className="text-gray-400" />
-              <span className="text-gray-600">
-                {uploading ? 'Uploading...' : 'Click to upload images'}
-              </span>
-              <span className="text-sm text-gray-500">or drag and drop</span>
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <ImageIcon className="text-gray-500" />
+              <h2 className="text-lg font-semibold text-gray-800">Images ({uploadedImages.length})</h2>
+            </div>
+            <label className="text-sm font-medium text-white bg-[#ff4514] hover:bg-[#ff4514]/90 px-4 py-2 rounded-lg cursor-pointer transition-colors">
+              Upload Image
+              <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
             </label>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {uploadedImages.map(image => (
+              <div key={image.id} className="group relative aspect-w-1 aspect-h-1">
+                <Image
+                  src={image.url}
+                  alt={image.name}
+                  fill
+                  className="object-cover rounded-md"
+                />
+                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <button onClick={() => removeImage(image.id)} className="p-2 bg-white/80 rounded-full text-gray-800 hover:bg-white">
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -370,39 +341,6 @@ export default function Content() {
         <div className="flex items-center gap-2 mb-4">
           <h2 className="text-xl font-semibold text-gray-800">Your Uploaded Content</h2>
         </div>
-
-        {/* Images Preview */}
-        {uploadedImages.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Images ({uploadedImages.length})</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {uploadedImages.map((image, index) => (
-                <div key={`${image.id}-${index}`} className="relative group aspect-w-1 aspect-h-1">
-                  <img
-                    src={image.preview}
-                    alt={image.name}
-                    className="w-full h-full object-cover rounded-lg"
-                    onError={(e) => {
-                      e.target.src = '/placeholder-image.png'; // Add a placeholder image
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg">
-                    <button
-                      onClick={() => removeImage(image.id)}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="truncate">{image.name}</div>
-                    {image.size && <div>{formatFileSize(image.size)}</div>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Videos Preview */}
         {uploadedVideos.length > 0 && (

@@ -28,24 +28,15 @@ function debounce(func, wait) {
  */
 export async function saveUserWork(userId, pageType, data) {
   try {
-    // First, delete any existing data for this user and page type
-    const { error: deleteError } = await supabase
-      .from('user_work')
-      .delete()
-      .eq('user_id', userId)
-      .eq('page_type', pageType);
-
-    if (deleteError) throw deleteError;
-
-    // Then insert the new data
     const { data: savedData, error } = await supabase
       .from('user_work')
-      .insert({
+      .upsert({
         user_id: userId,
         page_type: pageType,
         work_data: data,
-        created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id, page_type'
       })
       .select();
 
