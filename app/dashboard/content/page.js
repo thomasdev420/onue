@@ -174,8 +174,9 @@ export default function Content() {
       showStatus(`${newImageUploads.length} image(s) uploaded successfully!`);
 
     } catch (error) {
+      const errorMessage = error?.message || 'Please check the browser console for more details.';
       console.error('Error uploading images:', error);
-      showStatus('Failed to upload images. Please try again.', 'error');
+      showStatus(`Failed to upload images: ${errorMessage}`, 'error');
     } finally {
       setUploading(false);
     }
@@ -212,8 +213,9 @@ export default function Content() {
       showStatus(`${newVideoUploads.length} video(s) uploaded successfully!`);
       
     } catch (error) {
+      const errorMessage = error?.message || 'Please check the browser console for more details.';
       console.error('Error uploading videos:', error);
-      showStatus('Failed to upload videos. Please try again.', 'error');
+      showStatus(`Failed to upload videos: ${errorMessage}`, 'error');
     } finally {
       setUploading(false);
     }
@@ -235,8 +237,9 @@ export default function Content() {
       await saveContentToDatabase(updatedImages, uploadedVideos);
       showStatus('Image removed successfully.');
     } catch (error) {
+      const errorMessage = error?.message || 'An unknown error occurred.';
       console.error('Error removing image:', error);
-      showStatus('Failed to remove image.', 'error');
+      showStatus(`Failed to remove image: ${errorMessage}`, 'error');
     }
   };
 
@@ -256,8 +259,9 @@ export default function Content() {
       await saveContentToDatabase(uploadedImages, updatedVideos);
       showStatus('Video removed successfully.');
     } catch (error) {
+      const errorMessage = error?.message || 'An unknown error occurred.';
       console.error('Error removing video:', error);
-      showStatus('Failed to remove video.', 'error');
+      showStatus(`Failed to remove video: ${errorMessage}`, 'error');
     }
   };
 

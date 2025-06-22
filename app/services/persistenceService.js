@@ -124,17 +124,19 @@ export function usePersistence(pageType, defaultData) {
   const [data, setData] = useState(defaultData);
   const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
 
   // Load data on mount
   useEffect(() => {
     const loadData = async () => {
-      if (!session?.user?.email) {
+      if (!isAuthenticated) {
         setIsLoading(false);
         return;
       }
 
       try {
+        setIsLoading(true); // Ensure loading state is true at the start
         const savedData = await loadUserWork(session.user.email, pageType);
         if (savedData) {
           setData(savedData);
@@ -146,15 +148,22 @@ export function usePersistence(pageType, defaultData) {
       }
     };
 
-    loadData();
-  }, [session?.user?.email, pageType]);
+    if(isAuthenticated) {
+      loadData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, session?.user?.email, pageType]);
 
   // Auto-save when data changes
   useEffect(() => {
-    if (!session?.user?.email || isLoading) return;
+    // Do not save if still loading, not authenticated, or if data is the default
+    if (isLoading || !isAuthenticated) {
+      return;
+    }
 
     autoSaveWork(session.user.email, pageType, data, setSaveStatus);
-  }, [data, session?.user?.email, pageType, isLoading]);
+  }, [data, isAuthenticated, session?.user?.email, pageType, isLoading]);
 
   const updateData = useCallback((newData) => {
     setData(newData);
