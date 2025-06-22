@@ -5,7 +5,7 @@ import Image from "next/image";
 import { supabase } from "../../../supabaseClient";
 import { Input } from './../../components/ui/Input';
 import { Button } from './../../components/ui/Button';
-import { Trash2, ChevronDown, PanelLeft, X, Image as ImageIcon, Expand, Minimize, ArrowRight } from 'lucide-react';
+import { Trash2, ChevronDown, PanelLeft, X, Image as ImageIcon, Expand, Minimize, ArrowRight, MessageSquare } from 'lucide-react';
 import { usePersistence } from '../../services/persistenceService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 
@@ -45,6 +45,9 @@ export default function SlidesEditor() {
 
   // Expand/collapse state for slide section
   const [isSlideSectionExpanded, setIsSlideSectionExpanded] = useState(false);
+  
+  // New state for prompt modal visibility
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchImages = async () => {
@@ -473,6 +476,188 @@ export default function SlidesEditor() {
           </div>
         </div>
       )}
+
+      {/* Prompt Modal */}
+      {isPromptModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setIsPromptModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFF',
+              padding: '32px',
+              borderRadius: '16px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              width: '90%',
+              maxWidth: '500px',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setIsPromptModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                color: '#9CA3AF',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#F3F4F6';
+                e.currentTarget.style.color = '#6B7280';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#9CA3AF';
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            {/* Header */}
+            <div style={{ marginBottom: '24px', paddingRight: '40px' }}>
+              <h2 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                color: '#111827',
+                textAlign: 'center',
+                margin: 0,
+                fontFamily: "'Inter', sans-serif"
+              }}>
+                AI Prompt
+              </h2>
+              <p style={{
+                fontSize: '14px',
+                color: '#6B7280',
+                textAlign: 'center',
+                margin: '8px 0 0 0',
+                fontFamily: "'Inter', sans-serif"
+              }}>
+                Describe what you want to create and let AI help you
+              </p>
+            </div>
+
+            {/* Input Field */}
+            <div style={{ marginBottom: '24px' }}>
+              <textarea
+                placeholder="e.g., Create a motivational slide about entrepreneurship with a modern design..."
+                style={{
+                  width: '100%',
+                  minHeight: '120px',
+                  padding: '16px',
+                  border: '2px solid #E5E7EB',
+                  borderRadius: '12px',
+                  fontSize: '16px',
+                  fontFamily: "'Inter', sans-serif",
+                  resize: 'none',
+                  outline: 'none',
+                  transition: 'all 0.2s ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3B82F6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#E5E7EB';
+                  e.target.style.boxShadow = 'none';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    e.preventDefault();
+                    // TODO: Add prompt functionality later
+                    console.log('Prompt submitted:', e.target.value);
+                    setIsPromptModalOpen(false);
+                  }
+                }}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setIsPromptModalOpen(false)}
+                style={{
+                  padding: '12px 24px',
+                  border: '1px solid #D1D5DB',
+                  borderRadius: '8px',
+                  backgroundColor: '#FFF',
+                  color: '#374151',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: "'Inter', sans-serif"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#F9FAFB';
+                  e.currentTarget.style.borderColor = '#9CA3AF';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#FFF';
+                  e.currentTarget.style.borderColor = '#D1D5DB';
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // TODO: Add prompt functionality later
+                  const textarea = document.querySelector('textarea[placeholder*="Create a motivational"]');
+                  if (textarea) {
+                    console.log('Prompt submitted:', textarea.value);
+                  }
+                  setIsPromptModalOpen(false);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  backgroundColor: '#3B82F6',
+                  color: '#FFF',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  fontFamily: "'Inter', sans-serif"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#2563EB';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#3B82F6';
+                }}
+              >
+                Generate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: "flex", height: "90vh", padding: "0px 8px", boxSizing: "border-box", fontFamily: "'Inter', sans-serif" }}>
       {/* Right Panel */}
         <div style={{ 
@@ -481,49 +666,13 @@ export default function SlidesEditor() {
           flexDirection: "column",
           position: "relative"
         }}>
-          {/* Expand/Collapse Button */}
-          <button
-            onClick={() => setIsSlideSectionExpanded(!isSlideSectionExpanded)}
-            style={{
-              position: 'absolute',
-              top: '10px',
-              right: '10px',
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-              border: '1px solid #E5E5E5',
-              cursor: 'pointer',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              transition: 'all 0.2s ease',
-              zIndex: 1000,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F3F4F6';
-              e.currentTarget.style.borderColor = '#D1D5DB';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-              e.currentTarget.style.borderColor = '#E5E5E5';
-            }}
-          >
-            {isSlideSectionExpanded ? (
-              <Minimize size={16} color="#374151" />
-            ) : (
-              <Expand size={16} color="#374151" />
-            )}
-          </button>
-
           <div ref={canvasRef} className="editor-canvas" style={{ 
             flexGrow: 1, 
             display: "flex", 
             alignItems: 'center', 
             position: 'relative', 
             overflow: 'hidden',
-            height: isSlideSectionExpanded ? '100%' : 'calc(100% - 100px)' // Leave space for input bar when collapsed
+            height: '100%' // Full height since we're using a modal now
           }}>
             <div className="slides-track" style={{
               display: 'flex',
@@ -683,11 +832,17 @@ export default function SlidesEditor() {
                   ) : ( 
                     <div 
                       onClick={() => setIsContentModalOpen(true)}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#F0F0F0'; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#F7F7F7'; }}
+                      onMouseEnter={(e) => { 
+                        e.currentTarget.style.backgroundColor = '#F9FAFB'; // A slightly lighter gray
+                        e.currentTarget.style.borderColor = '#9CA3AF'; // A medium gray
+                      }}
+                      onMouseLeave={(e) => { 
+                        e.currentTarget.style.backgroundColor = '#F7F7F7';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
+                      }}
                       style={{
-                        color: "#777",
-                        fontWeight: "600",
+                        color: "#6B7280", // Darker text for better contrast
+                        fontWeight: "500",
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -697,8 +852,8 @@ export default function SlidesEditor() {
                         cursor: 'pointer',
                         borderRadius: '12px',
                         backgroundColor: '#F7F7F7',
-                        border: '1px solid #EAEAEA',
-                        transition: 'background-color 0.2s ease',
+                        border: '2px dashed #D1D5DB', // Thicker, dashed border
+                        transition: 'all 0.2s ease-in-out',
                       }}
                     >
                       Select an image
@@ -847,6 +1002,37 @@ export default function SlidesEditor() {
                     >
                       T
                     </button>
+
+                    {/* Prompt Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsPromptModalOpen(true);
+                      }}
+                      style={{
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: '1px solid #E5E5E5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        transition: 'all 0.2s ease'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#F3F4F6';
+                        e.currentTarget.style.borderColor = '#D1D5DB';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        e.currentTarget.style.borderColor = '#E5E5E5';
+                      }}
+                    >
+                      <MessageSquare size={16} color="#374151" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -856,39 +1042,6 @@ export default function SlidesEditor() {
               </div>
             </div>
           </div>
-
-          {/* Text Input Bar - Only shown when collapsed */}
-          {!isSlideSectionExpanded && (
-            <div className="flex items-center p-4 mt-8">
-              <div className="relative flex-grow">
-                <Input
-                    type="text"
-                  placeholder="Enter your prompt here..."
-                  className="w-full bg-transparent border-2 border-gray-300 focus:border focus:border-blue-500 focus:ring-0 text-sm pr-12"
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                      // TODO: Add prompt functionality later
-                      console.log('Prompt submitted:', e.target.value);
-                      e.target.value = '';
-                        }
-                    }}
-                />
-                <button
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 rounded-full bg-gray-300 hover:bg-gray-400 transition-colors"
-                  onClick={() => {
-                    // TODO: Add prompt functionality later
-                    const input = document.querySelector('input[placeholder="Enter your prompt here..."]');
-                    if (input) {
-                      console.log('Prompt submitted:', input.value);
-                      input.value = '';
-                    }
-                  }}
-                >
-                  <ArrowRight size={16} color="black" />
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </>
