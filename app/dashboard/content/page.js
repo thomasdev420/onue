@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
@@ -15,6 +15,69 @@ const StatusMessage = ({ message, type }) => {
     <div className={`flex items-center gap-2 p-3 rounded-md ${isError ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
       {isError ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
       <span className="text-sm font-medium">{message}</span>
+    </div>
+  );
+};
+
+// Reusable Dropzone component
+const Dropzone = ({ onDrop, acceptedFileType, Icon, label, uploading }) => {
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : Array.from(e.target.files);
+    const filteredFiles = files.filter(file => file.type.startsWith(acceptedFileType));
+    if (filteredFiles.length > 0) {
+      onDrop({ target: { files: filteredFiles } });
+    }
+  }, [acceptedFileType, onDrop]);
+
+  const handleFileChange = (e) => {
+    handleDrop(e);
+  };
+
+  return (
+    <div
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors duration-300 ${isDragging ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'}`}
+    >
+      <input
+        type="file"
+        multiple
+        accept={`${acceptedFileType}/*`}
+        onChange={handleFileChange}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        disabled={uploading}
+      />
+      <div className="flex flex-col items-center justify-center gap-4">
+        <div className={`w-16 h-16 rounded-full flex items-center justify-center ${isDragging ? 'bg-indigo-100' : 'bg-gray-100'}`}>
+          {uploading ? <Loader2 className="animate-spin text-gray-500" size={32} /> : <Icon className="text-gray-500" size={32} />}
+        </div>
+        <p className="text-gray-600 font-medium">{label}</p>
+        <p className="text-sm text-gray-500">or drag and drop</p>
+      </div>
     </div>
   );
 };
@@ -235,6 +298,14 @@ export default function Content() {
     }
   };
 
+  const onImageDrop = (event) => {
+    handleImageUpload(event);
+  };
+
+  const onVideoDrop = (event) => {
+    handleVideoUpload(event);
+  };
+
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
@@ -248,131 +319,80 @@ export default function Content() {
       <div className="p-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-8">Content</h1>
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-            <span className="ml-3 text-gray-600">Loading your content...</span>
-          </div>
+          <Loader2 className="mx-auto animate-spin text-gray-400" size={48} />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Content</h1>
-        {session && (
-            <div className="text-sm text-gray-500">
-                Logged in as: {session.user.email}
-            </div>
-        )}
-      </div>
-
-      <div className="mb-4">
-        <StatusMessage message={statusMessage.message} type={statusMessage.type} />
-      </div>
-
-      {/* Upload Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        {/* Image Upload Section */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <ImageIcon className="text-gray-500" />
-              <h2 className="text-lg font-semibold text-gray-800">Images ({uploadedImages.length})</h2>
-            </div>
-            <label className="text-sm font-medium text-white bg-[#ff4514] hover:bg-[#ff4514]/90 px-4 py-2 rounded-lg cursor-pointer transition-colors">
-              Upload Image
-              <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-            </label>
+    <div className="p-8 bg-gray-50 min-h-screen">
+      <header className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Content</h1>
+        {session?.user && (
+          <div className="text-sm text-gray-600">
+            Logged in as: <strong>{session.user.email}</strong>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {uploadedImages.map(image => (
-              <div key={image.id} className="group relative aspect-w-1 aspect-h-1">
-                <Image
-                  src={image.url}
-                  alt={image.name}
-                  fill
-                  className="object-cover rounded-md"
-                />
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button onClick={() => removeImage(image.id)} className="p-2 bg-white/80 rounded-full text-gray-800 hover:bg-white">
-                    <X size={18} />
+        )}
+      </header>
+
+      {statusMessage.message && <div className="mb-6"><StatusMessage message={statusMessage.message} type={statusMessage.type} /></div>}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+        {/* Image Upload */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <ImageIcon className="text-gray-600" size={24} />
+            <h2 className="text-xl font-semibold text-gray-700">Images ({uploadedImages.length})</h2>
+          </div>
+          <Dropzone onDrop={onImageDrop} acceptedFileType="image" Icon={Upload} label="Click to upload images" uploading={uploading} />
+        </div>
+
+        {/* Video Upload */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <VideoIcon className="text-green-600" size={24} />
+            <h2 className="text-xl font-semibold text-gray-700">Video Upload</h2>
+          </div>
+          <Dropzone onDrop={onVideoDrop} acceptedFileType="video" Icon={Upload} label="Click to upload videos" uploading={uploading} />
+        </div>
+      </div>
+
+      {/* Uploaded Content Section */}
+      <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+        <h2 className="text-xl font-semibold text-gray-700 mb-6">Your Uploaded Content</h2>
+
+        {(uploadedImages.length > 0 || uploadedVideos.length > 0) ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {[...uploadedImages, ...uploadedVideos].map((file) => (
+              <div key={file.id} className="group relative rounded-lg overflow-hidden border border-gray-200">
+                {file.type.startsWith('image/') ? (
+                  <Image src={file.url} alt={file.name} width={200} height={200} className="w-full h-32 object-cover" />
+                ) : (
+                  <div className="w-full h-32 bg-black flex items-center justify-center">
+                    <VideoIcon className="text-white" size={40} />
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-between p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={() => (file.type.startsWith('image/') ? removeImage(file.id) : removeVideo(file.id))}
+                    className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                    aria-label="Remove file"
+                  >
+                    <X size={14} />
                   </button>
+                  <div className="text-white text-xs">
+                    <p className="font-semibold truncate">{file.name}</p>
+                    <p>{formatFileSize(file.size)}</p>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Video Upload Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <VideoIcon size={24} className="text-green-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Video Upload</h2>
-            {uploading && <Loader2 className="animate-spin h-5 w-5 text-green-500" />}
+        ) : (
+          <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
+            <p className="text-gray-500">Your uploaded content will appear here.</p>
           </div>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <input
-              type="file"
-              accept="video/*"
-              multiple
-              onChange={handleVideoUpload}
-              className="hidden"
-              id="video-upload"
-              disabled={uploading || !isAuthenticated}
-            />
-            <label
-              htmlFor="video-upload"
-              className={`cursor-pointer flex flex-col items-center gap-2 ${uploading || !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Upload size={24} className="text-gray-400" />
-              <span className="text-gray-600">
-                {uploading ? 'Uploading...' : 'Click to upload videos'}
-              </span>
-              <span className="text-sm text-gray-500">or drag and drop</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Uploaded Content Preview */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-xl font-semibold text-gray-800">Your Uploaded Content</h2>
-        </div>
-
-        {/* Videos Preview */}
-        {uploadedVideos.length > 0 && (
-          <div>
-            <h3 className="text-lg font-medium text-gray-700 mb-4">Videos ({uploadedVideos.length})</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {uploadedVideos.map((video) => (
-                <div key={video.id} className="relative group bg-gray-100 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <VideoIcon size={24} className="text-gray-400" />
-                    <div className="flex-1">
-                      <span className="text-gray-600 truncate block">{video.name}</span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(video.uploadedAt).toLocaleDateString()}
-                        {video.size && ` • ${formatFileSize(video.size)}`}
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => removeVideo(video.id)}
-                      className="ml-auto bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {uploadedImages.length === 0 && uploadedVideos.length === 0 && (
-          <p className="text-gray-500 text-center py-8">No content uploaded yet</p>
         )}
       </div>
     </div>
