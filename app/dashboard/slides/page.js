@@ -26,6 +26,8 @@ export default function SlidesEditor() {
     isLoading: isLoadingSlides 
   } = usePersistence('slides', defaultSlides);
 
+  const { data: userImages } = usePersistence('userImages', []);
+
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
   const [draggingInfo, setDraggingInfo] = useState({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
@@ -115,7 +117,9 @@ export default function SlidesEditor() {
   };
 
   const handleSelectImageForSlide = (image) => {
-    updateSlide(activeSlideIndex, { image, ratio: '9:16' });
+    // Normalize the image object to have an image_url property
+    const imageToUse = { ...image, image_url: image.image_url || image.url };
+    updateSlide(activeSlideIndex, { image: imageToUse, ratio: '9:16' });
     setIsContentModalOpen(false);
   };
   
@@ -248,89 +252,60 @@ export default function SlidesEditor() {
     if (inlineEditing.isEditing && inlineEditing.textIndex !== -1 && inlineEditing.slideIndex !== -1) {
       const trimmedText = inlineEditText.trim();
       
-      if (trimmedText === '') {
-        // If the text is empty, delete the caption
+      if (!trimmedText) {
+        // If text is empty, delete it
         const newTexts = slides[inlineEditing.slideIndex].texts.filter((_, i) => i !== inlineEditing.textIndex);
         updateSlide(inlineEditing.slideIndex, { texts: newTexts });
       } else {
-        // Save the trimmed text
-        const newTexts = slides[inlineEditing.slideIndex].texts.map((text, i) =>
+        // Otherwise, update it
+        const newTexts = slides[inlineEditing.slideIndex].texts.map((text, i) => 
           i === inlineEditing.textIndex ? { ...text, content: trimmedText } : text
         );
         updateSlide(inlineEditing.slideIndex, { texts: newTexts });
       }
-    }
-    setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
-    setInlineEditText('');
-  }, [inlineEditing.isEditing, inlineEditing.textIndex, inlineEditing.slideIndex, inlineEditText, slides, updateSlide]);
-
-  const cancelInlineEdit = useCallback(() => {
-    setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
-    setInlineEditText('');
-  }, []);
-
-  const deleteInlineText = useCallback(() => {
-    if (inlineEditing.isEditing && inlineEditing.textIndex !== -1 && inlineEditing.slideIndex !== -1) {
-      const newTexts = slides[inlineEditing.slideIndex].texts.filter((_, i) => i !== inlineEditing.textIndex);
-      updateSlide(inlineEditing.slideIndex, { texts: newTexts });
-    }
-    setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
-    setInlineEditText('');
-  }, [inlineEditing.isEditing, inlineEditing.textIndex, inlineEditing.slideIndex, slides, updateSlide]);
-
-  // Handle keyboard events for inline editing
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!inlineEditing.isEditing) return;
       
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        saveInlineEdit();
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        cancelInlineEdit();
-      } else if (e.key === 'Delete' && e.ctrlKey) {
-        e.preventDefault();
-        deleteInlineText();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [inlineEditing.isEditing, saveInlineEdit, cancelInlineEdit, deleteInlineText]);
-
-  // Render content based on selected dropdown option
-  const renderContent = () => {
-    if (contentType === 'stock') {
-      return (
-        <>
-          {isLoading ? <p>Loading images...</p> : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '8px', marginTop: '8px' }}>
-              {libraryImages.map(image => (
-                <div key={image.id} onClick={() => handleSelectImageForSlide(image)} style={{ cursor: 'pointer', borderRadius: '12px', overflow: 'hidden', position: 'relative', width: '100%', height: '100px' }}>
-                  <Image fill src={image.image_url} alt={image.title} style={{ objectFit: 'cover' }} />
-                </div>
-              ))}
-            </div>
-          )}
-        </>
-      );
-    } else if (contentType === 'your-photos') {
-      return (
-        <div style={{ 
-          backgroundColor: '#FFF', 
-          color: '#777', 
-          textAlign: 'center', 
-          padding: '40px 20px', 
-          borderRadius: '8px',
-          marginTop: '8px',
-          fontFamily: "'Inter', sans-serif"
-        }}>
-          No photos uploaded yet
-        </div>
-      );
+      setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
+      setInlineEditText('');
     }
-    return null;
+  }, [inlineEditing, inlineEditText, slides, updateSlide]);
+  
+  const handleInlineEditChange = (e) => {
+    setInlineEditText(e.target.value);
+  };
+  
+  // New: Handle keydown for inline editing (Enter to save, Escape to cancel)
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      saveInlineEdit();
+    } else if (e.key === 'Escape') {
+      setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
+      setInlineEditText('');
+    }
+  };
+
+  const renderContent = () => {
+    let imagesToShow = [];
+    if (contentType === 'stock') {
+      imagesToShow = libraryImages;
+    } else if (contentType === 'user') {
+      imagesToShow = userImages;
+    }
+
+    return (
+      <div className="grid grid-cols-4 gap-2 p-2">
+        {imagesToShow.map((image) => (
+          <div key={image.id} className="cursor-pointer relative aspect-square" onClick={() => handleSelectImageForSlide(image)}>
+            <Image
+              src={image.image_url || image.url}
+              alt={image.title || 'User image'}
+              fill
+              sizes="200px"
+              className="rounded-lg object-cover"
+            />
+          </div>
+        ))}
+      </div>
+    );
   };
 
   const slideWidth = 35;
@@ -397,80 +372,48 @@ export default function SlidesEditor() {
             </button>
             <div style={{ flexGrow: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '30px' }}>
               <div>
-                <div style={{ position: 'relative', marginBottom: '16px' }}>
-                  <div
-                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '8px 12px',
-                      backgroundColor: '#F4F4F4',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontFamily: "'Inter', sans-serif",
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#333',
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                      border: '1px solid #E5E5E5',
-                    }}
-                  >
-                    <span>{contentType === 'stock' ? 'Stock' : 'Your Photos'}</span>
-                    <ChevronDown size={16} style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }} />
-                  </div>
-
-                  {isDropdownOpen && (
-                    <div style={{
-                      position: 'absolute',
-                      top: '100%',
-                      left: 0,
-                      right: 0,
-                      backgroundColor: '#FFF',
-                      borderRadius: '6px',
-                      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                      border: '1px solid #E5E5E5',
-                      zIndex: 10,
-                      marginTop: '2px',
-                    }}>
-                      <div
-                        onClick={() => {
-                          setContentType('stock');
-                          setIsDropdownOpen(false);
-                        }}
-                        style={{
-                          padding: '8px 12px',
-                          cursor: 'pointer',
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: '14px',
-                          color: '#333',
-                          backgroundColor: contentType === 'stock' ? '#F0F0F0' : 'transparent',
-                          borderBottom: '1px solid #F0F0F0',
-                        }}
-                      >
-                        Stock
-                      </div>
-                      <div
-                        onClick={() => {
-                          setContentType('your-photos');
-                          setIsDropdownOpen(false);
-                        }}
-                        style={{
-                          padding: '8px 12px',
-                          cursor: 'pointer',
-                          fontFamily: "'Inter', sans-serif",
-                          fontSize: '14px',
-                          color: '#333',
-                          backgroundColor: contentType === 'your-photos' ? '#F0F0F0' : 'transparent',
-                        }}
-                      >
-                        Your Photos
-                      </div>
+                <div className="flex-1 flex flex-col min-h-0">
+                  {/* Content Library Header */}
+                  <div className="p-4 border-b border-gray-200">
+                    <div className="relative">
+                      <button onClick={() => setIsDropdownOpen(!isDropdownOpen)} className="w-full bg-white border border-gray-300 rounded-md shadow-sm px-4 py-2 inline-flex justify-between items-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none">
+                        {contentType === 'stock' ? 'Stock Photos' : 'Your Photos'}
+                        <ChevronDown className="-mr-1 ml-2 h-5 w-5" />
+                      </button>
+                      {isDropdownOpen && (
+                        <div className="absolute z-10 mt-1 w-full rounded-md bg-white shadow-lg border border-gray-100">
+                          <ul className="p-1">
+                            {contentType !== 'stock' && (
+                              <li>
+                                <a
+                                  href="#"
+                                  onClick={(e) => { e.preventDefault(); setContentType('stock'); setIsDropdownOpen(false); }}
+                                  className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#ff4514]/10 hover:text-[#ff4514]"
+                                >
+                                  Stock Photos
+                                </a>
+                              </li>
+                            )}
+                            {contentType !== 'user' && (
+                              <li>
+                                <a
+                                  href="#"
+                                  onClick={(e) => { e.preventDefault(); setContentType('user'); setIsDropdownOpen(false); }}
+                                  className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#ff4514]/10 hover:text-[#ff4514]"
+                                >
+                                  Your Photos
+                                </a>
+                              </li>
+                            )}
+                          </ul>
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    {renderContent()}
+                  </div>
                 </div>
-
-                {renderContent()}
               </div>
             </div>
           </div>
@@ -759,7 +702,7 @@ export default function SlidesEditor() {
                               <textarea
                                 ref={inlineEditRef}
                                 value={inlineEditText}
-                                onChange={(e) => setInlineEditText(e.target.value)}
+                                onChange={handleInlineEditChange}
                                 onBlur={saveInlineEdit}
                                 style={{
                                   background: 'transparent',
@@ -782,15 +725,7 @@ export default function SlidesEditor() {
                                   overflowWrap: 'break-word',
                                   hyphens: 'auto',
                                 }}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    saveInlineEdit();
-                                  } else if (e.key === 'Escape') {
-                                    e.preventDefault();
-                                    cancelInlineEdit();
-                                  }
-                                }}
+                                onKeyDown={handleKeyDown}
                                 onInput={(e) => {
                                   // Auto-resize the textarea to fit content
                                   e.target.style.height = 'auto';

@@ -5,10 +5,12 @@ import { useSession } from 'next-auth/react';
 import { Upload, X, CreditCard, Pocket, Package, User, Mail, Shield } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePersistence } from '../../services/persistenceService';
+import { supabase } from '../../../supabaseClient';
 
 export default function Settings() {
   const { data: session } = useSession();
-  const [uploadedImages, setUploadedImages] = useState([]);
+  const { data: uploadedImages, updateData: setUploadedImages } = usePersistence('userImages', []);
   const [isDragging, setIsDragging] = useState(false);
 
   const handleDragOver = (e) => {
@@ -33,23 +35,54 @@ export default function Settings() {
     handleFiles(files);
   };
 
-  const handleFiles = (files) => {
-    const newImages = files.map(file => ({
-      id: Math.random().toString(36).substr(2, 9),
-      file,
-      preview: URL.createObjectURL(file)
+  const handleFiles = async (files) => {
+    if (!session?.user?.email) {
+      alert("You must be logged in to upload images.");
+      return;
+    }
+
+    const newImages = await Promise.all(files.map(async (file) => {
+      const filePath = `${session.user.email}/${file.name}-${Date.now()}`;
+      const { error: uploadError } = await supabase.storage
+        .from('user-images')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        return null;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('user-images')
+        .getPublicUrl(filePath);
+
+      return {
+        id: Math.random().toString(36).substr(2, 9),
+        url: publicUrl,
+        path: filePath,
+      };
     }));
-    setUploadedImages(prev => [...prev, ...newImages]);
+
+    const successfulUploads = newImages.filter(img => img !== null);
+    setUploadedImages(prev => [...prev, ...successfulUploads]);
   };
 
-  const removeImage = (id) => {
-    setUploadedImages(prev => {
-      const imageToRemove = prev.find(img => img.id === id);
-      if (imageToRemove) {
-        URL.revokeObjectURL(imageToRemove.preview);
-      }
-      return prev.filter(img => img.id !== id);
-    });
+  const removeImage = async (id) => {
+    const imageToRemove = uploadedImages.find(img => img.id === id);
+    if (!imageToRemove) return;
+
+    // Remove from Supabase storage
+    const { error: deleteError } = await supabase.storage
+      .from('user-images')
+      .remove([imageToRemove.path]);
+
+    if (deleteError) {
+      console.error("Error deleting image from storage:", deleteError);
+      // Optionally, alert the user or handle the error more gracefully
+    }
+
+    // Remove from local state and persistence
+    setUploadedImages(prev => prev.filter(img => img.id !== id));
   };
 
   return (
@@ -186,9 +219,9 @@ export default function Settings() {
             <h3 className="text-sm font-medium text-gray-700 mb-4">Uploaded Images</h3>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {uploadedImages.map(image => (
-                <div key={image.id} className="relative group">
+                <div key={image.id} className="relative group aspect-square">
                   <Image
-                    src={image.preview}
+                    src={image.url}
                     alt="Preview"
                     fill={true}
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
