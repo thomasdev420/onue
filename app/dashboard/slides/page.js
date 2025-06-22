@@ -30,7 +30,14 @@ export default function SlidesEditor() {
 
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
 
-  const [draggingInfo, setDraggingInfo] = useState({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
+  const [draggingInfo, setDraggingInfo] = useState({ 
+    isDragging: false, 
+    textIndex: -1, 
+    initialMousePos: null, 
+    initialTextPos: null,
+    elementWidth: 0,
+    elementHeight: 0 
+  });
   const canvasRef = useRef(null);
   
   const textRefs = useRef([]);
@@ -148,23 +155,21 @@ export default function SlidesEditor() {
   
   const handleMouseDown = (e, textIndex) => {
     if (textRefs.current[textIndex]) {
-      const textRect = textRefs.current[textIndex].getBoundingClientRect();
-      const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
-      const imageContainerRect = imageContainerEl.getBoundingClientRect();
-      
-      // Calculate the center of the text element
-      const textCenterX = textRect.left + textRect.width / 2;
-      const textCenterY = textRect.top + textRect.height / 2;
+      // Prevent default drag behavior
+      e.preventDefault();
+      e.stopPropagation();
+
+      const textPosition = slides[activeSlideIndex].texts[textIndex].position;
+      const rect = textRefs.current[textIndex].getBoundingClientRect();
       
       setDraggingInfo({
         isDragging: true,
         textIndex,
-        initialX: e.clientX,
-        initialY: e.clientY,
-        offset: {
-          x: e.clientX - textCenterX,
-          y: e.clientY - textCenterY,
-        }
+        // Store initial mouse position and text position
+        initialMousePos: { x: e.clientX, y: e.clientY },
+        initialTextPos: { x: textPosition.x, y: textPosition.y },
+        elementWidth: rect.width,
+        elementHeight: rect.height,
       });
     }
   };
@@ -187,48 +192,55 @@ export default function SlidesEditor() {
 
   const handleMouseUp = useCallback((e) => {
     if (draggingInfo.isDragging) {
-      const { initialX, initialY, textIndex } = draggingInfo;
-      if (initialX !== undefined && initialY !== undefined) {
+      const { initialMousePos, textIndex } = draggingInfo;
+      if (initialMousePos) {
         const finalX = e.clientX;
         const finalY = e.clientY;
-        const distance = Math.sqrt(Math.pow(finalX - initialX, 2) + Math.pow(finalY - initialY, 2));
+        const distance = Math.sqrt(Math.pow(finalX - initialMousePos.x, 2) + Math.pow(finalY - initialMousePos.y, 2));
         
         if (distance < 5) { // Threshold for click vs drag
-          // Start inline editing instead of the old editing system
           startInlineEditing(activeSlideIndex, textIndex);
         }
       }
     }
-    setDraggingInfo({ isDragging: false, textIndex: -1, offset: { x: 0, y: 0 } });
+    setDraggingInfo({ isDragging: false, textIndex: -1, initialMousePos: null, initialTextPos: null, elementWidth: 0, elementHeight: 0 });
   }, [draggingInfo, activeSlideIndex, startInlineEditing]);
 
   const handleMouseMove = useCallback((e) => {
     if (!draggingInfo.isDragging || draggingInfo.textIndex === -1) return;
 
-    const { textIndex, offset } = draggingInfo;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const { textIndex, initialMousePos, initialTextPos, elementWidth, elementHeight } = draggingInfo;
     const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
     
     if(!imageContainerEl) return;
 
     const imageContainerRect = imageContainerEl.getBoundingClientRect();
     
-    let newX = e.clientX - imageContainerRect.left - offset.x;
-    let newY = e.clientY - imageContainerRect.top - offset.y;
+    // Calculate the distance the mouse has moved
+    const dx = e.clientX - initialMousePos.x;
+    const dy = e.clientY - initialMousePos.y;
+
+    // Calculate new position based on initial position and mouse delta
+    let newX = initialTextPos.x + dx;
+    let newY = initialTextPos.y + dy;
     
-    const textRect = textRefs.current[textIndex]?.getBoundingClientRect();
-    if (textRect) {
+    if (elementWidth > 0 && elementHeight > 0) {
       // Account for the centered positioning - the position represents the center
-      const halfWidth = textRect.width / 2;
-      const halfHeight = textRect.height / 2;
+      const halfWidth = elementWidth / 2;
+      const halfHeight = elementHeight / 2;
       
       // Magnetic snapping to vertical center
       const centerX = imageContainerRect.width / 2;
-      const snapThreshold = 20; // pixels from center to trigger snap
+      const snapThreshold = 10; // pixels from center to trigger snap
       
       if (Math.abs(newX - centerX) < snapThreshold) {
         newX = centerX; // Snap to center
       }
       
+      // Clamp position within the container bounds
       newX = Math.max(halfWidth, Math.min(newX, imageContainerRect.width - halfWidth));
       newY = Math.max(halfHeight, Math.min(newY, imageContainerRect.height - halfHeight));
     }
@@ -240,6 +252,7 @@ export default function SlidesEditor() {
   }, [activeSlide.texts, activeSlideIndex, draggingInfo, updateSlide]);
   
   useEffect(() => {
+    // We bind to the window to catch mouse movements everywhere on the page
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     return () => {
@@ -276,6 +289,7 @@ export default function SlidesEditor() {
   // New: Handle keydown for inline editing (Enter to save, Escape to cancel)
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent default newline behavior
       saveInlineEdit();
     } else if (e.key === 'Escape') {
       setInlineEditing({ isEditing: false, textIndex: -1, slideIndex: -1 });
@@ -666,37 +680,33 @@ export default function SlidesEditor() {
                           inlineEditing.slideIndex === index && 
                           inlineEditing.textIndex === textIndex;
                         
-                        // Calculate the width based on text content to maintain consistent sizing
-                        const textLength = textItem.content.length;
-                        const baseWidth = Math.min(Math.max(textLength * 8, 50), 250); // 8px per character, min 50px, max 250px
-                        
+                        const isBeingDragged = draggingInfo.isDragging && draggingInfo.textIndex === textIndex;
+
                         return (
                         <div
                           key={textItem.id}
                           ref={el => textRefs.current[textIndex] = el}
-                            onMouseDown={(e) => index === activeSlideIndex && !isInlineEditing && handleMouseDown(e, textIndex)}
-          style={{
+                          onMouseDown={(e) => index === activeSlideIndex && !isInlineEditing && handleMouseDown(e, textIndex)}
+                          style={{
                             position: 'absolute',
                             left: `${textItem.position.x}px`,
                             top: `${textItem.position.y}px`,
-                              transform: 'translate(-50%, -50%)',
+                            transform: 'translate(-50%, -50%)',
                             color: 'white',
                             backgroundColor: 'rgba(0,0,0,0.5)',
                             padding: '5px 10px',
                             borderRadius: '5px',
                             cursor: index === activeSlideIndex ? 'move' : 'default',
                             userSelect: 'none',
-                              minWidth: '20px',
-                              minHeight: '20px',
-                              width: isInlineEditing ? 'auto' : `${baseWidth}px`,
-                              maxWidth: isInlineEditing ? '400px' : '250px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              wordWrap: 'break-word',
-                              overflowWrap: 'break-word',
-                              hyphens: 'auto',
-                            }}
+                            width: isBeingDragged ? `${draggingInfo.elementWidth}px` : 'auto',
+                            minWidth: '50px', // A reasonable minimum width
+                            maxWidth: isInlineEditing ? '400px' : '300px', // Max width before wrapping
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            textAlign: 'center', // Center the text within the div
+                            overflowWrap: 'break-word', // Allow wrapping for long text
+                          }}
                           >
                             {isInlineEditing ? (
                               <textarea
@@ -714,33 +724,21 @@ export default function SlidesEditor() {
                                   fontWeight: 'inherit',
                                   textAlign: 'center',
                                   width: '100%',
-                                  minWidth: '100px',
-                                  maxWidth: '400px',
                                   padding: '0',
                                   margin: '0',
                                   lineHeight: 'inherit',
                                   resize: 'none',
-                                  overflow: 'hidden',
-                                  wordWrap: 'break-word',
-                                  overflowWrap: 'break-word',
-                                  hyphens: 'auto',
+                                  overflow: 'hidden', // Hide scrollbar, handled by auto-height
                                 }}
                                 onKeyDown={handleKeyDown}
                                 onInput={(e) => {
                                   // Auto-resize the textarea to fit content
-                                  e.target.style.height = 'auto';
                                   e.target.style.height = e.target.scrollHeight + 'px';
                                 }}
                               />
                             ) : (
-                              <span style={{ 
-                                textAlign: 'center', 
-                                width: '100%',
-                                wordWrap: 'break-word',
-                                overflowWrap: 'break-word',
-                                hyphens: 'auto',
-                              }}>
-                          {textItem.content}
+                              <span>
+                                {textItem.content}
                               </span>
                             )}
                         </div>
