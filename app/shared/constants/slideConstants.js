@@ -1,15 +1,39 @@
-// Slide configuration
+/**
+ * Constants for slide management and configuration
+ */
+
 export const SLIDE_CONFIG = {
-  DEFAULT_RATIO: '16:9',
-  AVAILABLE_RATIOS: ['16:9', '4:3', '1:1', '9:16'],
-  SLIDE_WIDTH_PERCENTAGE: 35,
-  DEFAULT_TEXT_CONTENT: 'New Text',
-  MIN_TEXT_WIDTH: 50,
-  MAX_TEXT_WIDTH: '30vw',
-  SNAP_THRESHOLD: 10,
-  CLICK_THRESHOLD: 5,
-  TRANSITION_DURATION: '0.5s',
-  TRANSITION_EASING: 'ease-in-out'
+  DEFAULT_RATIO: '9:16',
+  AVAILABLE_RATIOS: ['9:16', '16:9', '1:1', '4:5'],
+  MAX_SLIDES: 50,
+  MIN_SLIDES: 1,
+  DEFAULT_TEXT_POSITION: { x: 50, y: 50 },
+  TEXT_POSITION_CONSTRAINTS: {
+    MIN_Y: 35, // Avoid top 30% of slide
+    MAX_Y: 85, // Avoid bottom 15% of slide
+    MIN_X: 10,
+    MAX_X: 90
+  },
+  SLIDE_WIDTH_PERCENTAGE: 35 // <-- Narrower width for better slide carousel visibility
+};
+
+export const SLIDE_TYPES = {
+  BUSINESS: 'business',
+  TECHNOLOGY: 'technology',
+  SUCCESS: 'success',
+  MOTIVATION: 'motivation',
+  GROWTH: 'growth',
+  CREATIVITY: 'creativity',
+  SOCIAL_MEDIA: 'social_media',
+  ENTREPRENEURSHIP: 'entrepreneurship',
+  MARKETING: 'marketing',
+  LIFESTYLE: 'lifestyle'
+};
+
+export const SLIDE_VALIDATION = {
+  MAX_TEXT_LENGTH: 500,
+  MAX_TEXTS_PER_SLIDE: 5,
+  MIN_TEXT_LENGTH: 1
 };
 
 // Content types

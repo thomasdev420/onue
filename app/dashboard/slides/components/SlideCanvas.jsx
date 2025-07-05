@@ -17,7 +17,8 @@ export default function SlideCanvas({
   onDeleteSlide,
   onRatioChange,
   onContentModalOpen,
-  onPromptModalOpen
+  onPromptModalOpen,
+  onScheduleClick
 }) {
   const {
     slideWidth,
@@ -92,21 +93,13 @@ export default function SlideCanvas({
       return;
     }
 
-    const imageContainerEl = imageContainerRefs.current[activeSlideIndex];
-    
-    if (imageContainerEl) {
-      const imageContainerRect = imageContainerEl.getBoundingClientRect();
-      const centerX = imageContainerRect.width / 2;
-      const centerY = imageContainerRect.height / 2;
-
-      const newText = {
-        id: Date.now(),
-        content: 'New Text',
-        position: { x: centerX, y: centerY }
-      };
-      const newTexts = [...activeSlide.texts, newText];
-      onSlideUpdate(activeSlideIndex, { texts: newTexts });
-    }
+    const newText = {
+      id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      content: 'New Text',
+      position: { x: 50, y: 50 } // Center at 50% for both x and y
+    };
+    const newTexts = [...activeSlide.texts, newText];
+    onSlideUpdate(activeSlideIndex, { texts: newTexts });
   };
 
   return (
@@ -205,15 +198,10 @@ export default function SlideCanvas({
               </div>
             ) : ( 
               <div 
-                onClick={() => onContentModalOpen()}
-                onMouseEnter={(e) => { 
-                  e.currentTarget.style.backgroundColor = '#F9FAFB';
-                  e.currentTarget.style.borderColor = '#9CA3AF';
-                }}
-                onMouseLeave={(e) => { 
-                  e.currentTarget.style.backgroundColor = '#F7F7F7';
-                  e.currentTarget.style.borderColor = '#D1D5DB';
-                }}
+                onClick={index === activeSlideIndex ? (e) => {
+                  e.stopPropagation();
+                  onContentModalOpen();
+                } : undefined}
                 style={{
                   color: "#6B7280",
                   fontWeight: "500",
@@ -223,11 +211,11 @@ export default function SlideCanvas({
                   justifyContent: 'center',
                   width: '100%',
                   height: '100%',
-                  cursor: 'pointer',
                   borderRadius: '12px',
                   backgroundColor: '#F7F7F7',
                   border: '2px dashed #D1D5DB',
                   transition: 'all 0.2s ease-in-out',
+                  cursor: index === activeSlideIndex ? 'pointer' : 'default'
                 }}
               >
                 Select an image
@@ -243,6 +231,7 @@ export default function SlideCanvas({
               onContentModalOpen={onContentModalOpen}
               onAddText={handleAddText}
               onPromptModalOpen={onPromptModalOpen}
+              onScheduleClick={onScheduleClick}
             />
           </div>
         ))}

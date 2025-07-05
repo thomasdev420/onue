@@ -1,6 +1,6 @@
 // This file defines the structure for collecting user data during onboarding.
 // It will be used in a future pop-up section when users create their account.
-// The collected data can be used to personalize and improve ChatGPT API prompts.
+// The collected data can be used to personalise and improve ChatGPT API prompts.
 
 const userDataTemplate = {
   name: '',

@@ -117,7 +117,7 @@ export default function ContentModal({
                                 setContentType('stock'); 
                                 setIsDropdownOpen(false); 
                               }}
-                              className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#ff4514]/10 hover:text-[#ff4514]"
+                              className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
                             >
                               Stock Photos
                             </a>
@@ -132,7 +132,7 @@ export default function ContentModal({
                                 setContentType('user'); 
                                 setIsDropdownOpen(false); 
                               }}
-                              className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#ff4514]/10 hover:text-[#ff4514]"
+                              className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
                             >
                               Your Photos
                             </a>

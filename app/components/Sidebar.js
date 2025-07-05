@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from 'next/image';
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from 'next/navigation';
-import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles } from 'lucide-react';
+import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload } from 'lucide-react';
 
 export default function Sidebar({ isCollapsed, toggleSidebar }) {
   const { data: session, status } = useSession();
@@ -31,13 +31,11 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
         <nav className="mt-2 px-4 flex-1">
           <ul className="space-y-1 text-sm">
             <SidebarLink href="/dashboard" icon={<Home size={18} />} label="Home" currentPath={pathname} isCollapsed={isCollapsed} />
-            <SidebarLink href="/dashboard/content" icon={<Video size={18} />} label="Content" currentPath={pathname} isCollapsed={isCollapsed} />
+            <SidebarLink href="/dashboard/content" icon={<Video size={18} />} label="Content Generator" currentPath={pathname} isCollapsed={isCollapsed} />
+            <SidebarLink href="/dashboard/upload" icon={<Upload size={18} />} label="Content Upload" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/magic" icon={<Wand2 size={18} />} label="Magic Mode" currentPath={pathname} isCollapsed={isCollapsed} />
-            <SidebarLink href="/dashboard/slides" icon={<Book size={18} />} label="Slides" currentPath={pathname} isCollapsed={isCollapsed} />
-            <SidebarLink href="/dashboard/hook-demo" icon={<Sparkles size={18} />} label="Hook & Demo" currentPath={pathname} isCollapsed={isCollapsed} />
-            <SidebarLink href="/dashboard/memes" icon={<ImageIcon size={18} />} label="Memes" currentPath={pathname} isCollapsed={isCollapsed} />
             <div className="mt-4"></div>
             <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} isCollapsed={isCollapsed} />
@@ -49,8 +47,42 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
       <div className="p-4">
         {!isCollapsed && (
           <Link href="/#pricing">
-            <button className="w-full bg-[#ff4514] text-white font-semibold py-2 rounded-lg hover:bg-orange-600 transition">
-              Upgrade
+            <button
+              style={{
+                position: 'relative',
+                background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '12px 24px',
+                color: 'white',
+                fontSize: '18px',
+                fontWeight: '600',
+                boxShadow: '0 8px 32px 0 rgba(0,0,0,0.45), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                cursor: 'pointer',
+                outline: 'none',
+                display: 'inline-block',
+                textAlign: 'center',
+                transition: 'transform 0.1s ease',
+                letterSpacing: '0.01em',
+                overflow: 'hidden',
+                width: '100%',
+              }}
+              onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+              onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+            >
+              <span style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '55%',
+                borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                pointerEvents: 'none',
+                zIndex: 1,
+                filter: 'blur(0.5px)',
+              }} />
+              <span style={{ position: 'relative', zIndex: 2 }}>Upgrade</span>
             </button>
           </Link>
         )}
@@ -97,8 +129,10 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
 
 function SidebarLink({ href, icon, label, currentPath, isCollapsed }) {
   const isActive = currentPath === href || 
-    (href !== '/dashboard' && currentPath?.startsWith(href)) || 
-    (href === '/dashboard' && currentPath === '/dashboard');
+    (href !== '/dashboard' && href !== '/dashboard/slides' && href !== '/dashboard/lfg' && currentPath?.startsWith(href)) || 
+    (href === '/dashboard' && currentPath === '/dashboard') ||
+    (href === '/dashboard/slides' && currentPath === '/dashboard/slides') ||
+    (href === '/dashboard/lfg' && currentPath === '/dashboard/lfg');
 
   // Check if the link is for settings or support
   const isSettingsOrSupport = href.includes('/settings') || href.includes('/support');

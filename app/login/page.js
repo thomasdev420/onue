@@ -1,49 +1,46 @@
 'use client';
 
-import { signIn } from 'next-auth/react';
-import { useState } from 'react';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const isDev = process.env.NODE_ENV === 'development';
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    // Use the 'credentials' provider and redirect to the content page on success
-    await signIn('credentials', { email, callbackUrl: '/dashboard/content' });
-    setLoading(false);
-  };
+  useEffect(() => {
+    if (isDev) {
+      // In development, redirect to dashboard immediately (no login needed)
+      router.push('/dashboard');
+    }
+  }, [router, isDev]);
+
+  // In production, show Google login
+  if (isDev) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="p-8 bg-white rounded-lg shadow-md max-w-sm w-full">
         <h1 className="text-2xl font-semibold text-center text-gray-800 mb-6">
-          Development Login
+          Sign In
         </h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 sr-only">
-              Email Address
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter any email to log in"
-              required
-            />
-          </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Logging in...' : 'Log In as Dev'}
-          </Button>
-        </form>
-        <p className="text-xs text-gray-500 mt-4 text-center">
-          This login is for development purposes only.
+        <p className="text-center text-gray-600 mb-6">
+          Please sign in with Google to continue.
         </p>
+        <button
+          onClick={() => window.location.href = '/api/auth/signin/google'}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+        >
+          Sign in with Google
+        </button>
       </div>
     </div>
   );

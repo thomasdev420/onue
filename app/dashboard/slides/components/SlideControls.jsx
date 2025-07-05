@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { Trash2, Image as ImageIcon, MessageSquare, Calendar } from 'lucide-react';
 import ActionButton from './ActionButton';
 
 export default function SlideControls({
@@ -12,7 +12,8 @@ export default function SlideControls({
   onRatioChange,
   onContentModalOpen,
   onAddText,
-  onPromptModalOpen
+  onPromptModalOpen,
+  onScheduleClick
 }) {
   const isActive = slideIndex === activeSlideIndex;
 
@@ -69,7 +70,7 @@ export default function SlideControls({
         }}
         content="T"
         fontSize="16px"
-        fontWeight="bold"
+        fontWeight="normal"
         color="#374151"
       />
 
@@ -80,6 +81,16 @@ export default function SlideControls({
           onPromptModalOpen();
         }}
         icon={<MessageSquare size={16} color="#374151" />}
+        rainbowBorder={true}
+      />
+
+      {/* Schedule Button */}
+      <ActionButton
+        onClick={(e) => {
+          e.stopPropagation();
+          onScheduleClick();
+        }}
+        icon={<Calendar size={16} color="#374151" />}
       />
     </div>
   );

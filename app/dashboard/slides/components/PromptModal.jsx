@@ -1,22 +1,156 @@
 'use client';
 
-import React from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Loader2, Send } from 'lucide-react';
 
 export default function PromptModal({
   isOpen,
   onClose,
-  onSubmit
+  onSubmit,
+  businessContext = null
 }) {
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [slideCount, setSlideCount] = useState(3);
+  const [error, setError] = useState('');
+  const [step, setStep] = useState(2); // 2: enter prompt (skip format selection)
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPrompt('');
+      setError('');
+      setIsGenerating(false);
+      setStep(2); // Always start at text input step
+    }
+  }, [isOpen]);
+
+  // Auto-expand textarea
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+    }
+  };
+  useEffect(() => { adjustTextareaHeight(); }, [prompt]);
+
+
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+
+
+  const handleSubmit = async () => {
+    if (!prompt.trim()) {
+      setError('Please enter a prompt');
+      return;
+    }
+    setError('');
+    setIsGenerating(true);
+    const userMessage = prompt.trim();
+    setPrompt('');
+    
+    console.log('Starting AI generation with prompt:', userMessage);
+    console.log('Business context:', businessContext);
+
+    // Use the prompt directly without format selection
+    const finalPrompt = userMessage;
+
+    let finalSlideCount = slideCount;
+    const slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
+    if (slideCountMatch) {
+      const requestedCount = parseInt(slideCountMatch[1]);
+      if (requestedCount >= 1 && requestedCount <= 10) {
+        finalSlideCount = requestedCount;
+      }
+    }
+    
+    try {
+      console.log('Sending request to API with:', {
+        prompt: finalPrompt,
+        slideCount: finalSlideCount,
+        businessContext: businessContext
+      });
+      
+      const response = await fetch('/api/generate-slides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: finalPrompt,
+          slideCount: finalSlideCount,
+          businessContext: businessContext
+        }),
+      });
+      
+      console.log('API response status:', response.status);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate slides');
+      }
+      const data = await response.json();
+      console.log('API response received:', data);
+      console.log('Slides from API:', data.slides);
+      
+      if (!data.slides || !Array.isArray(data.slides)) {
+        throw new Error('Invalid response format: slides array not found');
+      }
+      
+      // Automatically apply the generated slides
+      onSubmit(data.slides, userMessage);
+      setIsGenerating(false);
+      onClose();
+      
+    } catch (err) {
+      setError(err.message || 'Failed to generate slides');
+      setIsGenerating(false);
+    }
+  };
+
+
+
   if (!isOpen) return null;
 
-  const handleSubmit = () => {
-    const textarea = document.querySelector('textarea[placeholder*="Create a motivational"]');
-    if (textarea) {
-      onSubmit(textarea.value);
-    }
-    onClose();
-  };
+  // Full-screen loading overlay when generating
+  if (isGenerating) {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '24px',
+          textAlign: 'center',
+          color: 'white'
+        }}>
+          <Loader2 size={48} className="animate-spin" />
+          <div style={{ fontSize: '20px', fontWeight: '600' }}>
+            Generating your slides...
+          </div>
+          <div style={{ fontSize: '16px', opacity: 0.8 }}>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -26,8 +160,7 @@ export default function PromptModal({
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        backdropFilter: 'blur(4px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
@@ -38,153 +171,124 @@ export default function PromptModal({
       <div
         style={{
           backgroundColor: '#FFF',
-          padding: '32px',
-          borderRadius: '16px',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
-          width: '90%',
-          maxWidth: '500px',
+          borderRadius: '24px',
+          boxShadow: '0 5px 15px rgba(0,0,0,0.15)',
+          width: '100%',
+          maxWidth: '520px',
           position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
+          padding: '40px',
+          boxSizing: 'border-box',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
+          disabled={isGenerating}
           style={{
             position: 'absolute',
-            top: '16px',
-            right: '16px',
+            top: '24px',
+            right: '24px',
             background: 'none',
             border: 'none',
-            cursor: 'pointer',
+            cursor: isGenerating ? 'not-allowed' : 'pointer',
             padding: '8px',
             borderRadius: '8px',
             color: '#9CA3AF',
             transition: 'all 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#F3F4F6';
-            e.currentTarget.style.color = '#6B7280';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
-            e.currentTarget.style.color = '#9CA3AF';
+            opacity: isGenerating ? 0.5 : 1,
+            zIndex: 10,
           }}
         >
-          <X size={20} />
+          <X size={24} />
         </button>
 
-        {/* Header */}
-        <div style={{ marginBottom: '24px', paddingRight: '40px' }}>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: '700',
-            color: '#111827',
-            textAlign: 'center',
-            margin: 0,
-            fontFamily: "'Inter', sans-serif"
-          }}>
-            AI Prompt
-          </h2>
-          <p style={{
-            fontSize: '14px',
-            color: '#6B7280',
-            textAlign: 'center',
-            margin: '8px 0 0 0',
-            fontFamily: "'Inter', sans-serif"
-          }}>
-            Describe what you want to create and let AI help you
-          </p>
-        </div>
-
-        {/* Input Field */}
-        <div style={{ marginBottom: '24px' }}>
-          <textarea
-            placeholder="e.g., Create a motivational slide about entrepreneurship with a modern design..."
-            style={{
-              width: '100%',
-              minHeight: '120px',
-              padding: '16px',
-              border: '2px solid #E5E7EB',
-              borderRadius: '12px',
-              fontSize: '16px',
-              fontFamily: "'Inter', sans-serif",
-              resize: 'none',
-              outline: 'none',
-              transition: 'all 0.2s ease',
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#3B82F6';
-              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = '#E5E7EB';
-              e.target.style.boxShadow = 'none';
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && e.ctrlKey) {
-                e.preventDefault();
-                handleSubmit();
-              }
-            }}
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{
-          display: 'flex',
-          gap: '12px',
-          justifyContent: 'flex-end'
-        }}>
-          <button
-            onClick={onClose}
-            style={{
-              padding: '12px 24px',
-              border: '1px solid #D1D5DB',
-              borderRadius: '8px',
-              backgroundColor: '#FFF',
-              color: '#374151',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
+        {/* Step 2: Prompt Input */}
+        {step === 2 && (
+          <>
+            <h2 style={{
+              fontSize: '28px',
+              fontWeight: 700,
+              color: '#23272F',
+              textAlign: 'center',
+              margin: 0,
+              marginBottom: '8px',
               fontFamily: "'Inter', sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F9FAFB';
-              e.currentTarget.style.borderColor = '#9CA3AF';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#FFF';
-              e.currentTarget.style.borderColor = '#D1D5DB';
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            style={{
-              padding: '12px 24px',
-              border: 'none',
-              borderRadius: '8px',
-              backgroundColor: '#3B82F6',
-              color: '#FFF',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
+            }}>
+              AI Prompt
+            </h2>
+            <div style={{
+              fontSize: '17px',
+              color: '#7B8493',
+              textAlign: 'center',
+              marginBottom: '24px',
+              fontWeight: 500,
               fontFamily: "'Inter', sans-serif"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#2563EB';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#3B82F6';
-            }}
-          >
-            Generate
-          </button>
-        </div>
+            }}>
+              Describe what you want to create and let AI help you
+            </div>
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={e => setPrompt(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="e.g., Create a motivational slide about entrepreneurship with a modern design..."
+              disabled={isGenerating}
+              style={{
+                width: '100%',
+                minHeight: '100px',
+                fontSize: '16px',
+                color: '#23272F',
+                border: '2px solid #E5E7EB',
+                borderRadius: '12px',
+                padding: '16px',
+                fontFamily: "'Inter', sans-serif",
+                marginBottom: '32px',
+                boxSizing: 'border-box',
+                resize: 'none',
+                background: '#FFF',
+                outline: 'none',
+                transition: 'border-color 0.2s ease',
+              }}
+            />
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              <button
+                onClick={handleSubmit}
+                disabled={isGenerating || !prompt.trim()}
+                style={{
+                  height: '56px',
+                  padding: '0 48px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  background: isGenerating || !prompt.trim() ? '#A5B4FC' : '#2563EB',
+                  color: '#FFF',
+                  fontWeight: 700,
+                  fontSize: '18px',
+                  cursor: isGenerating || !prompt.trim() ? 'not-allowed' : 'pointer',
+                  fontFamily: "'Inter', sans-serif",
+                  transition: 'all 0.2s',
+                  boxShadow: isGenerating || !prompt.trim() ? 'none' : '0 1px 2px rgba(37,99,235,0.08)',
+                }}
+              >
+                Generate
+              </button>
+            </div>
+            {error && (
+              <div style={{
+                color: '#EF4444',
+                fontSize: '14px',
+                textAlign: 'center',
+                marginTop: '20px',
+                maxWidth: '360px',
+                fontFamily: "'Inter', sans-serif"
+              }}>
+                {error}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

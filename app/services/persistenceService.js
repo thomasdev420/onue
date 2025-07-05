@@ -1,23 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { supabase } from '../../supabaseClient';
+import { debounce } from '../utils/performance';
 
 /**
  * Universal persistence service for saving and loading user work across all pages
  */
-
-// Debounce function to prevent too many saves
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
 
 /**
  * Save user work to database
@@ -27,6 +15,10 @@ function debounce(func, wait) {
  * @returns {Promise<Object>} Result of save operation
  */
 export async function saveUserWork(userId, pageType, data) {
+  if (!userId || !pageType) {
+    throw new Error('User ID and page type are required');
+  }
+
   try {
     const { data: savedData, error } = await supabase
       .from('user_work')
@@ -40,12 +32,15 @@ export async function saveUserWork(userId, pageType, data) {
       })
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error(`Database error saving ${pageType} work:`, error);
+      throw new Error(`Failed to save ${pageType} work: ${error.message}`);
+    }
 
     return { data: savedData, error: null };
   } catch (error) {
     console.error(`Error saving ${pageType} work:`, error);
-    return { data: null, error };
+    return { data: null, error: error.message || 'Unknown error occurred' };
   }
 }
 
@@ -56,6 +51,10 @@ export async function saveUserWork(userId, pageType, data) {
  * @returns {Promise<Object>} Loaded data or null if not found
  */
 export async function loadUserWork(userId, pageType) {
+  if (!userId || !pageType) {
+    throw new Error('User ID and page type are required');
+  }
+
   try {
     const { data, error } = await supabase
       .from('user_work')
@@ -69,13 +68,14 @@ export async function loadUserWork(userId, pageType) {
         // No data found, return null
         return null;
       }
-      throw error;
+      console.error(`Database error loading ${pageType} work:`, error);
+      throw new Error(`Failed to load ${pageType} work: ${error.message}`);
     }
 
     return data.work_data;
   } catch (error) {
     console.error(`Error loading ${pageType} work:`, error);
-    return null;
+    throw error;
   }
 }
 
@@ -87,6 +87,11 @@ export async function loadUserWork(userId, pageType) {
  * @param {Function} setSaveStatus - Function to update save status
  */
 export const autoSaveWork = debounce(async (userId, pageType, data, setSaveStatus) => {
+  if (!userId || !pageType || !data) {
+    console.warn('Auto-save skipped: missing required parameters');
+    return;
+  }
+
   try {
     setSaveStatus('saving');
     const { error } = await saveUserWork(userId, pageType, data);
@@ -115,6 +120,7 @@ export function usePersistence(pageType, defaultData) {
   const [data, setData] = useState(defaultData);
   const [saveStatus, setSaveStatus] = useState('idle'); // idle, saving, saved, error
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { data: session, status } = useSession();
   const isAuthenticated = status === 'authenticated';
 
@@ -127,19 +133,21 @@ export function usePersistence(pageType, defaultData) {
       }
 
       try {
-        setIsLoading(true); // Ensure loading state is true at the start
+        setIsLoading(true);
+        setError(null);
         const savedData = await loadUserWork(session.user.email, pageType);
         if (savedData) {
           setData(savedData);
         }
       } catch (error) {
         console.error(`Error loading ${pageType} data:`, error);
+        setError(`Failed to load ${pageType} data: ${error.message}`);
       } finally {
         setIsLoading(false);
       }
     };
 
-    if(isAuthenticated) {
+    if (isAuthenticated) {
       loadData();
     } else {
       setIsLoading(false);
@@ -149,26 +157,50 @@ export function usePersistence(pageType, defaultData) {
   // Auto-save when data changes
   useEffect(() => {
     // Do not save if still loading, not authenticated, or if data is the default
-    if (isLoading || !isAuthenticated) {
+    if (isLoading || !isAuthenticated || !session?.user?.email) {
       return;
     }
 
-    autoSaveWork(session.user.email, pageType, data, setSaveStatus);
-  }, [data, isAuthenticated, session?.user?.email, pageType, isLoading]);
+    // Only auto-save if data has actually changed from the default
+    if (JSON.stringify(data) !== JSON.stringify(defaultData)) {
+      autoSaveWork(session.user.email, pageType, data, setSaveStatus);
+    }
+  }, [data, isAuthenticated, session?.user?.email, pageType, isLoading, defaultData]);
 
   const updateData = useCallback((newData) => {
     setData(newData);
+    setError(null); // Clear any previous errors when data is updated
   }, []);
 
   const resetData = useCallback(() => {
     setData(defaultData);
+    setError(null);
   }, [defaultData]);
+
+  const retryLoad = useCallback(async () => {
+    if (!isAuthenticated || !session?.user?.email) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const savedData = await loadUserWork(session.user.email, pageType);
+      if (savedData) {
+        setData(savedData);
+      }
+    } catch (error) {
+      setError(`Failed to reload ${pageType} data: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAuthenticated, session?.user?.email, pageType]);
 
   return {
     data,
     updateData,
     resetData,
     saveStatus,
-    isLoading
+    isLoading,
+    error,
+    retryLoad
   };
 } 

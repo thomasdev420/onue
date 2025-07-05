@@ -218,7 +218,7 @@ const platformColors = {
 };
 
 const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-const hours = Array.from({ length: 24 }, (_, i) => i);
+const hours = Array.from({ length: 17 }, (_, i) => i + 6); // 6 AM to 22 (10 PM)
 
 export default function PostingCalendar({ selectedDate }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -255,14 +255,14 @@ export default function PostingCalendar({ selectedDate }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-4 max-w-lg w-full mx-auto">
       {/* Selected Day Header */}
       {/* <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800">{selectedDay}</h2>
       </div> */}
 
       {/* Time Slots */}
-      <div className="space-y-2">
+      <div className="space-y-1">
         {hours.map(hour => {
           const platform = getPlatformForTime(selectedDay, hour);
           const colors = platform ? platformColors[platform] : {
@@ -276,17 +276,17 @@ export default function PostingCalendar({ selectedDate }) {
               key={hour}
               onClick={() => handleSlotClick(hour)}
               className={`
-                w-full p-3 rounded-lg transition-colors
+                w-full p-2 rounded-md transition-colors
                 ${colors.bg} ${colors.border} ${colors.hover}
                 ${selectedSlot === hour ? 'ring-2 ring-blue-500' : ''}
                 flex items-center justify-between
               `}
             >
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-xs font-medium text-gray-700">
                 {formatHour(hour)}
               </span>
               {platform && (
-                <span className="text-sm text-gray-600">
+                <span className="text-xs text-gray-600">
                   {platform}
                 </span>
               )}
@@ -296,18 +296,14 @@ export default function PostingCalendar({ selectedDate }) {
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex flex-col gap-4">
-        <div className="flex items-center gap-4 text-sm text-gray-600 flex-wrap">
-          {Object.entries(platformColors).map(([platform, colors]) => (
-            <div key={platform} className="flex items-center gap-2">
-              <div className={`w-4 h-4 ${colors.bg} ${colors.border} rounded`} />
-              <span>{platform}</span>
-            </div>
-          ))}
-        </div>
-        <p className="text-sm text-gray-500 italic">
-          *Broad optimal times to post, this will change based on performance of your content
-        </p>
+      <div className="mt-4 flex flex-wrap gap-3 items-center text-xs text-gray-600">
+        {Object.entries(platformColors).map(([platform, colors]) => (
+          <div key={platform} className="flex items-center gap-1">
+            <div className={`w-3 h-3 ${colors.bg} ${colors.border} rounded`} />
+            <span>{platform}</span>
+          </div>
+        ))}
+        <span className="italic text-gray-400 ml-2">*Optimal times may vary</span>
       </div>
     </div>
   );

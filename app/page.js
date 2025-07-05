@@ -10,12 +10,8 @@ export default function Home() {
   const { data: session } = useSession();
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-12 sm:px-20 font-sans text-gray-900 relative">
-      {/* Beta Version Box */}
+    <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-32 sm:px-20 font-sans text-gray-900 relative">
       <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
-        <div className="inline-block px-4 py-1.5 rounded-full bg-gray-200">
-          <span className="text-gray-800 font-semibold text-sm font-mono">Beta V3.0.0</span>
-        </div>
         <Link href="/dashboard">
           <button className="px-3 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors">
             <span className="text-gray-800 font-semibold text-sm font-mono">Dev Access</span>
@@ -65,28 +61,144 @@ export default function Home() {
       </nav>
 
       {/* Header Section */}
-      <header className="max-w-2xl text-center mb-12 mt-24">
-        <h1 className="text-5xl font-extrabold mb-4 tracking-tight text-gray-800">
-          Automate content that boost your website traffic
-        </h1>
-        <p className="text-lg font-semibold text-gray-500 mb-6">
-          Viral marketing magic, without hiring a whole creative team.
-        </p>
-        <div className="flex justify-center">
-          {session ? (
-            <Link href="/dashboard">
-              <button className="bg-[#ff4514] text-white font-semibold px-7 py-3.5 rounded-full shadow hover:bg-[#e63e12] transition start-glow">
-                Start Now
-              </button>
-            </Link>
-          ) : (
-            <button
-              onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-              className="bg-[#ff4514] text-white font-semibold px-7 py-3.5 rounded-full shadow hover:bg-[#e63e12] transition start-glow"
+      <header className="max-w-2xl text-center mb-12">
+        {/* Beta Pill */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          marginBottom: '10px',
+          marginTop: '-16px',
+        }}>
+          <div
+            style={{
+              display: 'inline-block',
+              padding: '2px',
+              borderRadius: '9999px',
+              background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+            }}
+          >
+            <span
+              style={{
+                display: 'inline-block',
+                borderRadius: '9999px',
+                background: '#fef9f6',
+                fontWeight: 'bold',
+                fontSize: '15px',
+                color: '#222',
+                padding: '4px 16px',
+                lineHeight: 1.2,
+              }}
             >
-              Unlock Now
-            </button>
-          )}
+              Version 0.0.3
+            </span>
+          </div>
+        </div>
+        <h1 className="text-5xl font-extrabold mb-2 tracking-tight text-gray-800" style={{ fontWeight: "800", marginBottom: '16px' }}>
+        Automate content that boosts your website traffic
+        </h1>
+        <p className="text-lg font-semibold text-gray-500 mb-4" style={{ marginBottom: '18px' }}>
+        Generate viral, self-improving content that boosts your traffic on autopilot.
+        </p>
+        <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '48px' }}>
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          {session ? (
+              <Link href="/dashboard">
+                <button
+                  style={{
+                    width: '220px',
+                    height: '64px',
+                    position: 'relative',
+                    background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                    border: 'none',
+                    borderRadius: '16px',
+                    color: 'white',
+                    fontSize: '24px',
+                    fontWeight: '600',
+                    boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    textAlign: 'center',
+                    transition: 'transform 0.1s ease',
+                    letterSpacing: '0.01em',
+                    overflow: 'hidden',
+                  }}
+                  onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+                  onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '55%',
+                    borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    filter: 'blur(0.5px)',
+                  }} />
+                  <span style={{ position: 'relative', zIndex: 2 }}>Unlock now</span>
+                </button>
+              </Link>
+            ) :
+              <button
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                style={{
+                  width: '220px',
+                  height: '64px',
+                  position: 'relative',
+                  background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                  border: 'none',
+                  borderRadius: '16px',
+                  color: 'white',
+                  fontSize: '24px',
+                  fontWeight: '600',
+                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  textAlign: 'center',
+                  transition: 'transform 0.1s ease',
+                  letterSpacing: '0.01em',
+                  overflow: 'hidden',
+                }}
+                onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+                onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '55%',
+                  borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  filter: 'blur(0.5px)',
+                }} />
+                <span style={{ position: 'relative', zIndex: 2 }}>Unlock now</span>
+              </button>
+            }
+            <span style={{
+              fontSize: '14px',
+              color: '#6B7280',
+              fontWeight: '500',
+                  cursor: 'pointer',
+              transition: 'color 0.2s ease',
+                }}
+            onMouseEnter={e => { e.target.style.color = '#374151'; }}
+            onMouseLeave={e => { e.target.style.color = '#6B7280'; }}
+              >
+            </span>
+          </div>
         </div>
       </header>
 
@@ -129,15 +241,28 @@ export default function Home() {
       </div>
 
       {/* Problem Text */}
-      <h1
-        className="text-5xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
-        style={{ fontWeight: "800" }}
-      >
-        Creating content that converts takes
-        <br />
-        <span style={{ color: "red", fontWeight: "900" }}>hours</span> and often
-        still <span style={{ color: "red", fontWeight: "900" }}>flops</span>
-      </h1>
+      <div style={{
+        background: '#fff',
+        border: '1.5px solid #f87171',
+        borderRadius: '18px',
+        boxShadow: '0 4px 24px 0 rgba(0,0,0,0.06)',
+        padding: '36px 32px',
+        maxWidth: '900px',
+        margin: '0 auto 40px auto',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+        <h1
+          className="text-4xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
+          style={{ fontWeight: "800" }}
+        >
+          Creating content that actually<br />
+          drives results takes <span style={{ color: "red", fontWeight: "900" }}>hours</span><br />
+          and often still <span style={{ color: "red", fontWeight: "900" }}>fails</span><br />
+          to deliver for most founders.
+        </h1>
+      </div>
 
       {/* The Solution */}
       <div
@@ -168,96 +293,88 @@ export default function Home() {
       </div>
 
       {/* Solution Text */}
-      <h1
-        className="text-5xl font-extrabold mb-16 tracking-tight text-center text-gray-800"
-        style={{ fontWeight: "800" }}
-      >
-        SwiftReel creates{" "}
-        <span style={{ fontWeight: "900", color: "#22C55E" }}>self-improving</span>{" "}
-        content, so you can post{" "}
-        <span style={{ fontWeight: "900", color: "#22C55E" }}>faster</span> and
-        grow{" "}
-        <span style={{ fontWeight: "900", color: "#22C55E" }}>consistently</span>{" "}
-        without the guesswork.
-      </h1>
+      <div style={{
+        background: '#fff',
+        border: '1.5px solid #22C55E',
+        borderRadius: '18px',
+        boxShadow: '0 4px 24px 0 rgba(0,0,0,0.06)',
+        padding: '36px 32px',
+        maxWidth: '900px',
+        margin: '0 auto 40px auto',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}>
+        <h1
+          className="text-4xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
+          style={{ fontWeight: "800" }}
+        >
+          Swiftreel generates and optimizes<br />
+          content that learns what <span style={{ color: "#22C55E", fontWeight: "900" }}>works</span>,<br />
+          so you can post <span style={{ color: "#22C55E", fontWeight: "900" }}>faster</span>,<br />
+          grow <span style={{ color: "#22C55E", fontWeight: "900" }}>consistently</span> and skip the guesswork.
+        </h1>
+      </div>
 
       {/* Comparison Section */}
-      <section className="max-w-4xl mx-auto mb-10 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">
-          Alternatives are expensive.
+      <section className="max-w-7xl mx-auto mb-16 px-4 mt-20">
+        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-8 text-center">
+          Alternatives are <span className="text-red-600">expensive</span>
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-red-50 p-4 rounded-lg border border-red-300">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">UGC Agencies</h3>
-            <p className="text-gray-600 mb-2">
-              Expensive, charging $60-$120 per video, going upwards of $4000 to
-              $6000 a month.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-20 items-stretch justify-items-center">
+          {/* UGC Agencies */}
+          <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-red-200 rounded-2xl shadow-md p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-red-400 cursor-pointer">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl font-bold text-gray-800">UGC Agencies</span>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Expensive, charging $60-$120 per video, going upwards of $4000 to $6000 a month.
             </p>
-            <ul className="text-left text-sm space-y-1">
-              <li className="flex items-center">
-                <span className="text-red-400 mr-2">✗</span> High cost
-              </li>
-              <li className="flex items-center">
-                <span className="text-red-400 mr-2">✗</span> Limited control
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✔</span> Professional quality
-              </li>
+            <ul className="space-y-1 text-sm">
+              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> High cost</li>
+              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Limited control</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Professional quality</li>
             </ul>
           </div>
-          <div className="bg-red-50 p-4 rounded-lg border border-red-300">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">DIY Approach</h3>
-            <p className="text-gray-600 mb-2">
-              Time-consuming process: research, plan, record, edit, schedule,
-              iterate, re-purpose, analyze...
+          {/* DIY Approach */}
+          <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-red-200 rounded-2xl shadow-md p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-red-400 cursor-pointer">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl font-bold text-gray-800">DIY Approach</span>
+            </div>
+            <p className="text-gray-600 mb-4">
+              Time-consuming process: research, plan, record, edit, schedule, iterate, re-purpose, analyze…
             </p>
-            <ul className="text-left text-sm space-y-1">
-              <li className="flex items-center">
-                <span className="text-red-400 mr-2">✗</span> Time intensive
-              </li>
-              <li className="flex items-center">
-                <span className="text-red-400 mr-2">✗</span> Requires expertise
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✔</span> Full creative control
-              </li>
+            <ul className="space-y-1 text-sm">
+              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Time intensive</li>
+              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Requires expertise</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Full creative control</li>
             </ul>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg border border-green-300">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">SwiftReel</h3>
-            <p className="text-gray-600 mb-2">
-              Automatically creates & publishes videos to all platforms for a
-              simple monthly subscription.
+          {/* SwiftReel */}
+          <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-green-300 rounded-2xl shadow-lg p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-green-400 cursor-pointer relative">
+            <span className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm">Best Value</span>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xl font-bold text-gray-800">SwiftReel</span>
+            </div>
+            <p className="text-gray-700 mb-4">
+              Automatically creates & publishes videos to all platforms for a simple monthly subscription.
             </p>
-            <ul className="text-left text-sm space-y-1">
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✔</span> Cost effective
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✔</span> Fully automated
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-400 mr-2">✔</span> Multi-platform
-                publishing
-              </li>
+            <ul className="space-y-1 text-sm">
+              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Cost effective</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Fully automated</li>
+              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Multi-platform publishing</li>
             </ul>
           </div>
         </div>
-        <h3 className="mt-6 text-base font-bold text-gray-800">What can it do?</h3>
-        <p className="pt-2 text-md font-medium">
-          <span className="text-gray-800">
-            SwiftReel&apos;s goal is to automate content that drives traffic to your
-            business.{" "}
-          </span>
-          <span className="text-gray-600">
-            The differentiating factor between SwiftReel and competitors is that
-            SwiftReel takes the approach of using faceless content to automate
-            videos. While other services require you to upload all of your video
-            & image assets in order to create &quot;AI ads&quot;, SwiftReel believes in
-            organic content with TikTok distribution as a means of getting
-            leads/inbound.
-          </span>
-        </p>
+        <div className="my-10 border-t border-gray-200"></div>
+        <div className="max-w-3xl mx-auto text-center">
+          <h3 className="text-lg font-bold text-gray-800 mb-2">What can it do?</h3>
+          <p className="text-md text-gray-700 font-medium">
+            <span className="font-bold text-gray-900">Swiftreel automatically creates self-improving content that drives users to your website.</span>
+            <br />
+            The differentiating factor between SwiftReel and competitors is that SwiftReel takes the approach of using faceless content to automate videos. While other services require you to upload all of your video & image assets in order to create &quot;AI ads&quot;, SwiftReel believes in organic content with TikTok distribution as a means of getting leads/inbound.
+          </p>
+        </div>
       </section>
 
       {/* Pricing Section */}
@@ -268,78 +385,186 @@ export default function Home() {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Starter</h3>
               <p className="mb-4">
-                <span className="text-gray-800 font-bold text-3xl">$19</span>
+                <span className="text-gray-800 font-bold text-3xl">$29</span>
                 <span className="text-gray-400 text-base ml-1">per month</span>
               </p>
-              <button className="w-full bg-gray-900 text-white font-semibold py-2 rounded-full mb-4 hover:bg-gray-700 transition">
-                Buy Now
+              {/* Starter Plan Button (black gradient, lifted/glossy) */}
+              <button
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '12px 24px',
+                  color: 'white',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.45), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  transition: 'transform 0.1s ease',
+                  letterSpacing: '0.01em',
+                  overflow: 'hidden',
+                  width: '100%',
+                  marginBottom: '1rem',
+                }}
+                onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+                onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '55%',
+                  borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  filter: 'blur(0.5px)',
+                }} />
+                <span style={{ position: 'relative', zIndex: 2 }}>Buy Now</span>
               </button>
               <ul className="text-left space-y-2 text-sm">
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Generate 10 videos per month
+                  <span className="text-[#3953e6] mr-2">✔</span> Generate 10 videos per month
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Use default 200+ UGC avatars included
+                  <span className="text-[#3953e6] mr-2">✔</span> Use default 200+ UGC avatars included
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Create your own AI avatars (25 images, 5 videos)
+                  <span className="text-[#3953e6] mr-2">✔</span> Create your own AI avatars (25 images, 5 videos)
                 </li>
               </ul>
             </div>
-            <div className="bg-white p-8 rounded-xl shadow-sm border-2 border-[#ff4514] flex flex-col items-start relative">
-              <span className="absolute top-4 left-4 bg-[#ff4514] text-white text-xs font-semibold px-2 py-1 rounded-full">
+            <div className="bg-white p-8 rounded-xl shadow-sm border-2 border-[#3953e6] flex flex-col items-start relative">
+              <span className="absolute top-4 left-4 text-white text-xs font-semibold px-2 py-1 rounded-full" style={{background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)'}}>
                 Most Popular
               </span>
               <h3 className="text-xl font-semibold text-gray-800 mb-2 mt-8">Growth</h3>
               <p className="mb-4">
-                <span className="text-gray-800 font-bold text-3xl">$49</span>
+                <span className="text-gray-800 font-bold text-3xl">$79</span>
                 <span className="text-gray-400 text-base ml-1">per month</span>
               </p>
-              <button className="w-full bg-[#ff4514] text-white font-semibold py-2 rounded-full mb-4 hover:bg-[#e63e12] transition">
-                Buy Now
+              {/* Growth Plan Button (blue gradient/gloss) */}
+              <button
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '12px 24px',
+                  color: 'white',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.45), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  transition: 'transform 0.1s ease',
+                  letterSpacing: '0.01em',
+                  overflow: 'hidden',
+                  width: '100%',
+                  marginBottom: '1rem',
+                }}
+                onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+                onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '55%',
+                  borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  filter: 'blur(0.5px)',
+                }} />
+                <span style={{ position: 'relative', zIndex: 2 }}>Buy Now</span>
               </button>
               <ul className="text-left space-y-2 text-sm">
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Everything in Starter, plus...
+                  <span className="text-[#3953e6] mr-2">✔</span> Everything in Starter, plus...
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Generate 50 videos per month
+                  <span className="text-[#3953e6] mr-2">✔</span> Generate 50 videos per month
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> AI slideshow generator access
+                  <span className="text-[#3953e6] mr-2">✔</span> AI slideshow generator access
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Create your own AI avatars (100 images, 25 videos)
+                  <span className="text-[#3953e6] mr-2">✔</span> Create your own AI avatars (100 images, 25 videos)
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Publish directly to TikTok
+                  <span className="text-[#3953e6] mr-2">✔</span> Publish directly to TikTok
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Schedule and automate videos
+                  <span className="text-[#3953e6] mr-2">✔</span> Schedule and automate videos
                 </li>
               </ul>
             </div>
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Scale</h3>
               <p className="mb-4">
-                <span className="text-gray-800 font-bold text-3xl">$95</span>
+                <span className="text-gray-800 font-bold text-3xl">$149</span>
                 <span className="text-gray-400 text-base ml-1">per month</span>
               </p>
-              <button className="w-full bg-gray-900 text-white font-semibold py-2 rounded-full mb-4 hover:bg-gray-700 transition">
-                Buy Now
+              {/* Scale Plan Button (black gradient, lifted/glossy) */}
+              <button
+                style={{
+                  position: 'relative',
+                  background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '12px 24px',
+                  color: 'white',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.45), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                  cursor: 'pointer',
+                  outline: 'none',
+                  display: 'inline-block',
+                  textAlign: 'center',
+                  transition: 'transform 0.1s ease',
+                  letterSpacing: '0.01em',
+                  overflow: 'hidden',
+                  width: '100%',
+                  marginBottom: '1rem',
+                }}
+                onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+                onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+              >
+                <span style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '55%',
+                  borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                  pointerEvents: 'none',
+                  zIndex: 1,
+                  filter: 'blur(0.5px)',
+                }} />
+                <span style={{ position: 'relative', zIndex: 2 }}>Buy Now</span>
               </button>
               <ul className="text-left space-y-2 text-sm">
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Everything in Growth, plus...
+                  <span className="text-[#3953e6] mr-2">✔</span> Everything in Growth, plus...
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Generate 150 videos per month
+                  <span className="text-[#3953e6] mr-2">✔</span> Generate 150 videos per month
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Create your own AI avatars (200 images, 50 videos)
+                  <span className="text-[#3953e6] mr-2">✔</span> Create your own AI avatars (200 images, 50 videos)
                 </li>
                 <li className="flex items-center text-gray-600">
-                  <span className="text-[#ff4514] mr-2">✔</span> Priority support
+                  <span className="text-[#3953e6] mr-2">✔</span> Priority support
                 </li>
               </ul>
             </div>
@@ -348,54 +573,28 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="mt-20 text-gray-500 text-sm">
-        © {new Date().getFullYear()} SwiftReel. All rights reserved.
+      <footer className="absolute bottom-2 left-0 w-full flex flex-col items-center gap-2 text-gray-500 text-sm">
+        <div className="flex items-center gap-4">
+          <span>© 2025 SwiftReel. All rights reserved.</span>
+          <a
+            href="/privacy-policy"
+            className="px-3 py-1 rounded-full bg-white border border-gray-300 text-gray-500 font-semibold hover:bg-blue-50 hover:text-blue-800 transition"
+            style={{ fontSize: '14px' }}
+          >
+            Privacy Policy
+          </a>
+          <a
+            href="/terms-of-service"
+            className="px-3 py-1 rounded-full bg-white border border-gray-300 text-gray-500 font-semibold hover:bg-blue-50 hover:text-blue-800 transition"
+            style={{ fontSize: '14px' }}
+          >
+            Terms of Service
+          </a>
+        </div>
       </footer>
 
       <style>
         {`
-          html {
-            scroll-behavior: smooth;
-          }
-          .start-glow {
-            position: relative;
-            box-shadow: 0 0 16px 2px #ffb380, 0 0 8px 2px #ff4514;
-            animation: glow-pulse 3s infinite alternate ease-in-out;
-          }
-
-          .start-glow::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            border-radius: 9999px;
-            background: linear-gradient(45deg, #ff4514, #ffb380, #ff4514);
-            z-index: -1;
-            animation: rotate-glow 3s linear infinite;
-          }
-
-          @keyframes glow-pulse {
-            0% {
-              box-shadow: 0 2px 12px 1px #ffb380, 0 1px 6px 1px #ff4514;
-            }
-            50% {
-              box-shadow: 0 -2px 20px 3px #ffb380, 0 -1px 10px 3px #ff4514;
-            }
-            100% {
-              box-shadow: 0 2px 12px 1px #ffb380, 0 1px 6px 1px #ff4514;
-            }
-          }
-
-          @keyframes rotate-glow {
-            0% {
-              transform: rotate(0deg);
-            }
-            100% {
-              transform: rotate(360deg);
-            }
-          }
         `}
       </style>
     </div>

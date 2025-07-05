@@ -1,16 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useSession } from 'next-auth/react';
 import { supabase } from "../../../supabaseClient";
 import { usePersistence } from '../../services/persistenceService';
+import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 import SlideCanvas from './components/SlideCanvas';
 import ContentModal from './components/ContentModal';
 import PromptModal from './components/PromptModal';
 import { useSlideManagement } from './hooks/useSlideManagement';
 import { useSlideNavigation } from './hooks/useSlideNavigation';
+import { validateSlide } from '../../utils/validation';
+import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
+
+const isDev = process.env.NODE_ENV === 'development';
 
 export default function SlidesEditor() {
+  const { data: session, status } = useSession();
+  const effectiveStatus = isDev ? 'authenticated' : status;
+  const effectiveSession = useMemo(() => {
+    return isDev
+      ? { user: { name: 'Dev User', email: 'dev@local.com' } }
+      : session;
+  }, [session]);
   // State for image library
   const [libraryImages, setLibraryImages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -18,9 +31,14 @@ export default function SlidesEditor() {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const [error, setError] = useState(null);
+  const [businessContext, setBusinessContext] = useState(null);
+  const [businessContextFetched, setBusinessContextFetched] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState(null);
 
   // Use persistence hook for slides
-  const defaultSlides = [{ id: Date.now(), image: null, texts: [], ratio: '16:9' }];
+  const defaultSlides = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
   const { 
     data: slides, 
     updateData: setSlides, 
@@ -60,11 +78,17 @@ export default function SlidesEditor() {
     const fetchImages = async () => {
       try {
         setIsLoading(true);
+        setError(null);
         const { data, error } = await supabase.from('images').select('id, title, image_url');
         if (error) throw error;
+        console.log('Fetched images from database:', data?.length || 0, 'images');
+        if (data && data.length > 0) {
+          console.log('Sample image:', data[0]);
+        }
         setLibraryImages(data);
       } catch (error) { 
-        console.error("Error fetching images:", error); 
+        console.error("Error fetching images:", error);
+        setError('Failed to load image library. Please refresh the page.');
       } finally { 
         setIsLoading(false); 
       }
@@ -72,25 +96,185 @@ export default function SlidesEditor() {
     fetchImages();
   }, []);
 
+  // Fetch business context for AI generation - only once on mount
+  useEffect(() => {
+    if (businessContextFetched) return;
+    
+    const fetchBusinessContext = async () => {
+      try {
+        const context = await getCurrentUserBusinessContext();
+        setBusinessContext(context);
+      } catch (error) {
+        console.error('Error fetching business context:', error);
+      } finally {
+        setBusinessContextFetched(true);
+      }
+    };
+    fetchBusinessContext();
+  }, [businessContextFetched]); // Only depend on the fetch flag
+
+  // Check for AI-generated slides from localStorage
+  useEffect(() => {
+    const aiGeneratedSlides = localStorage.getItem('aiGeneratedSlides');
+    if (aiGeneratedSlides && !isLoading && libraryImages.length > 0) {
+      try {
+        const parsedSlides = JSON.parse(aiGeneratedSlides);
+        console.log('Found AI-generated slides in localStorage:', parsedSlides);
+        
+        if (parsedSlides && Array.isArray(parsedSlides) && parsedSlides.length > 0) {
+          // Process the slides with images and positioning (same as handlePromptSubmit)
+          const processSlides = async () => {
+            try {
+              console.log('Processing AI-generated slides from localStorage...');
+              console.log('Available library images:', libraryImages.length);
+              
+              // Apply smart text positioning to each slide
+              const { applySmartPositioning } = await import('../../utils/textPositioning');
+              const positionedSlides = parsedSlides.map(slide => applySmartPositioning(slide));
+              
+              // Auto-select images based on imageCategory
+              const slidesWithImages = positionedSlides.map((slide, index) => {
+                // Always try to assign an image, even if no category or no library images
+                let selectedImage = null;
+                
+                if (libraryImages.length > 0) {
+                  if (slide.imageCategory) {
+                    // Find images that match the category (simple keyword matching)
+                    const categoryKeywords = {
+                      'business': ['business', 'office', 'corporate', 'professional'],
+                      'technology': ['tech', 'computer', 'digital', 'innovation'],
+                      'success': ['success', 'achievement', 'winning', 'trophy'],
+                      'motivation': ['motivation', 'inspiration', 'positive', 'energy'],
+                      'growth': ['growth', 'progress', 'development', 'improvement'],
+                      'creativity': ['creative', 'art', 'design', 'imagination'],
+                      'social_media': ['social', 'media', 'connection', 'network'],
+                      'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership'],
+                      'marketing': ['marketing', 'advertising', 'promotion', 'brand'],
+                      'lifestyle': ['lifestyle', 'life', 'daily', 'personal']
+                    };
+                    
+                    const keywords = categoryKeywords[slide.imageCategory] || ['business'];
+                    const matchingImages = libraryImages.filter(img => 
+                      keywords.some(keyword => 
+                        img.title.toLowerCase().includes(keyword.toLowerCase())
+                      )
+                    );
+                    
+                    console.log(`Slide ${index + 1} - Category: ${slide.imageCategory}, Keywords: ${keywords.join(', ')}, Matching images: ${matchingImages.length}`);
+                    
+                    // Select a random matching image, or fallback to any image
+                    selectedImage = matchingImages.length > 0 
+                      ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
+                      : libraryImages[Math.floor(Math.random() * libraryImages.length)];
+                  } else {
+                    // No category specified, select a random image
+                    selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
+                  }
+                  
+                  console.log(`Selected image for slide ${index + 1}:`, selectedImage?.title);
+                } else {
+                  console.log(`No library images available for slide ${index + 1}`);
+                }
+                
+                return {
+                  ...slide,
+                  image: selectedImage
+                };
+              });
+              
+              // Replace current slides with processed ones
+              setSlides(slidesWithImages);
+              setActiveSlideIndex(0);
+              
+              console.log('Applied AI-generated slides successfully with images and positioning');
+            } catch (error) {
+              console.error('Error processing AI-generated slides:', error);
+              // Fallback to unprocessed slides
+              setSlides(parsedSlides);
+              setActiveSlideIndex(0);
+            }
+          };
+          
+          processSlides();
+          
+          // Clear localStorage
+          localStorage.removeItem('aiGeneratedSlides');
+        }
+      } catch (error) {
+        console.error('Error parsing AI-generated slides from localStorage:', error);
+        localStorage.removeItem('aiGeneratedSlides');
+      }
+    }
+  }, [setSlides, libraryImages, isLoading]);
+
+  // Validate slides data
+  useEffect(() => {
+    if (slides && slides.length > 0) {
+      const validationErrors = [];
+      slides.forEach((slide, index) => {
+        const validation = validateSlide(slide);
+        if (!validation.success) {
+          validationErrors.push(`Slide ${index + 1}: ${validation.error}`);
+        }
+      });
+      
+      if (validationErrors.length > 0) {
+        console.error('Slide validation errors:', validationErrors);
+        setError(`Data validation errors: ${validationErrors.join(', ')}`);
+      } else {
+        setError(null);
+      }
+    }
+  }, [slides]);
+
   // Event handlers
   const handleSlideSelect = (index) => {
     setActiveSlideIndex(index);
   };
 
   const handleSlideUpdate = (slideIndex, newProps) => {
-    updateSlide(slideIndex, newProps);
+    try {
+      // Validate the updated slide
+      const updatedSlide = { ...slides[slideIndex], ...newProps };
+      const validation = validateSlide(updatedSlide);
+      
+      if (!validation.success) {
+        console.error('Slide validation failed:', validation.error);
+        return;
+      }
+      
+      updateSlide(slideIndex, newProps);
+    } catch (error) {
+      console.error('Error updating slide:', error);
+      setError('Failed to update slide. Please try again.');
+    }
   };
 
   const handleAddSlide = () => {
-    addSlide();
+    try {
+      addSlide();
+    } catch (error) {
+      console.error('Error adding slide:', error);
+      setError('Failed to add slide. Please try again.');
+    }
   };
 
   const handleDeleteSlide = (slideIndex) => {
-    deleteSlide(slideIndex);
+    try {
+      deleteSlide(slideIndex);
+    } catch (error) {
+      console.error('Error deleting slide:', error);
+      setError('Failed to delete slide. Please try again.');
+    }
   };
 
   const handleRatioChange = (slideIndex) => {
-    changeRatio(slideIndex);
+    try {
+      changeRatio(slideIndex);
+    } catch (error) {
+      console.error('Error changing ratio:', error);
+      setError('Failed to change slide ratio. Please try again.');
+    }
   };
 
   const handleContentModalOpen = () => {
@@ -109,14 +293,109 @@ export default function SlidesEditor() {
     setIsPromptModalOpen(false);
   };
 
-  const handlePromptSubmit = (prompt) => {
-    // TODO: Implement AI prompt functionality
-    console.log('Prompt submitted:', prompt);
+  const handlePromptSubmit = (generatedSlides, prompt) => {
+    try {
+      console.log('handlePromptSubmit called with:', {
+        generatedSlides,
+        prompt,
+        slidesLength: generatedSlides?.length
+      });
+
+      // Validate generated slides
+      if (!generatedSlides || !Array.isArray(generatedSlides)) {
+        console.error('Invalid generated slides data:', generatedSlides);
+        setError('Invalid slide data received. Please try again.');
+        return;
+      }
+
+      if (generatedSlides.length === 0) {
+        console.error('No generated slides received');
+        setError('No slides were generated. Please try again.');
+        return;
+      }
+
+      console.log('Applying generated slides...');
+      
+      // Apply smart text positioning to each slide
+      const { applySmartPositioning } = require('../../utils/textPositioning');
+      const positionedSlides = generatedSlides.map(slide => applySmartPositioning(slide));
+      
+      // Auto-select images based on imageCategory
+      const slidesWithImages = positionedSlides.map((slide, index) => {
+        if (slide.imageCategory && libraryImages.length > 0) {
+          // Find images that match the category (simple keyword matching)
+          const categoryKeywords = {
+            'business': ['business', 'office', 'corporate', 'professional'],
+            'technology': ['tech', 'computer', 'digital', 'innovation'],
+            'success': ['success', 'achievement', 'winning', 'trophy'],
+            'motivation': ['motivation', 'inspiration', 'positive', 'energy'],
+            'growth': ['growth', 'progress', 'development', 'improvement'],
+            'creativity': ['creative', 'art', 'design', 'imagination'],
+            'social_media': ['social', 'media', 'connection', 'network'],
+            'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership'],
+            'marketing': ['marketing', 'advertising', 'promotion', 'brand'],
+            'lifestyle': ['lifestyle', 'life', 'daily', 'personal']
+          };
+          
+          const keywords = categoryKeywords[slide.imageCategory] || ['business'];
+          const matchingImages = libraryImages.filter(img => 
+            keywords.some(keyword => 
+              img.title.toLowerCase().includes(keyword.toLowerCase())
+            )
+          );
+          
+          // Select a random matching image, or fallback to any image
+          const selectedImage = matchingImages.length > 0 
+            ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
+            : libraryImages[Math.floor(Math.random() * libraryImages.length)];
+          
+          return {
+            ...slide,
+            image: selectedImage
+          };
+        }
+        return slide;
+      });
+      
+      // Replace all slides with the positioned ones
+      setSlides(slidesWithImages);
+      
+      // Set active slide to first generated slide
+      setActiveSlideIndex(0);
+      
+      console.log('AI-generated slides applied successfully:', positionedSlides.length, 'slides');
+      console.log('Generated slides structure:', positionedSlides);
+      
+      // Close the modal
+      setIsPromptModalOpen(false);
+      
+    } catch (error) {
+      console.error('Error applying AI-generated slides:', error);
+      setError('Failed to apply generated slides. Please try again.');
+    }
   };
 
   const handleImageSelect = (image) => {
-    handleSelectImageForSlide(image);
-    setIsContentModalOpen(false);
+    try {
+      handleSelectImageForSlide(image);
+      setIsContentModalOpen(false);
+    } catch (error) {
+      console.error('Error selecting image:', error);
+      setError('Failed to select image. Please try again.');
+    }
+  };
+
+  // Handler for scheduling
+  const handleScheduleClick = () => {
+    setIsScheduleModalOpen(true);
+  };
+
+  const handleDateSelected = (date) => {
+    setScheduledDate(date);
+    setIsScheduleModalOpen(false);
+    // Save to localStorage for now
+    localStorage.setItem('scheduledContent', JSON.stringify({ date, slides }));
+    alert(`Content scheduled for ${date.toLocaleDateString()}`);
   };
 
   // Add a guard to prevent rendering with invalid slide data
@@ -135,6 +414,20 @@ export default function SlidesEditor() {
     <>
       <SaveStatusIndicator saveStatus={saveStatus} />
 
+      {error && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{error}</span>
+            <button 
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
+
       <ContentModal
         isOpen={isContentModalOpen}
         onClose={handleContentModalClose}
@@ -151,6 +444,7 @@ export default function SlidesEditor() {
         isOpen={isPromptModalOpen}
         onClose={handlePromptModalClose}
         onSubmit={handlePromptSubmit}
+        businessContext={businessContext}
       />
 
       <div style={{ 
@@ -176,9 +470,25 @@ export default function SlidesEditor() {
             onRatioChange={handleRatioChange}
             onContentModalOpen={handleContentModalOpen}
             onPromptModalOpen={handlePromptModalOpen}
+            onScheduleClick={handleScheduleClick}
           />
         </div>
       </div>
+      {/* Schedule Modal */}
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl p-8 relative">
+            <button
+              onClick={() => setIsScheduleModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Pick a day to schedule this content</h2>
+            <MonthlyCalendar onDateSelected={handleDateSelected} />
+          </div>
+        </div>
+      )}
     </>
   );
 } 

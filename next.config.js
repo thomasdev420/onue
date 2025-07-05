@@ -23,9 +23,11 @@ const nextConfig = {
       { protocol: 'https', hostname: 'eatsleepworkrepeat.com' },
       { protocol: 'https', hostname: 'www.nelincs.gov.uk' },
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'www.w3schools.com' },
       
       // ADD THIS:
       { protocol: 'https', hostname: 'cdn.mos.cms.futurecdn.net' },
+      { protocol: 'https', hostname: 'randomuser.me' },
     ],
   },
 }

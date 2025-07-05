@@ -59,14 +59,14 @@ export async function loadSlides(userId) {
     
     // If no slides found, return a default slide
     if (slides.length === 0) {
-      return [{ id: Date.now(), image: null, texts: [], ratio: '16:9' }];
+      return [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
     }
 
     return slides;
   } catch (error) {
     console.error('Error loading slides:', error);
     // Return default slide on error
-    return [{ id: Date.now(), image: null, texts: [], ratio: '16:9' }];
+    return [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
   }
 }
 

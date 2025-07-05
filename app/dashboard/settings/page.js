@@ -1,244 +1,242 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Upload, X, CreditCard, Pocket, Package, User, Mail, Shield } from 'lucide-react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePersistence } from '../../services/persistenceService';
 import { supabase } from '../../../supabaseClient';
+import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X } from 'lucide-react';
+import ErrorAlert from '../../components/ErrorAlert';
+import Image from 'next/image';
 
-export default function Settings() {
+export default function SettingsPage() {
   const { data: session } = useSession();
-  const { data: uploadedImages, updateData: setUploadedImages } = usePersistence('userImages', []);
-  const [isDragging, setIsDragging] = useState(false);
+  const [userImages, setUserImages] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetchUserImages();
+    }
+  }, [session, fetchUserImages]);
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-  };
+  const fetchUserImages = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_images')
+        .select('*')
+        .eq('user_id', session.user.email);
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
-  };
+      if (error) throw error;
+      setUserImages(data || []);
+    } catch (error) {
+      console.error('Error fetching user images:', error);
+      setError('Failed to load your images');
+    }
+  }, [session?.user?.email]);
 
-  const handleFileInput = (e) => {
-    const files = Array.from(e.target.files);
-    handleFiles(files);
-  };
-
-  const handleFiles = async (files) => {
+  const handleFileUpload = async (event) => {
     if (!session?.user?.email) {
-      alert("You must be logged in to upload images.");
+      setError('You must be logged in to upload images.');
       return;
     }
 
-    const newImages = await Promise.all(files.map(async (file) => {
-      const filePath = `${session.user.email}/${file.name}-${Date.now()}`;
-      const { error: uploadError } = await supabase.storage
-        .from('user-images')
-        .upload(filePath, file);
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
-      if (uploadError) {
-        console.error('Error uploading image:', uploadError);
-        return null;
+    setIsUploading(true);
+    setError(null);
+
+    try {
+      for (const file of files) {
+        // Validate file type and size
+        if (!file.type.startsWith('image/')) {
+          setError('Please upload only image files');
+          continue;
+        }
+
+        if (file.size > 10 * 1024 * 1024) { // 10MB limit
+          setError('File size must be less than 10MB');
+          continue;
+        }
+
+        const fileName = `${Date.now()}-${file.name}`;
+        const { data, error } = await supabase.storage
+          .from('user-content')
+          .upload(fileName, file);
+
+        if (error) throw error;
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('user-content')
+          .getPublicUrl(fileName);
+
+        // Save to database
+        const { error: dbError } = await supabase
+          .from('user_images')
+          .insert({
+            user_id: session.user.email,
+            title: file.name,
+            image_url: publicUrl,
+            file_size: file.size,
+            file_type: file.type
+          });
+
+        if (dbError) throw dbError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('user-images')
-        .getPublicUrl(filePath);
-
-      return {
-        id: Math.random().toString(36).substr(2, 9),
-        url: publicUrl,
-        path: filePath,
-      };
-    }));
-
-    const successfulUploads = newImages.filter(img => img !== null);
-    setUploadedImages(prev => [...prev, ...successfulUploads]);
-  };
-
-  const removeImage = async (id) => {
-    const imageToRemove = uploadedImages.find(img => img.id === id);
-    if (!imageToRemove) return;
-
-    // Remove from Supabase storage
-    const { error: deleteError } = await supabase.storage
-      .from('user-images')
-      .remove([imageToRemove.path]);
-
-    if (deleteError) {
-      console.error("Error deleting image from storage:", deleteError);
-      // Optionally, alert the user or handle the error more gracefully
+      setSuccessMessage('Images uploaded successfully!');
+      fetchUserImages(); // Refresh the list
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Upload error:', error);
+      setError('Failed to upload images. Please try again.');
+    } finally {
+      setIsUploading(false);
     }
-
-    // Remove from local state and persistence
-    setUploadedImages(prev => prev.filter(img => img.id !== id));
   };
+
+  const handleDeleteImage = async (imageId) => {
+    try {
+      const { error } = await supabase
+        .from('user_images')
+        .delete()
+        .eq('id', imageId);
+
+      if (error) throw error;
+
+      setSuccessMessage('Image deleted successfully!');
+      fetchUserImages(); // Refresh the list
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Delete error:', error);
+      setError('Failed to delete image. Please try again.');
+    }
+  };
+
+  const socialPlatforms = [
+    { name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
+    { name: 'Facebook', icon: Facebook, color: 'bg-gradient-to-r from-blue-500 to-blue-600' },
+    { name: 'Twitter', icon: Twitter, color: 'bg-gradient-to-r from-blue-400 to-blue-500' },
+    { name: 'LinkedIn', icon: Linkedin, color: 'bg-gradient-to-r from-blue-600 to-blue-700' },
+    { name: 'YouTube', icon: Youtube, color: 'bg-gradient-to-r from-red-500 to-red-600' }
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="flex items-center gap-3 mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
-        <div className="h-6 w-px bg-gray-200"></div>
-        <p className="text-sm text-gray-500">Manage your account settings and preferences</p>
-      </div>
-      
-      {/* Get Started Section */}
-      <div className="mb-12">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-[#ff4514] rounded-full"></div>
-          <h2 className="text-xl font-semibold text-gray-800">Get Started</h2>
+    <div className="p-8 max-w-6xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Settings</h1>
+
+      {error && (
+        <ErrorAlert 
+          error={error} 
+          onDismiss={() => setError(null)}
+          className="mb-6"
+        />
+      )}
+
+      {successMessage && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+          <div className="flex items-center gap-2">
+            <Check size={16} />
+            <span className="text-sm font-medium">{successMessage}</span>
+            <button 
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-500 hover:text-green-700 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 text-blue-500">
-                <CreditCard size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-800">Subscription required</h3>
-                <p className="text-gray-500 text-sm">Estimated 2–3 minutes</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <Link href="/#pricing">
-                <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
-                  Upgrade now
-                  <span>➔</span>
-                </button>
-              </Link>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Image Management */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Image Management</h2>
+          
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Upload Images
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileUpload}
+                disabled={isUploading}
+                className="hidden"
+                id="image-upload"
+              />
+              <label htmlFor="image-upload" className="cursor-pointer">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-600">
+                  {isUploading ? 'Uploading...' : 'Click to upload images'}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  JPG, PNG, GIF up to 10MB each
+                </p>
+              </label>
             </div>
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gray-50 text-gray-700">
-                <Pocket size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-800">Connect TikTok account</h3>
-                <p className="text-gray-500 text-sm">Estimated 30 seconds</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
-                Connect TikTok
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-gray-50 text-gray-700">
-                <Package size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-800">Add your first product</h3>
-                <p className="text-gray-500 text-sm">Estimated 30 seconds</p>
+          {userImages.length > 0 && (
+            <div>
+              <h3 className="text-lg font-medium text-gray-800 mb-3">Your Images</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {userImages.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <Image
+                      src={image.image_url}
+                      alt={image.title}
+                      width={256}
+                      height={128}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
+                    <button
+                      onClick={() => handleDeleteImage(image.id)}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="mt-4">
-              <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
-                Add Product
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center bg-blue-50 text-blue-500">
-                <Upload size={24} />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-semibold text-gray-800">Upload product demo video</h3>
-                <p className="text-gray-500 text-sm">Estimated 30 seconds</p>
-              </div>
-            </div>
-            <div className="mt-4">
-              <button className="w-full bg-blue-500 text-white py-2.5 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center gap-2 font-medium">
-                Upload Demo
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Image Upload Section */}
-      <div className="mb-12">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-1 h-6 bg-[#ff4514] rounded-full"></div>
-          <h2 className="text-xl font-semibold text-gray-800">Content Images</h2>
-        </div>
-        <div 
-          className={`
-            bg-white border-2 border-dashed rounded-xl p-8 text-center
-            ${isDragging ? 'border-[#ff4514] bg-[#ff4514]/5' : 'border-gray-200'}
-            transition-colors duration-200
-          `}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            id="image-upload"
-            className="hidden"
-            multiple
-            accept="image/*"
-            onChange={handleFileInput}
-          />
-          <label 
-            htmlFor="image-upload"
-            className="cursor-pointer"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center">
-                <Upload className="w-8 h-8 text-gray-400" />
-              </div>
-              <div className="text-gray-600">
-                <span className="font-medium text-[#ff4514]">Click to upload</span> or drag and drop
-              </div>
-              <p className="text-sm text-gray-500">PNG, JPG, GIF up to 10MB</p>
-            </div>
-          </label>
+          )}
         </div>
 
-        {/* Preview Grid */}
-        {uploadedImages.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-4">Uploaded Images</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {uploadedImages.map(image => (
-                <div key={image.id} className="relative group aspect-square">
-                  <Image
-                    src={image.url}
-                    alt="Preview"
-                    fill={true}
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    style={{objectFit: "cover"}}
-                    className="rounded-lg"
-                  />
-                  <button
-                    onClick={() => removeImage(image.id)}
-                    className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <X className="w-4 h-4 text-white" />
-                  </button>
+        {/* Social Media Connections */}
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Social Media Connections</h2>
+          
+          <div className="space-y-4">
+            {socialPlatforms.map((platform) => (
+              <div key={platform.name} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 ${platform.color} rounded-lg flex items-center justify-center`}>
+                    <platform.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-800">{platform.name}</h3>
+                    <p className="text-sm text-gray-500">Connect your account</p>
+                  </div>
                 </div>
-              ))}
-            </div>
+                <button
+                  onClick={() => setError(`${platform.name} connection coming soon!`)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Connect
+                </button>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

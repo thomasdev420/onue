@@ -11,7 +11,7 @@ The slides editor has been refactored from a monolithic 1011-line component into
 ```
 app/dashboard/slides/
 ├── page.js                    # Main entry point (now ~150 lines)
-├── constants.js               # Centralized constants and configuration
+├── constants.js               # Centralised constants and configuration
 ├── README.md                  # This documentation
 ├── components/                # Reusable UI components
 │   ├── SlideCanvas.jsx       # Main slide display area
@@ -84,106 +84,12 @@ app/dashboard/slides/
 
 ### `useSlideCanvas.js`
 - Manages canvas refs and slide width configuration
-- Provides centralized canvas state
+- Provides centralised canvas state
 
 ### `useDragAndDrop.js`
 - Handles text element dragging
-- Magnetic snapping to center
+- Magnetic snapping to centre
 - Boundary constraints
 - Click vs drag detection
 
-### `useInlineEditing.js`
-- Manages inline text editing state
-- Textarea focus and auto-resize
-- Save/cancel functionality
-- Keyboard shortcuts (Enter/Escape)
-
-### `useSlideManagement.js`
-- Slide CRUD operations (Create, Read, Update, Delete)
-- Aspect ratio cycling
-- Text addition
-- Image selection
-
-### `useSlideNavigation.js`
-- Keyboard navigation (arrow keys)
-- Slide index management
-- Navigation event handling
-
-## Constants
-
-### `constants.js`
-Centralized configuration for:
-- Slide dimensions and ratios
-- Colors and styling
-- Spacing and sizing
-- Modal configurations
-- Z-index values
-
-## Benefits of Refactoring
-
-### 1. **Maintainability**
-- Single responsibility principle
-- Clear component boundaries
-- Easy to locate and modify specific functionality
-
-### 2. **Reusability**
-- Components can be reused across different contexts
-- Hooks can be shared between components
-- Constants prevent duplication
-
-### 3. **Testability**
-- Small, focused components are easier to test
-- Hooks can be tested in isolation
-- Clear interfaces make mocking easier
-
-### 4. **Performance**
-- Better memoization opportunities
-- Reduced re-renders through proper component separation
-- Optimized event handling
-
-### 5. **Developer Experience**
-- Easier to understand and navigate
-- Better IDE support and autocomplete
-- Clearer error boundaries
-
-## Migration Notes
-
-### Preserved Functionality
-- All existing features work exactly as before
-- No changes to user experience
-- Same keyboard shortcuts and interactions
-- Identical visual appearance
-
-### Breaking Changes
-- None - this is a pure refactoring
-- All existing APIs remain the same
-- No changes to data structures
-
-## Future Improvements
-
-### Potential Enhancements
-1. **CSS Modules**: Replace inline styles with CSS modules
-2. **TypeScript**: Add type safety
-3. **Testing**: Add comprehensive unit tests
-4. **Performance**: Add React.memo and useMemo optimizations
-5. **Accessibility**: Improve keyboard navigation and screen reader support
-
-### Code Quality
-1. **Error Boundaries**: Add error boundaries for better error handling
-2. **Loading States**: Improve loading state management
-3. **Validation**: Add input validation
-4. **Documentation**: Add JSDoc comments for functions
-
-## Usage
-
-The refactored slides editor maintains the same API as before. Simply import and use the main `SlidesEditor` component:
-
-```jsx
-import SlidesEditor from './app/dashboard/slides/page';
-
-function App() {
-  return <SlidesEditor />;
-}
-```
-
-All functionality, including drag-and-drop, inline editing, modal interactions, and persistence, works exactly as before. 
+### `

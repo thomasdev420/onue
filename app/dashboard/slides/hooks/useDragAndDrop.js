@@ -50,24 +50,27 @@ export function useDragAndDrop({ slides, activeSlideIndex, onSlideUpdate, imageC
     const dx = e.clientX - initialMousePos.x;
     const dy = e.clientY - initialMousePos.y;
 
-    let newX = initialTextPos.x + dx;
-    let newY = initialTextPos.y + dy;
+    // Convert pixel movement to percentage movement
+    const percentDx = (dx / imageContainerRect.width) * 100;
+    const percentDy = (dy / imageContainerRect.height) * 100;
+
+    let newX = initialTextPos.x + percentDx;
+    let newY = initialTextPos.y + percentDy;
     
     if (elementWidth > 0 && elementHeight > 0) {
-      const halfWidth = elementWidth / 2;
-      const halfHeight = elementHeight / 2;
+      const halfWidthPercent = (elementWidth / imageContainerRect.width) * 50;
+      const halfHeightPercent = (elementHeight / imageContainerRect.height) * 50;
       
-      // Magnetic snapping to vertical center
-      const centerX = imageContainerRect.width / 2;
-      const snapThreshold = 10;
+      // Magnetic snapping to vertical center (50%)
+      const snapThreshold = 5; // 5% threshold
       
-      if (Math.abs(newX - centerX) < snapThreshold) {
-        newX = centerX;
+      if (Math.abs(newX - 50) < snapThreshold) {
+        newX = 50;
       }
       
-      // Clamp position within the container bounds
-      newX = Math.max(halfWidth, Math.min(newX, imageContainerRect.width - halfWidth));
-      newY = Math.max(halfHeight, Math.min(newY, imageContainerRect.height - halfHeight));
+      // Clamp position within the container bounds (0-100%)
+      newX = Math.max(halfWidthPercent, Math.min(newX, 100 - halfWidthPercent));
+      newY = Math.max(halfHeightPercent, Math.min(newY, 100 - halfHeightPercent));
     }
     
     const newTexts = slides[activeSlideIndex].texts.map((text, i) => 
