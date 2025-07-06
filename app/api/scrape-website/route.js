@@ -2,13 +2,24 @@ import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openai = null;
+
+function getOpenAI() {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 async function classifyBusinessType(text) {
   try {
-    const completion = await openai.chat.completions.create({
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4o", // or "gpt-3.5-turbo" for lower cost
       messages: [
         {
@@ -52,7 +63,8 @@ Return only the business type label, nothing else.`
 
 async function extractCompanyNameWithAI(title, domain, metaDescription) {
   try {
-    const completion = await openai.chat.completions.create({
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
@@ -104,7 +116,8 @@ Extract the company name:`
 
 async function extractProductInfoWithAI(metaDescription, domain, title) {
   try {
-    const completion = await openai.chat.completions.create({
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {

@@ -2,9 +2,19 @@ import OpenAI from 'openai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openai = null;
+
+function getOpenAI() {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export async function POST(req) {
   try {
@@ -64,7 +74,8 @@ export async function POST(req) {
     console.log('Business context:', { companyName, businessType, productInfo });
 
     // Generate slide content using OpenAI with enhanced prompt
-    const completion = await openai.chat.completions.create({
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {

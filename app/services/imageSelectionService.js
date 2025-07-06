@@ -2,9 +2,19 @@ import { supabase } from '../../supabaseClient';
 import { apiLogger } from '../utils/logger';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors
+let openai = null;
+
+function getOpenAI() {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY environment variable is required');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 // Stock photo categories with keywords
 const STOCK_PHOTO_CATEGORIES = {
@@ -128,7 +138,8 @@ export class ImageSelectionService {
         return images[0]; // Return first image as fallback
       }
       
-      const completion = await openai.chat.completions.create({
+      const openaiClient = getOpenAI();
+      const completion = await openaiClient.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
