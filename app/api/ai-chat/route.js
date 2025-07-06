@@ -6,6 +6,12 @@ let openai = null;
 function getOpenAI() {
   if (!openai) {
     const apiKey = process.env.OPENAI_API_KEY;
+    console.log('OpenAI API Key check:', {
+      hasKey: !!apiKey,
+      keyLength: apiKey ? apiKey.length : 0,
+      keyPrefix: apiKey ? apiKey.substring(0, 7) + '...' : 'none'
+    });
+    
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required');
     }
@@ -16,7 +22,20 @@ function getOpenAI() {
 
 export async function POST(req) {
   try {
-    const { prompt, businessContext } = await req.json();
+    // Log the raw request body for debugging
+    const rawBody = await req.text();
+    console.log('Raw request body:', rawBody);
+    let prompt, businessContext;
+    try {
+      ({ prompt, businessContext } = JSON.parse(rawBody));
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError.message);
+      return Response.json({
+        error: 'Malformed JSON in request body',
+        details: parseError.message,
+        rawBody
+      }, { status: 400 });
+    }
 
     if (!prompt) {
       return Response.json({ error: 'Prompt is required' }, { status: 400 });
@@ -82,16 +101,19 @@ Provide helpful, actionable advice in a friendly, professional tone. Keep respon
   } catch (error) {
     console.error('Error in AI chat API:', error);
     
-    if (error.message.includes('API key') || error.message.includes('OPENAI_API_KEY')) {
+    // Check if it's specifically a missing API key error
+    if (error.message === 'OPENAI_API_KEY environment variable is required') {
       return Response.json({ 
-        error: 'AI service not configured. Please check your OpenAI API key in environment variables.',
+        error: 'AI service not configured. Please check your OpenAI API key in environment variables. If you just added it, please redeploy your project.',
         code: 'MISSING_API_KEY'
       }, { status: 500 });
     }
     
+    // Return the actual error message for debugging
     return Response.json({ 
-      error: 'Failed to get AI response. Please try again.',
-      code: 'AI_ERROR'
+      error: `Failed to get AI response: ${error.message}`,
+      code: 'AI_ERROR',
+      details: error.message
     }, { status: 500 });
   }
 } 
