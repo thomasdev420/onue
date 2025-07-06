@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useSession } from 'next-auth/react';
-import { supabase } from "../../../supabaseClient";
+import { getSupabase } from "../../../supabaseClient";
 import { usePersistence } from '../../services/persistenceService';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
@@ -79,6 +79,7 @@ export default function SlidesEditor() {
       try {
         setIsLoading(true);
         setError(null);
+        const supabase = getSupabase();
         const { data, error } = await supabase.from('images').select('id, title, image_url');
         if (error) throw error;
         console.log('Fetched images from database:', data?.length || 0, 'images');

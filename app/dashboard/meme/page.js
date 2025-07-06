@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useSession } from 'next-auth/react';
-import { supabase } from "../../../supabaseClient";
+import { getSupabase } from "../../../supabaseClient";
 import { usePersistence } from '../../services/persistenceService';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
@@ -114,6 +114,7 @@ export default function MemeEditor() {
       try {
         setIsLoading(true);
         setError(null);
+        const supabase = getSupabase();
         const { data, error } = await supabase.from('images').select('id, title, image_url');
         if (error) throw error;
         setLibraryImages(data);

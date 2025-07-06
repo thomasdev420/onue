@@ -1,11 +1,6 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../auth/[...nextauth]/route';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import { getSupabase } from '../../../../supabaseClient';
 
 export async function GET(req) {
   try {
@@ -41,6 +36,7 @@ export async function GET(req) {
         throw new Error('Supabase not configured');
       }
       
+      const supabase = getSupabase();
       const result = await supabase
         .from('user_work')
         .select('work_data')

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Upload, Image as ImageIcon, Video as VideoIcon, X, Loader2, CheckCircle, AlertCircle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
-import { supabase } from '../../../supabaseClient';
+import { getSupabase } from '../../../supabaseClient';
 import { usePersistence } from '../../services/persistenceService';
 import { validateFile } from '../../utils/validation';
 
@@ -108,6 +108,7 @@ export default function UploadPage() {
         setIsLoading(true);
         
         // Videos are loaded separately and not part of the persistence hook for now.
+        const supabase = getSupabase();
         const { data: videoWork, error: videoError } = await supabase
           .from('user_work')
           .select('work_data')
@@ -136,6 +137,7 @@ export default function UploadPage() {
     if (!session?.user?.email) return;
 
     try {
+      const supabase = getSupabase();
       // Save videos
       const { error: videoError } = await supabase
         .from('user_work')
@@ -160,6 +162,7 @@ export default function UploadPage() {
     const bucketName = type === 'image' ? 'user-images' : 'user-videos';
 
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase.storage
         .from(bucketName)
         .upload(fileName, file);
@@ -270,6 +273,7 @@ export default function UploadPage() {
     if (!imageToRemove) return;
 
     try {
+      const supabase = getSupabase();
       // Remove from Supabase storage
       const { error: deleteError } = await supabase.storage
         .from('user-images')
@@ -295,6 +299,7 @@ export default function UploadPage() {
     if (!videoToRemove) return;
 
     try {
+      const supabase = getSupabase();
       // Remove from Supabase storage
       const { error: deleteError } = await supabase.storage
         .from('user-videos')

@@ -1,4 +1,4 @@
-import { supabase } from '../supabaseClient';
+import { getSupabase } from '../supabaseClient';
 
 /**
  * Save slides to the database for a specific user
@@ -8,6 +8,7 @@ import { supabase } from '../supabaseClient';
  */
 export async function saveSlides(userId, slides) {
   try {
+    const supabase = getSupabase();
     // First, delete any existing slides for this user
     const { error: deleteError } = await supabase
       .from('slides')
@@ -46,6 +47,7 @@ export async function saveSlides(userId, slides) {
  */
 export async function loadSlides(userId) {
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('slides')
       .select('*')

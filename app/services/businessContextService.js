@@ -1,4 +1,4 @@
-import { supabase } from '../../supabaseClient';
+import { getSupabase } from '../../supabaseClient';
 import { businessLogger } from '../utils/logger';
 
 // Global state for business context
@@ -17,6 +17,7 @@ export async function getBusinessContext(userEmail) {
       return null;
     }
 
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('user_work')
       .select('work_data')

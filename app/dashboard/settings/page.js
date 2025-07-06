@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { supabase } from '../../../supabaseClient';
+import { getSupabase } from '../../../supabaseClient';
 import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X } from 'lucide-react';
 import ErrorAlert from '../../components/ErrorAlert';
 import Image from 'next/image';
@@ -22,6 +22,7 @@ export default function SettingsPage() {
 
   const fetchUserImages = useCallback(async () => {
     try {
+      const supabase = getSupabase();
       const { data, error } = await supabase
         .from('user_images')
         .select('*')
@@ -61,6 +62,7 @@ export default function SettingsPage() {
         }
 
         const fileName = `${Date.now()}-${file.name}`;
+        const supabase = getSupabase();
         const { data, error } = await supabase.storage
           .from('user-content')
           .upload(fileName, file);
@@ -101,6 +103,7 @@ export default function SettingsPage() {
 
   const handleDeleteImage = async (imageId) => {
     try {
+      const supabase = getSupabase();
       const { error } = await supabase
         .from('user_images')
         .delete()
