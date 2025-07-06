@@ -94,7 +94,11 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           body: JSON.stringify({
             prompt: fullPrompt,
             slideCount: 3,
-            businessContext: businessContext
+            businessContext: businessContext,
+            userInfo: {
+              name: effectiveSession?.user?.name,
+              email: effectiveSession?.user?.email
+            }
           }),
         });
         if (!response.ok) {
@@ -173,7 +177,11 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           body: JSON.stringify({
             prompt: userMessage,
             slideCount: 3,
-            businessContext: businessContext
+            businessContext: businessContext,
+            userInfo: {
+              name: effectiveSession?.user?.name,
+              email: effectiveSession?.user?.email
+            }
           }),
         });
 
@@ -209,7 +217,11 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           },
           body: JSON.stringify({
             prompt: userMessage,
-            businessContext: businessContext
+            businessContext: businessContext,
+            userInfo: {
+              name: effectiveSession?.user?.name,
+              email: effectiveSession?.user?.email
+            }
           }),
         });
 

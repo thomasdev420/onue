@@ -18,7 +18,7 @@ function getOpenAI() {
 
 export async function POST(req) {
   try {
-    const { prompt, slideCount = 5, businessContext } = await req.json();
+    const { prompt, slideCount = 5, businessContext, userInfo } = await req.json();
 
     // Validate required fields
     if (!prompt) {
@@ -71,13 +71,15 @@ export async function POST(req) {
       }, { status: 500 });
     }
 
-    // Extract business context
+    // Extract comprehensive business context
     const companyName = businessContext?.companyName || 'Business';
     const businessType = businessContext?.businessType || 'General Business';
     const productInfo = businessContext?.productInfo || 'Not specified';
+    const websiteUrl = businessContext?.websiteUrl;
+    const personalization = businessContext?.personalization;
 
     console.log('User prompt:', prompt);
-    console.log('Business context:', { companyName, businessType, productInfo });
+    console.log('Business context:', { companyName, businessType, productInfo, websiteUrl, personalization });
 
     // Generate slide content using OpenAI with enhanced prompt
     const openaiClient = getOpenAI();
@@ -91,6 +93,16 @@ export async function POST(req) {
           CRITICAL: The user's prompt is the most important instruction. Create content that directly addresses what they asked for.
 
           Business Context: ${companyName} (${businessType}) - ${productInfo}
+          ${websiteUrl ? `Website: ${websiteUrl}` : ''}
+          ${userInfo?.name ? `User: ${userInfo.name}` : ''}
+          ${personalization ? `
+          User Profile:
+          - Interests: ${personalization.interests || 'Not specified'}
+          - Goal: ${personalization.goals || 'Not specified'}
+          - Role: ${personalization.role || 'Not specified'}
+          - Experience: ${personalization.experienceLevel || 'Not specified'}
+          - Time: ${personalization.timeCommitment || 'Not specified'}
+          - Audience: ${personalization.targetAudience || 'Not specified'}` : ''}
 
           Rules:
           - First slide: Title/overview (no number prefix)
@@ -106,7 +118,11 @@ export async function POST(req) {
           Example format:
           [{"texts":[{"content":"Your content here","position":{"x":50,"y":60}}],"imageCategory":"business"}]
 
-          IMPORTANT: If the user asks for "dogs", create content about dogs. If they ask for "marketing tips", create marketing tips. Always match their specific request.`
+          IMPORTANT: 
+          - If the user asks for "dogs", create content about dogs. If they ask for "marketing tips", create marketing tips. Always match their specific request.
+          - Use the user's business context, interests, goals, and target audience to create highly relevant and personalized content.
+          - Adjust the complexity and style based on their experience level and time commitment.
+          - Make content that would resonate with their specific target audience.`
         },
         {
           role: "user",

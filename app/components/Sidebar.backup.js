@@ -3,19 +3,13 @@
 import Link from "next/link";
 import Image from 'next/image';
 import { useSession, signOut } from "next-auth/react";
-import { usePathname, useRouter } from 'next/navigation';
-import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload, Shield } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload } from 'lucide-react';
 
 export default function Sidebar({ isCollapsed, toggleSidebar }) {
   const { data: session, status } = useSession();
   const user = session?.user;
   const pathname = usePathname();
-  const router = useRouter();
-
-  const handleRevokeDevAccess = () => {
-    localStorage.removeItem("devAccessGranted");
-    router.push('/');
-  };
 
   return (
     <aside className={`bg-gray-50 shadow-md flex flex-col fixed top-0 left-0 h-screen transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`} style={{ backgroundColor: '#EFEFE7' }}>
@@ -41,6 +35,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
             <SidebarLink href="/dashboard/upload" icon={<Upload size={18} />} label="Content Upload" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />
+            <SidebarLink href="/dashboard/magic" icon={<Wand2 size={18} />} label="Magic Mode" currentPath={pathname} isCollapsed={isCollapsed} />
             <div className="mt-4"></div>
             <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} isCollapsed={isCollapsed} />
@@ -90,17 +85,6 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
               <span style={{ position: 'relative', zIndex: 2 }}>Upgrade</span>
             </button>
           </Link>
-        )}
-
-        {/* Dev Access Revoke Button */}
-        {!isCollapsed && (
-          <button
-            onClick={handleRevokeDevAccess}
-            className="w-full mt-3 px-3 py-2 text-xs text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-center gap-2"
-          >
-            <Shield size={14} />
-            Revoke Dev Access
-          </button>
         )}
 
         {/* Display Google Account Details */}

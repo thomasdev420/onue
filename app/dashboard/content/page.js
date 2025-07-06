@@ -46,12 +46,6 @@ export default function NewContentPage() {
       description: 'Create engaging hooks and demonstrations',
       icon: <Sparkles size={24} />,
       href: '/dashboard/hook-demo',
-    },
-    {
-      title: 'Magic Mode',
-      description: 'AI-powered content creation and editing',
-      icon: <Wand2 size={24} />,
-      href: '/dashboard/magic',
     }
   ];
 

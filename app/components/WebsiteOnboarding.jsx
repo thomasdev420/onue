@@ -310,12 +310,12 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
             <X className="w-5 h-5" />
           </button>
           <h2 className="text-2xl font-bold text-gray-900 text-center pr-8">
-            {currentStep === ONBOARDING_STEPS.URL_INPUT && "Let's get started"}
-            {currentStep === ONBOARDING_STEPS.SCANNING && "Scanning your website"}
-            {currentStep === ONBOARDING_STEPS.CONFIRMATION && "Review your information"}
-            {currentStep === ONBOARDING_STEPS.PERSONALIZATION && "Personalize your experience"}
-            {currentStep === ONBOARDING_STEPS.MEDIA_UPLOAD && "Add your media"}
-            {currentStep === ONBOARDING_STEPS.VIDEO_CREATION && "Create your first video"}
+            {currentStep === ONBOARDING_STEPS.URL_INPUT && ""}
+            {currentStep === ONBOARDING_STEPS.SCANNING && ""}
+            {currentStep === ONBOARDING_STEPS.CONFIRMATION && ""}
+            {currentStep === ONBOARDING_STEPS.PERSONALIZATION && ""}
+            {currentStep === ONBOARDING_STEPS.MEDIA_UPLOAD && ""}
+            {currentStep === ONBOARDING_STEPS.VIDEO_CREATION && ""}
           </h2>
         </div>
 

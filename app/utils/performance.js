@@ -145,3 +145,17 @@ export function createPerformanceObserver(entryType, callback) {
   }
   return null;
 } 
+
+/**
+ * Get device pixel ratio safely
+ */
+export function getDevicePixelRatio() {
+  try {
+    if (typeof window !== 'undefined' && window.devicePixelRatio) {
+      return window.devicePixelRatio;
+    }
+    return 1;
+  } catch {
+    return 1;
+  }
+} 

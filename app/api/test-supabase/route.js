@@ -1,38 +1,48 @@
-import { getSupabase } from '../../../supabaseClient';
-
 export async function GET() {
   try {
-    // Test Supabase connection
+    const { getSupabase } = await import('../../../supabaseClient');
     const supabase = getSupabase();
     
-    // Test basic connection by trying to access the user_work table
+    // Test if the user_work table exists
     const { data, error } = await supabase
       .from('user_work')
-      .select('count')
+      .select('*')
       .limit(1);
     
-    const connectionStatus = {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'present' : 'missing',
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'present' : 'missing',
-      connection: error ? 'failed' : 'success',
-      error: error ? error.message : null
-    };
-
-    return Response.json({
-      message: 'Supabase connection test',
-      timestamp: new Date().toISOString(),
-      status: connectionStatus,
-      environment: {
-        NODE_ENV: process.env.NODE_ENV || 'development',
-        NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'configured' : 'missing',
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'configured' : 'missing'
+    if (error) {
+      // Check if it's a table not found error
+      if (error.code === '42P01') {
+        return Response.json({
+          status: 'error',
+          message: 'Supabase connected but user_work table is missing',
+          error: error.message,
+          code: error.code,
+          solution: 'Run the database setup SQL in Supabase SQL Editor'
+        }, { status: 500 });
       }
+      
+      return Response.json({
+        status: 'error',
+        message: 'Supabase connection failed',
+        error: error.message,
+        code: error.code
+      }, { status: 500 });
+    }
+    
+    return Response.json({
+      status: 'success',
+      message: 'Supabase connection working and user_work table exists',
+      tableExists: true,
+      environment: process.env.NODE_ENV,
+      autoSaveReady: true
     });
+    
   } catch (error) {
     return Response.json({
-      error: 'Supabase test failed',
-      details: error.message,
-      stack: error.stack
+      status: 'error',
+      message: 'Failed to connect to Supabase',
+      error: error.message,
+      environment: process.env.NODE_ENV
     }, { status: 500 });
   }
 } 

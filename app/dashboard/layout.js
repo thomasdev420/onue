@@ -10,7 +10,17 @@ export default function DashboardLayout({ children }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [devAccessChecked, setDevAccessChecked] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Check dev access on mount
+  useEffect(() => {
+    const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
+    if (!devAccessGranted && !isDev) {
+      router.push('/');
+    }
+    setDevAccessChecked(true);
+  }, [router, isDev]);
 
   // Handle redirect for unauthenticated users
   useEffect(() => {
@@ -23,8 +33,8 @@ export default function DashboardLayout({ children }) {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Show loading state while checking authentication (only in production)
-  if (!isDev && status === 'loading') {
+  // Show loading state while checking authentication and dev access
+  if (!devAccessChecked || (!isDev && status === 'loading')) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#FAF9F6' }}>
         <div className="flex items-center gap-3">

@@ -1,23 +1,129 @@
 "use client";
 
 import Link from "next/link";
-import { Lightbulb, Rocket, Users } from "lucide-react";
+import { Lightbulb, Rocket, Users, X } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
+import { useState, useEffect } from "react";
 
 // Landing page
 export default function Home() {
   const { data: session } = useSession();
+  const [showDevModal, setShowDevModal] = useState(false);
+  const [devCode, setDevCode] = useState("");
+  const [devCodeError, setDevCodeError] = useState("");
+  const [devAccessGranted, setDevAccessGranted] = useState(false);
+
+  const handleDevAccessClick = () => {
+    setShowDevModal(true);
+    setDevCode("");
+    setDevCodeError("");
+    // Clear any existing dev access when opening modal
+    setDevAccessGranted(false);
+    localStorage.removeItem("devAccessGranted");
+  };
+
+  const handleDevCodeSubmit = (e) => {
+    e.preventDefault();
+    if (devCode === "42069") {
+      setDevAccessGranted(true);
+      setDevCodeError("");
+      // Store in localStorage to persist across sessions
+      localStorage.setItem("devAccessGranted", "true");
+      // Close modal after a brief delay
+      setTimeout(() => {
+        setShowDevModal(false);
+        window.location.href = "/dashboard";
+      }, 1000);
+    } else {
+      setDevCodeError("Incorrect code. Please try again.");
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowDevModal(false);
+    setDevCode("");
+    setDevCodeError("");
+    // Reset dev access state when closing modal
+    setDevAccessGranted(false);
+  };
+
+  // Check if dev access was previously granted
+  useEffect(() => {
+    const granted = localStorage.getItem("devAccessGranted") === "true";
+    setDevAccessGranted(granted);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-32 sm:px-20 font-sans text-gray-900 relative">
       <div className="absolute top-4 left-8 z-50 flex items-center gap-3">
-        <Link href="/dashboard">
-          <button className="px-3 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors">
-            <span className="text-gray-800 font-semibold text-sm font-mono">Dev Access</span>
-          </button>
-        </Link>
+        <button 
+          onClick={handleDevAccessClick}
+          className="px-3 py-1.5 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
+        >
+          <span className="text-gray-800 font-semibold text-sm font-mono">Dev Access</span>
+        </button>
       </div>
+
+      {/* Dev Access Modal */}
+      {showDevModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-xl">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Developer Access</h2>
+              <button
+                onClick={handleCloseModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            
+            {!devAccessGranted ? (
+              <form onSubmit={handleDevCodeSubmit}>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Enter Access Code
+                  </label>
+                  <input
+                    type="password"
+                    value={devCode}
+                    onChange={(e) => setDevCode(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Enter code..."
+                    autoFocus
+                  />
+                  {devCodeError && (
+                    <p className="text-red-500 text-sm mt-2">{devCodeError}</p>
+                  )}
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={handleCloseModal}
+                    className="flex-1 px-4 py-3 text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    Verify
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="text-center">
+                <div className="text-green-500 text-6xl mb-4">✓</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Access Granted!</h3>
+                <p className="text-gray-600">Redirecting to dashboard...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Navigation Bar */}
       <nav className="absolute top-4 right-8 z-50">
