@@ -26,9 +26,11 @@ export async function POST(req) {
     const isDev = process.env.NODE_ENV === 'development';
     
     if (!isDev) {
-      // Check authentication in production
-      // This would typically check for a valid session
-      // For now, we'll allow all requests
+      // Temporarily allow all requests in production until auth is properly configured
+      // TODO: Implement proper authentication check when NEXTAUTH_SECRET is set
+      if (!process.env.NEXTAUTH_SECRET) {
+        console.warn('NEXTAUTH_SECRET not set - allowing all requests');
+      }
     }
 
     // Create context-aware prompt
@@ -80,12 +82,16 @@ Provide helpful, actionable advice in a friendly, professional tone. Keep respon
   } catch (error) {
     console.error('Error in AI chat API:', error);
     
-    if (error.message.includes('API key')) {
-      return Response.json({ error: 'AI service not configured' }, { status: 500 });
+    if (error.message.includes('API key') || error.message.includes('OPENAI_API_KEY')) {
+      return Response.json({ 
+        error: 'AI service not configured. Please check your OpenAI API key in environment variables.',
+        code: 'MISSING_API_KEY'
+      }, { status: 500 });
     }
     
     return Response.json({ 
-      error: 'Failed to get AI response. Please try again.' 
+      error: 'Failed to get AI response. Please try again.',
+      code: 'AI_ERROR'
     }, { status: 500 });
   }
 } 

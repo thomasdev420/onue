@@ -1,54 +1,49 @@
-# Deployment Setup Guide
+# Vercel Deployment Setup
 
-## Environment Variables Required
+## Required Environment Variables
 
-To deploy successfully, you need to add these environment variables to your Vercel project:
+Add these environment variables in your Vercel project settings:
 
-### Required Variables:
-1. **OPENAI_API_KEY** - Your OpenAI API key
-2. **NEXT_PUBLIC_SUPABASE_URL** - Your Supabase project URL
-3. **NEXT_PUBLIC_SUPABASE_ANON_KEY** - Your Supabase anonymous key
-4. **NEXTAUTH_SECRET** - A random string for NextAuth (generate one)
-5. **NEXTAUTH_URL** - Your production URL (e.g., https://your-app.vercel.app)
+### Essential Variables (Required for AI functionality)
+```
+OPENAI_API_KEY=your_openai_api_key_here
+NEXTAUTH_SECRET=your_nextauth_secret_key_here
+NEXTAUTH_URL=https://your-vercel-domain.vercel.app
+```
 
-### Optional Variables (for full functionality):
-6. **GOOGLE_CLIENT_ID** - Google OAuth client ID
-7. **GOOGLE_CLIENT_SECRET** - Google OAuth client secret
-8. **TIKTOK_CLIENT_KEY** - TikTok API client key
-9. **TIKTOK_CLIENT_SECRET** - TikTok API client secret
+### Supabase Configuration (Required for data persistence)
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Optional Variables (For full functionality)
+```
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+TIKTOK_CLIENT_KEY=your_tiktok_client_key
+TIKTOK_CLIENT_SECRET=your_tiktok_client_secret
+TIKTOK_REDIRECT_URI=https://your-vercel-domain.vercel.app/api/auth/tiktok/callback
+```
 
 ## How to Add Environment Variables in Vercel:
 
 1. Go to your Vercel dashboard
 2. Select your project
-3. Go to "Settings" → "Environment Variables"
-4. Add each variable:
-   - **Name**: The variable name (e.g., `OPENAI_API_KEY`)
-   - **Value**: The actual value
-   - **Environment**: Select "Production" (and "Preview" if needed)
-5. Click "Save"
+3. Go to Settings → Environment Variables
+4. Add each variable with the correct name and value
+5. Redeploy your project
 
-## Generate NEXTAUTH_SECRET:
+## Common Issues:
 
-You can generate a secure secret using:
-```bash
-openssl rand -base64 32
-```
+1. **AI not working**: Missing `OPENAI_API_KEY`
+2. **Authentication errors**: Missing `NEXTAUTH_SECRET` or incorrect `NEXTAUTH_URL`
+3. **Data not saving**: Missing Supabase credentials
+4. **Web scraping failing**: Missing OpenAI API key (used for content analysis)
 
-Or use an online generator and copy a random string.
+## Testing:
 
-## Test Deployment:
-
-After adding the environment variables, your deployment should work. The build will now succeed because:
-
-1. ✅ OpenAI client is initialized lazily (only when needed)
-2. ✅ Environment variables are properly configured
-3. ✅ All API routes handle missing environment variables gracefully
-
-## Troubleshooting:
-
-If you still get build errors:
-1. Check that all required environment variables are set
-2. Ensure the variable names match exactly (case-sensitive)
-3. Verify the values are correct
-4. Check the Vercel build logs for specific error messages 
+After setting environment variables, test these endpoints:
+- `/api/ai-chat` - Should return AI responses
+- `/api/scrape-website` - Should scrape and analyze websites
+- `/api/generate-slides` - Should generate slide content 
