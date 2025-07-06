@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '../../../../../supabaseClient';
+import { getSupabase } from '../../../../../supabaseClient';
 
 export async function GET(request) {
   try {
@@ -54,6 +54,7 @@ export async function GET(request) {
 
     // Save access_token and user info to database
     try {
+      const supabase = getSupabase();
       const { error } = await supabase
         .from('tiktok_connections')
         .upsert({

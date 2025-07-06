@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { supabase } from '../../../../supabaseClient';
+import { getSupabase } from '../../../../supabaseClient';
 
 export async function GET() {
   try {
@@ -11,6 +11,7 @@ export async function GET() {
     }
 
     // Check if user has onboarding data (new integrated flow)
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('user_work')
       .select('work_data')

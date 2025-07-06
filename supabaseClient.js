@@ -1,11 +1,25 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Lazy initialization to avoid build-time errors
+let supabaseClient = null;
 
-// Validate required environment variables
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing required Supabase environment variables. Please check your .env.local file.')
+export function getSupabase() {
+  if (!supabaseClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing required Supabase environment variables. Please check your .env.local file.');
+    }
+
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  return supabaseClient;
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey) 
+// For backward compatibility, export a getter
+export const supabase = {
+  get client() {
+    return getSupabase();
+  }
+}; 

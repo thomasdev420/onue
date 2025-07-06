@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { supabase } from '../../supabaseClient';
+import { getSupabase } from '../../supabaseClient';
 import { debounce } from '../utils/performance';
 
 /**
@@ -20,6 +20,7 @@ export async function saveUserWork(userId, pageType, data) {
   }
 
   try {
+    const supabase = getSupabase();
     const { data: savedData, error } = await supabase
       .from('user_work')
       .upsert({
@@ -56,6 +57,7 @@ export async function loadUserWork(userId, pageType) {
   }
 
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from('user_work')
       .select('*')

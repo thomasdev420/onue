@@ -1,4 +1,4 @@
-import { supabase } from '../../supabaseClient';
+import { getSupabase } from '../../supabaseClient';
 import { apiLogger } from '../utils/logger';
 import OpenAI from 'openai';
 
@@ -242,6 +242,7 @@ Which image number (1-${availableImages.length}) would be most relevant for this
     try {
       apiLogger.debug('Querying images with keywords:', keywords);
       
+      const supabase = getSupabase();
       const { data: images, error } = await supabase
         .from('images')
         .select('id, title, image_url')
