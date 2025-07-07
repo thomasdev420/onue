@@ -143,7 +143,7 @@ export default function SlideCanvas({
                 style={{
                   position: 'relative',
                   width: '100%',
-                  aspectRatio: slide.ratio.replace(':', ' / '),
+                  aspectRatio: typeof slide.ratio === 'string' ? slide.ratio.replace(':', ' / ') : '9 / 16',
                   maxWidth: '100%',
                   maxHeight: '100%',
                   borderRadius: '12px',
