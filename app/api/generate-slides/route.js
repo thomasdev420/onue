@@ -78,6 +78,11 @@ export async function POST(req) {
           }];
         }
       }
+      // Ensure every slide has a unique id
+      slides = slides.map((slide, idx) => ({
+        id: slide.id || `slide-${Date.now()}-${idx}`,
+        ...slide
+      }));
       return Response.json({ slides });
     }
 
