@@ -1,6 +1,23 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+// Validate required environment variables
+const requiredEnvVars = {
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL
+};
+
+// Check for missing environment variables
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([key, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  console.error('Missing required environment variables:', missingVars);
+}
+
 const providers = [
   GoogleProvider({
     clientId: process.env.GOOGLE_CLIENT_ID,
@@ -14,6 +31,7 @@ export const authOptions = {
   session: {
     strategy: "jwt",
   },
+  debug: process.env.NODE_ENV === 'development',
   cookies: {
     sessionToken: {
       name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
@@ -23,6 +41,20 @@ export const authOptions = {
         path: '/',
         secure: process.env.NODE_ENV === 'production'
       }
+    }
+  },
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      console.log('Sign in attempt:', { user: user?.email, provider: account?.provider });
+      return true;
+    },
+    async redirect({ url, baseUrl }) {
+      console.log('Redirect callback:', { url, baseUrl });
+      // Allows relative callback URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
     }
   }
 };

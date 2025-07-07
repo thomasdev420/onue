@@ -576,17 +576,6 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           <div className="text-red-500 text-sm text-center mt-2">{error}</div>
         )}
 
-        {effectiveStatus === 'unauthenticated' && (
-          <div className="text-center mt-4">
-            <p className="text-gray-500 text-sm mb-2">Please sign in to use the AI features</p>
-            <Link href="/login">
-              <button className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
-                Sign In
-              </button>
-            </Link>
-          </div>
-        )}
-
         {!docked && (
         <div className="flex gap-3 justify-center mt-4 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
           {actions.map((action, idx) => (
