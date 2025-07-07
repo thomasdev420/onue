@@ -1,20 +1,20 @@
 import OpenAI from 'openai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
-import { buildContextAwarePrompt } from '../../../app/utils/contextPriority.js';
+import { buildContextAwarePrompt } from '../../utils/contextPriority.js';
 import { 
   extractMemoryInsights, 
   storeMemoryInsights, 
   retrieveUserMemory, 
   buildMemoryContext 
-} from '../../../app/services/aiMemoryService.js';
+} from '../../services/aiMemoryService.js';
 import { 
   analyzePromptClarity, 
   generateClarificationResponse, 
   isClarificationResponse,
   extractClarifiedInformation,
   buildEnhancedPrompt
-} from '../../../app/utils/clarificationSystem.js';
+} from '../../utils/clarificationSystem.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
