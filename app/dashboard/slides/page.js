@@ -40,25 +40,19 @@ export default function SlidesEditor() {
   const [scheduledDate, setScheduledDate] = useState(null);
   const pathname = usePathname();
   const [mode, setMode] = useState('slides');
-  const [confirmedMode, setConfirmedMode] = useState('slides');
   
   // Determine current mode based on route
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-      setConfirmedMode('videos');
     } else if (pathname.includes('/dashboard/meme')) {
       setMode('memes');
-      setConfirmedMode('memes');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
-      setConfirmedMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
       setMode('slides');
-      setConfirmedMode('slides');
     } else if (pathname.includes('/dashboard/hook-demo')) {
       setMode('hook-demo');
-      setConfirmedMode('hook-demo');
     }
   }, [pathname]);
   const [showModeModal, setShowModeModal] = useState(false);
@@ -429,16 +423,16 @@ export default function SlidesEditor() {
   // Handler for closing the mode modal and navigating if needed
   const handleModeModalClose = () => {
     setShowModeModal(false);
-    if (mode !== confirmedMode) {
-      const modeToRoute = {
-        videos: '/dashboard/videos',
-        memes: '/dashboard/meme',
-        avatars: '/dashboard/images',
-        slides: '/dashboard/slides',
-        'hook-demo': '/dashboard/hook-demo',
-      };
-      router.push(modeToRoute[mode] || '/dashboard/slides');
-      setConfirmedMode(mode);
+    const modeToRoute = {
+      videos: '/dashboard/videos',
+      memes: '/dashboard/meme',
+      avatars: '/dashboard/images',
+      slides: '/dashboard/slides',
+      'hook-demo': '/dashboard/hook-demo',
+    };
+    const targetRoute = modeToRoute[mode];
+    if (targetRoute && pathname !== targetRoute) {
+      router.push(targetRoute);
     }
   };
 
