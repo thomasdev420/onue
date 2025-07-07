@@ -468,7 +468,7 @@ export default function SlidesEditor() {
   return (
     <>
       {/* Settings button at top right */}
-      <div style={{ position: 'fixed', top: 24, right: 32, zIndex: 1100 }}>
+      <div style={{ position: 'fixed', top: 24, right: 160, zIndex: 1100 }}>
         <button
           onClick={() => setShowModeModal(true)}
           style={{
