@@ -1,5 +1,53 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../auth/[...nextauth]/route';
+
+// Define authOptions inline to match the ProductionSessionProvider
+const authOptions = {
+  providers: [
+    {
+      id: "google",
+      name: "Google",
+      type: "oauth",
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        url: "https://accounts.google.com/o/oauth2/v2/auth",
+        params: {
+          scope: "openid email profile",
+        },
+      },
+      token: "https://oauth2.googleapis.com/token",
+      userinfo: "https://www.googleapis.com/oauth2/v2/userinfo",
+    },
+  ],
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
+  debug: process.env.NODE_ENV === 'development',
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  },
+  callbacks: {
+    async signIn({ user, account, profile, email, credentials }) {
+      console.log('Sign in attempt:', { user: user?.email, provider: account?.provider });
+      return true;
+    },
+    async redirect({ url, baseUrl }) {
+      console.log('Redirect callback:', { url, baseUrl });
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    }
+  }
+};
 import { getCurrentUserBusinessContext } from '../../../app/services/businessContextService';
 
 export async function GET() {
