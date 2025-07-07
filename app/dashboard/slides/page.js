@@ -14,7 +14,7 @@ import { useSlideNavigation } from './hooks/useSlideNavigation';
 import { validateSlide } from '../../utils/validation';
 import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
 import ModeToggle from '../components/ModeToggle';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -38,8 +38,29 @@ export default function SlidesEditor() {
   const [businessContextFetched, setBusinessContextFetched] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(null);
+  const pathname = usePathname();
   const [mode, setMode] = useState('slides');
   const [confirmedMode, setConfirmedMode] = useState('slides');
+  
+  // Determine current mode based on route
+  useEffect(() => {
+    if (pathname.includes('/dashboard/videos')) {
+      setMode('videos');
+      setConfirmedMode('videos');
+    } else if (pathname.includes('/dashboard/meme')) {
+      setMode('memes');
+      setConfirmedMode('memes');
+    } else if (pathname.includes('/dashboard/images')) {
+      setMode('avatars');
+      setConfirmedMode('avatars');
+    } else if (pathname.includes('/dashboard/slides')) {
+      setMode('slides');
+      setConfirmedMode('slides');
+    } else if (pathname.includes('/dashboard/hook-demo')) {
+      setMode('hook-demo');
+      setConfirmedMode('hook-demo');
+    }
+  }, [pathname]);
   const [showModeModal, setShowModeModal] = useState(false);
   const router = useRouter();
 
