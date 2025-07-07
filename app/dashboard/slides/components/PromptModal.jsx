@@ -87,7 +87,8 @@ export default function PromptModal({
           userInfo: {
             name: 'User',
             email: 'user@example.com'
-          }
+          },
+          forceGenerate: true // Always force slide generation for slides page
         }),
       });
       

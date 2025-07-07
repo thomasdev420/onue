@@ -197,7 +197,7 @@ export default function Home() {
                 lineHeight: 1.2,
               }}
             >
-              Version 0.0.5
+              Version 0.0.6
             </span>
           </div>
         </div>
