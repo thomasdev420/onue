@@ -6,6 +6,8 @@
  * avoid it to preserve space for user-added content.
  */
 
+import { isOverlapping } from '../shared/utils/overlapDetection.js';
+
 // Define text positioning zones for different slide layouts
 // Note: Top zones (y <= 30) are excluded to prevent AI-generated captions from appearing
 // in the top 30% of slides, while still allowing manual user positioning
@@ -67,8 +69,32 @@ function isInRestrictedTopArea(position) {
  * @returns {Object} Position object with x and y coordinates
  */
 export function calculateOptimalPosition(existingTexts, slideRatio, textIndex = 0) {
-  // Always return just-below-center for all captions
-  return { x: 50, y: 60, name: 'just-below-middle' };
+  const config = POSITIONING_ZONES[slideRatio] || POSITIONING_ZONES['9:16'];
+  const zones = config.zones;
+  
+  // If no existing texts, use the first zone
+  if (!existingTexts || existingTexts.length === 0) {
+    return zones[0];
+  }
+  
+  // Check each zone to find one that doesn't overlap with existing texts
+  for (const zone of zones) {
+    let hasOverlap = false;
+    
+    for (const existingText of existingTexts) {
+      if (isOverlapping({ position: zone }, existingText)) {
+        hasOverlap = true;
+        break;
+      }
+    }
+    
+    if (!hasOverlap) {
+      return zone;
+    }
+  }
+  
+  // If all zones are occupied, create an offset position
+  return createOffsetPosition(existingTexts, slideRatio);
 }
 
 /**
@@ -161,10 +187,18 @@ export function applySmartPositioning(slide) {
     return slide;
   }
 
-  const updatedTexts = slide.texts.map(text => ({
-    ...text,
-    position: { x: 50, y: 60, name: 'just-below-middle' }
-  }));
+  const updatedTexts = [];
+  const slideRatio = slide.ratio || '9:16';
+  
+  for (let i = 0; i < slide.texts.length; i++) {
+    const text = slide.texts[i];
+    const optimalPosition = calculateOptimalPosition(updatedTexts, slideRatio, i);
+    
+    updatedTexts.push({
+      ...text,
+      position: optimalPosition
+    });
+  }
 
   return {
     ...slide,
