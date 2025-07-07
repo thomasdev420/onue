@@ -15,23 +15,18 @@ export default function DashboardLayout({ children }) {
 
   // Check dev access on mount
   useEffect(() => {
-    if (isDev) {
-      // In development mode, always allow access
-      setDevAccessChecked(true);
-    } else {
-      // In production, check for dev access
-      const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
-      if (!devAccessGranted) {
-        router.push('/');
-      }
-      setDevAccessChecked(true);
+    const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
+    if (!devAccessGranted && !isDev) {
+      router.push('/');
     }
+    setDevAccessChecked(true);
   }, [router, isDev]);
 
   // Handle redirect for unauthenticated users
   useEffect(() => {
-    if (!isDev && status === 'unauthenticated') {
-      router.push('/login');
+    // Only redirect if not in development and not authenticated
+    if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted")) {
+      router.push('/');
     }
   }, [isDev, status, router]);
 
@@ -52,8 +47,8 @@ export default function DashboardLayout({ children }) {
   }
 
   // In development, always allow access
-  // In production, redirect to login if not authenticated
-  if (!isDev && status === 'unauthenticated') {
+  // In production, only redirect if not authenticated AND no dev access
+  if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted")) {
     return null;
   }
 

@@ -251,7 +251,7 @@ export default function Home() {
                   <span style={{ position: 'relative', zIndex: 2 }}>Unlock now</span>
                 </button>
               </Link>
-            ) :
+            ) : (
               <button
                 onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
                 style={{
@@ -292,7 +292,7 @@ export default function Home() {
                 }} />
                 <span style={{ position: 'relative', zIndex: 2 }}>Unlock now</span>
               </button>
-            }
+            )}
             <span style={{
               fontSize: '14px',
               color: '#6B7280',
