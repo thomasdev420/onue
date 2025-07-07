@@ -458,11 +458,11 @@ export default function SlidesEditor() {
     'hook-demo': 'Demo',
   };
   const modeColorMap = {
-    videos: '#3B82F6',
-    memes: '#F59E0B',
-    avatars: '#A855F7',
-    slides: '#10B981',
-    'hook-demo': '#F43F5E',
+    videos: '#6366F1', // Softer blue
+    memes: '#D97706', // Softer orange
+    avatars: '#9333EA', // Softer purple
+    slides: '#059669', // Softer green
+    'hook-demo': '#DC2626', // Softer red
   };
 
   return (
@@ -472,10 +472,10 @@ export default function SlidesEditor() {
         <button
           onClick={() => setShowModeModal(true)}
           style={{
-            background: modeColorMap[mode] || '#10B981',
+            background: modeColorMap[mode] || '#059669',
             border: 'none',
             borderRadius: '9999px',
-            boxShadow: `0 4px 16px 0 ${(modeColorMap[mode] || '#10B981')}44, 0 0 0 3px ${(modeColorMap[mode] || '#10B981')}33`,
+            boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#059669')}22, 0 0 0 1px ${(modeColorMap[mode] || '#059669')}11`,
             color: '#fff',
             fontWeight: 500,
             fontSize: 18,
@@ -486,7 +486,7 @@ export default function SlidesEditor() {
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            transition: 'background 0.2s',
+            transition: 'all 0.2s ease',
             outline: 'none',
             borderWidth: 0,
           }}

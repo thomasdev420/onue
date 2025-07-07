@@ -2,11 +2,11 @@ import React, { useRef, useEffect, useState } from 'react';
 import { COLORS, BORDER_RADIUS } from '../../shared/constants/slideConstants';
 
 const MODES = [
-  { label: 'Videos', value: 'videos', color: '#3B82F6' }, // blue
-  { label: 'Memes', value: 'memes', color: '#F59E0B' }, // orange
-  { label: 'Avatars', value: 'avatars', color: '#A855F7' }, // purple
-  { label: 'Slides', value: 'slides', color: '#10B981' }, // green
-  { label: 'Demo', value: 'hook-demo', color: '#F43F5E' }, // pink/red
+  { label: 'Videos', value: 'videos', color: '#6366F1' }, // softer blue
+  { label: 'Memes', value: 'memes', color: '#D97706' }, // softer orange
+  { label: 'Avatars', value: 'avatars', color: '#9333EA' }, // softer purple
+  { label: 'Slides', value: 'slides', color: '#059669' }, // softer green
+  { label: 'Demo', value: 'hook-demo', color: '#DC2626' }, // softer red
 ];
 
 export default function ModeToggle({
