@@ -22,7 +22,14 @@ export function getSupabase() {
       if (!supabaseUrl) missingVars.push('NEXT_PUBLIC_SUPABASE_URL');
       if (!supabaseAnonKey) missingVars.push('NEXT_PUBLIC_SUPABASE_ANON_KEY');
       
-      throw new Error(`Missing required Supabase environment variables: ${missingVars.join(', ')}. Please check your Vercel environment variables.`);
+      console.warn(`Missing required Supabase environment variables: ${missingVars.join(', ')}. Using placeholder values for development.`);
+      
+      // Use placeholder values for development
+      const placeholderUrl = 'https://placeholder.supabase.co';
+      const placeholderKey = 'placeholder_key';
+      
+      supabaseClient = createClient(placeholderUrl, placeholderKey);
+      return supabaseClient;
     }
 
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey);

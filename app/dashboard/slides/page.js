@@ -61,14 +61,18 @@ export default function SlidesEditor() {
   // Use persistence hook for slides
   const defaultSlides = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
   const { 
-    data: slides, 
+    data: slidesData, 
     updateData: setSlides, 
     resetData: resetSlides,
     saveStatus, 
     isLoading: isLoadingSlides 
   } = usePersistence('slides', defaultSlides);
+  
+  // Ensure slides is always an array
+  const slides = Array.isArray(slidesData) ? slidesData : defaultSlides;
 
-  const { data: userImages } = usePersistence('userImages', []);
+  const { data: userImagesData } = usePersistence('userImages', []);
+  const userImages = Array.isArray(userImagesData) ? userImagesData : [];
 
   // Active slide state
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
@@ -102,15 +106,22 @@ export default function SlidesEditor() {
         setError(null);
         const supabase = getSupabase();
         const { data, error } = await supabase.from('images').select('id, title, image_url');
-        if (error) throw error;
+        if (error) {
+          console.warn('Failed to fetch images from database:', error);
+          // Use empty array as fallback
+          setLibraryImages([]);
+          return;
+        }
         console.log('Fetched images from database:', data?.length || 0, 'images');
         if (data && data.length > 0) {
           console.log('Sample image:', data[0]);
         }
-        setLibraryImages(data);
+        setLibraryImages(data || []);
       } catch (error) { 
         console.error("Error fetching images:", error);
         setError('Failed to load image library. Please refresh the page.');
+        // Ensure libraryImages is always an array
+        setLibraryImages([]);
       } finally { 
         setIsLoading(false); 
       }
@@ -176,8 +187,8 @@ export default function SlidesEditor() {
                     };
                     
                     const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-                    const matchingImages = libraryImages.filter(img => 
-                      keywords.some(keyword => 
+                    const matchingImages = (libraryImages || []).filter(img => 
+                      img && img.title && keywords.some(keyword => 
                         img.title.toLowerCase().includes(keyword.toLowerCase())
                       )
                     );
@@ -187,10 +198,10 @@ export default function SlidesEditor() {
                     // Select a random matching image, or fallback to any image
                     selectedImage = matchingImages.length > 0 
                       ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
-                      : libraryImages[Math.floor(Math.random() * libraryImages.length)];
+                      : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
                   } else {
                     // No category specified, select a random image
-                    selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
+                    selectedImage = (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
                   }
                   
                   console.log(`Selected image for slide ${index + 1}:`, selectedImage?.title);
@@ -360,8 +371,8 @@ export default function SlidesEditor() {
           };
           
           const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-          const matchingImages = libraryImages.filter(img => 
-            keywords.some(keyword => 
+          const matchingImages = (libraryImages || []).filter(img => 
+            img && img.title && keywords.some(keyword => 
               img.title.toLowerCase().includes(keyword.toLowerCase())
             )
           );
@@ -369,7 +380,7 @@ export default function SlidesEditor() {
           // Select a random matching image, or fallback to any image
           const selectedImage = matchingImages.length > 0 
             ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
-            : libraryImages[Math.floor(Math.random() * libraryImages.length)];
+            : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
           
           return {
             ...slide,
@@ -420,6 +431,25 @@ export default function SlidesEditor() {
     // Save to localStorage for now
     localStorage.setItem('scheduledContent', JSON.stringify({ date, slides }));
     alert(`Content scheduled for ${date.toLocaleDateString()}`);
+  };
+
+  // Handle mode navigation
+  const handleModeChange = (newMode) => {
+    setShowModeModal(false);
+    setMode(newMode);
+    
+    const routeMap = {
+      videos: '/dashboard/videos',
+      memes: '/dashboard/meme',
+      avatars: '/dashboard/images',
+      slides: '/dashboard/slides',
+      'hook-demo': '/dashboard/hook-demo'
+    };
+    
+    const targetRoute = routeMap[newMode];
+    if (targetRoute) {
+      router.push(targetRoute);
+    }
   };
 
   // Handler for closing the mode modal and navigating if needed
@@ -518,7 +548,7 @@ export default function SlidesEditor() {
             style={{ position: 'relative' }}
             onClick={e => e.stopPropagation()}
           >
-            <ModeToggle value={mode} onChange={setMode} />
+            <ModeToggle value={mode} onChange={handleModeChange} />
           </div>
         </div>
       )}
