@@ -5,6 +5,7 @@ import { ChevronUp, Sparkles, Loader2, X, Send, User, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
+import { useClarification } from '../../shared/hooks/useClarification.js';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -29,9 +30,17 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
   const [chatHistory, setChatHistory] = useState([]);
   const textareaRef = useRef(null);
   const chatContainerRef = useRef(null);
-  // Track if we are waiting for content type clarification
-  const [awaitingContentType, setAwaitingContentType] = useState(false);
-  const [pendingUserMessage, setPendingUserMessage] = useState(null);
+  
+  // Clarification system
+  const {
+    needsClarification,
+    handleClarificationRequest,
+    submitClarification,
+    cancelClarification,
+    getClarificationText,
+    isWaitingForClarification,
+    getOriginalPrompt
+  } = useClarification();
 
   // Fetch business context on mount only
   useEffect(() => {
@@ -79,43 +88,84 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     setChatHistory(prev => [...prev, newUserMessage]);
     if (onMessageSubmit) onMessageSubmit();
 
-    // If we are awaiting content type clarification, treat this as the answer
-    if (awaitingContentType && pendingUserMessage) {
-      setAwaitingContentType(false);
-      setPendingUserMessage(null);
-      // Combine the pending message and the user's clarification
-      const fullPrompt = `${pendingUserMessage} [User clarification: ${userMessage}]`;
+    // If we are waiting for clarification, handle the follow-up
+    if (isWaitingForClarification()) {
       try {
-        const response = await fetch('/api/generate-slides', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: fullPrompt,
-            slideCount: 3,
-            businessContext: businessContext,
-            userInfo: {
-              name: effectiveSession?.user?.name,
-              email: effectiveSession?.user?.email
+        const response = await submitClarification(userMessage, async (params) => {
+          // Determine if this should be a slide request or chat request
+          const isSlideRequest = getOriginalPrompt()?.toLowerCase().includes('slide') || 
+                                getOriginalPrompt()?.toLowerCase().includes('create') ||
+                                getOriginalPrompt()?.toLowerCase().includes('generate') ||
+                                getOriginalPrompt()?.toLowerCase().includes('make') ||
+                                getOriginalPrompt()?.toLowerCase().includes('content');
+
+          if (isSlideRequest) {
+            const slideResponse = await fetch('/api/generate-slides', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...params,
+                slideCount: 3,
+                businessContext: businessContext,
+                userInfo: {
+                  name: effectiveSession?.user?.name,
+                  email: effectiveSession?.user?.email
+                }
+              }),
+            });
+            
+            if (!slideResponse.ok) {
+              const errorData = await slideResponse.json();
+              throw new Error(errorData.error || 'Failed to generate slides');
             }
-          }),
+            
+            return await slideResponse.json();
+          } else {
+            const chatResponse = await fetch('/api/ai-chat', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                ...params,
+                businessContext: businessContext,
+                userInfo: {
+                  name: effectiveSession?.user?.name,
+                  email: effectiveSession?.user?.email
+                }
+              }),
+            });
+            
+            if (!chatResponse.ok) {
+              const errorData = await chatResponse.json();
+              throw new Error(errorData.error || 'Failed to get AI response');
+            }
+            
+            return await chatResponse.json();
+          }
         });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Failed to generate slides');
+
+        // Handle the response based on type
+        if (response.slides) {
+          // Slide generation response
+          setGeneratedSlides(response.slides);
+          setShowAIModal(true);
+          const aiMessage = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+            type: 'ai',
+            content: `I've generated ${response.slides.length} slides for you! Click "Use These Slides" to apply them to your project.`,
+            timestamp: new Date(),
+            isSlideResponse: true
+          };
+          setChatHistory(prev => [...prev, aiMessage]);
+        } else if (response.response) {
+          // Chat response
+          const aiMessage = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+            type: 'ai',
+            content: response.response,
+            timestamp: new Date()
+          };
+          setChatHistory(prev => [...prev, aiMessage]);
         }
-        const data = await response.json();
-        setGeneratedSlides(data.slides);
-        setShowAIModal(true);
-        const aiMessage = {
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          type: 'ai',
-          content: `I've generated ${data.slides.length} slides for you! Click "Use These Slides" to apply them to your project.`,
-          timestamp: new Date(),
-          isSlideResponse: true
-        };
-        setChatHistory(prev => [...prev, aiMessage]);
       } catch (err) {
         setError(err.message || 'Failed to process request');
         const errorMessage = {
@@ -152,21 +202,6 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
                             userMessage.toLowerCase().includes('promotional') ||
                             userMessage.toLowerCase().includes('inspirational');
 
-      // If it's a slide/content request but lacks specific content details, ask for clarification
-      if (isSlideRequest && !/(carousel|meme|listicle|educational|promotional|inspirational|tips|ideas|instagram|tiktok|twitter|thread|story|ad|video|reel|post|thread|format|style|topic|about|on|for|content|create|generate|make|marketing|business|social|media|brand|product|service|company|startup|entrepreneur|small business|ecommerce|restaurant|fitness|health|beauty|fashion|travel|food|technology|software|app|website|blog|newsletter|email|campaign|strategy|plan|guide|tutorial|how to|what is|why|when|where|who|how)/i.test(userMessage)) {
-        setAwaitingContentType(true);
-        setPendingUserMessage(userMessage);
-        const aiClarifyMessage = {
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          type: 'ai',
-          content: "I'd love to help you create content! Could you tell me more about what you'd like to create? For example:\n• What type of content (educational, promotional, inspirational, etc.)?\n• What topic or subject matter?\n• Any specific ideas or themes you have in mind?",
-          timestamp: new Date()
-        };
-        setChatHistory(prev => [...prev, aiClarifyMessage]);
-        setIsGenerating(false);
-        return;
-      }
-
       if (isSlideRequest) {
         // Handle slide generation
         const response = await fetch('/api/generate-slides', {
@@ -196,18 +231,32 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
         const data = await response.json();
         console.log('Received slides data:', data);
         
-        setGeneratedSlides(data.slides);
-        setShowAIModal(true);
-        
-        // Add AI response to chat history
-        const aiMessage = {
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          type: 'ai',
-          content: `I've generated ${data.slides.length} slides for you! Click "Use These Slides" to apply them to your project.`,
-          timestamp: new Date(),
-          isSlideResponse: true
-        };
-        setChatHistory(prev => [...prev, aiMessage]);
+        // Check if clarification is needed
+        if (needsClarification(data)) {
+          handleClarificationRequest(data, userMessage);
+          const clarificationMessage = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+            type: 'ai',
+            content: data.response,
+            timestamp: new Date(),
+            isClarification: true,
+            needsClarification: true
+          };
+          setChatHistory(prev => [...prev, clarificationMessage]);
+        } else {
+          setGeneratedSlides(data.slides);
+          setShowAIModal(true);
+          
+          // Add AI response to chat history
+          const aiMessage = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+            type: 'ai',
+            content: `I've generated ${data.slides.length} slides for you! Click "Use These Slides" to apply them to your project.`,
+            timestamp: new Date(),
+            isSlideResponse: true
+          };
+          setChatHistory(prev => [...prev, aiMessage]);
+        }
       } else {
         // Handle general AI questions
         const response = await fetch('/api/ai-chat', {
@@ -236,14 +285,28 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
         const data = await response.json();
         console.log('Received AI response:', data);
         
-        // Add AI response to chat history
-        const aiMessage = {
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          type: 'ai',
-          content: data.response,
-          timestamp: new Date()
-        };
-        setChatHistory(prev => [...prev, aiMessage]);
+        // Check if clarification is needed
+        if (needsClarification(data)) {
+          handleClarificationRequest(data, userMessage);
+          const clarificationMessage = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+            type: 'ai',
+            content: data.response,
+            timestamp: new Date(),
+            isClarification: true,
+            needsClarification: true
+          };
+          setChatHistory(prev => [...prev, clarificationMessage]);
+        } else {
+          // Add AI response to chat history
+          const aiMessage = {
+            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+            type: 'ai',
+            content: data.response,
+            timestamp: new Date()
+          };
+          setChatHistory(prev => [...prev, aiMessage]);
+        }
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err);
@@ -345,6 +408,25 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
                     <div className="text-base text-gray-900 whitespace-pre-line max-w-2xl w-full text-left" style={{ background: 'none', padding: 0, margin: '8px 0' }}>
                       {message.content}
                     </div>
+                  ) : message.isClarification ? (
+                    <div
+                      className="text-base whitespace-pre-line max-w-[80%] bg-yellow-50 border border-yellow-200 text-yellow-900 shadow-sm px-4 py-2 rounded-2xl"
+                      style={{
+                        marginLeft: 0,
+                        marginRight: 'auto',
+                        fontWeight: 500,
+                        background: '#fffbe6',
+                        color: '#b45309',
+                        marginTop: 4,
+                        marginBottom: 4
+                      }}
+                    >
+                      {message.content}
+                      {message.needsClarification && idx === chatHistory.length - 1 && (
+                        <div className="mt-3">
+                        </div>
+                      )}
+                    </div>
                   ) : (
                     <div
                       className={`text-base whitespace-pre-line max-w-[80%] ${message.type === 'user' ? 'text-gray-900' : message.isError ? 'text-red-700' : 'text-gray-900'} ${message.type === 'user' ? 'bg-blue-50' : 'bg-white'} shadow-sm px-4 py-2 rounded-2xl`}
@@ -389,10 +471,12 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           style={{ alignItems: 'center', ...(
             docked
               ? {
-                  background: '#fff',
-                  border: '1.5px solid #a3a3a3', // darker border
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(147, 197, 253, 0.15) 100%)',
+                  backdropFilter: 'blur(24px) saturate(1.1)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(1.1)',
+                  border: '1.5px solid rgba(147, 197, 253, 0.25)',
                   borderRadius: '18px',
-                  boxShadow: '0 2px 16px 0 rgba(0,0,0,0.04)',
+                  boxShadow: '0 2px 16px 0 rgba(0,0,0,0.04), 0 0 0 1px rgba(147, 197, 253, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
                   padding: '8px 16px',
                   minHeight: '48px',
                   margin: '0 auto',
@@ -436,11 +520,11 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
                       height: '40px',
                       borderRadius: '12px',
                       border: 'none',
-                      background: 'linear-gradient(135deg, #b4d8f8 0%, #b7cfff 100%)',
+                      background: 'linear-gradient(135deg, #7ecbff 0%, #4f8cff 100%)', // more vibrant blue
                       color: 'white',
                       fontWeight: 600,
                       fontSize: '18px',
-                      boxShadow: '0 2px 8px 0 rgba(0,0,0,0.06)',
+                      boxShadow: '0 2px 8px 0 rgba(147,197,253,0.35), 0 0 8px 2px #b7cfff', // blue glow
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -462,7 +546,7 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
                       color: 'white',
                       fontWeight: 600,
                       fontSize: '18px',
-                      boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                      boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 0 8px 2px #b7cfff', // blue glow
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -481,9 +565,9 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
               onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
               {isGenerating ? (
-                <Loader2 size={20} className="animate-spin" style={{ position: 'relative', zIndex: 2 }} />
+                <Loader2 size={20} className="animate-spin" style={{ position: 'relative', zIndex: 2, color: '#fff' }} />
               ) : (
-                <Send size={20} style={{ position: 'relative', zIndex: 2 }} />
+                <Send size={20} style={{ position: 'relative', zIndex: 2, color: '#fff', opacity: 1 }} />
               )}
             </button>
           </div>

@@ -1,6 +1,20 @@
 import OpenAI from 'openai';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
+import { buildContextAwarePrompt } from '../../../app/utils/contextPriority.js';
+import { 
+  extractMemoryInsights, 
+  storeMemoryInsights, 
+  retrieveUserMemory, 
+  buildMemoryContext 
+} from '../../../app/services/aiMemoryService.js';
+import { 
+  analyzePromptClarity, 
+  generateClarificationResponse, 
+  isClarificationResponse,
+  extractClarifiedInformation,
+  buildEnhancedPrompt
+} from '../../../app/utils/clarificationSystem.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -18,7 +32,7 @@ function getOpenAI() {
 
 export async function POST(req) {
   try {
-    const { prompt, slideCount = 5, businessContext, userInfo } = await req.json();
+    const { prompt, slideCount = 5, businessContext, userInfo, isClarificationFollowup, originalAnalysis } = await req.json();
 
     // Validate required fields
     if (!prompt) {
@@ -71,6 +85,58 @@ export async function POST(req) {
       }, { status: 500 });
     }
 
+    // Get user email for memory system
+    let userEmail = null;
+    if (userInfo?.email) {
+      userEmail = userInfo.email;
+    } else if (process.env.NODE_ENV === 'development') {
+      userEmail = 'dev@local.com';
+    }
+
+    // Handle clarification logic
+    let finalPrompt = prompt;
+    let clarificationResponse = null;
+    
+    // If this is a follow-up to a clarification, extract information and enhance the prompt
+    if (isClarificationFollowup && originalAnalysis) {
+      const clarifiedInfo = extractClarifiedInformation(prompt, originalAnalysis);
+      finalPrompt = buildEnhancedPrompt(originalAnalysis.originalPrompt || prompt, clarifiedInfo, { businessContext, userInfo });
+      console.log('Enhanced slide prompt with clarified information:', { original: prompt, enhanced: finalPrompt });
+    } else {
+      // Analyze prompt for clarity
+      const analysis = analyzePromptClarity(prompt, { businessContext, userInfo });
+      
+      if (analysis.needsClarification) {
+        clarificationResponse = generateClarificationResponse(analysis, prompt, { businessContext, userInfo });
+        console.log('Slide prompt needs clarification:', { analysis, clarificationResponse });
+        
+        return Response.json({ 
+          response: clarificationResponse,
+          needsClarification: true,
+          analysis: {
+            ...analysis,
+            originalPrompt: prompt
+          }
+        });
+      }
+    }
+
+    // Extract and store memory insights from user input
+    if (userEmail && finalPrompt) {
+      const insights = extractMemoryInsights(finalPrompt, { businessContext, userInfo });
+      if (insights.length > 0) {
+        await storeMemoryInsights(userEmail, insights);
+        console.log(`Extracted ${insights.length} memory insights from slide generation request`);
+      }
+    }
+
+    // Retrieve user memory for context
+    let userMemory = [];
+    if (userEmail) {
+      userMemory = await retrieveUserMemory(userEmail);
+      console.log(`Retrieved ${userMemory.length} memory records for slide generation`);
+    }
+
     // Extract comprehensive business context
     const companyName = businessContext?.companyName || 'Business';
     const businessType = businessContext?.businessType || 'General Business';
@@ -80,6 +146,40 @@ export async function POST(req) {
 
     console.log('User prompt:', prompt);
     console.log('Business context:', { companyName, businessType, productInfo, websiteUrl, personalization });
+    console.log('User memory count:', userMemory.length);
+
+    // Build context-aware system prompt with proper priority
+    const context = {
+      businessContext,
+      userInfo
+    };
+    
+    let systemPrompt = buildContextAwarePrompt(context, finalPrompt);
+    
+    // Add memory context if available
+    if (userMemory.length > 0) {
+      const memoryContext = buildMemoryContext(userMemory, finalPrompt);
+      systemPrompt += memoryContext;
+    }
+    
+    // Add slide-specific instructions
+    systemPrompt += `\n\nYou are an expert content creator for social media slides. Create ${slideCount} engaging slides based on the user's specific request.
+
+Rules:
+- First slide: Title/overview (no number prefix)
+- Other slides: Number prefix (e.g., "1. Your content")
+- Text position: x=50, y=60 (just below center)
+- No semicolons or dashes
+- No '#', ':' or '-' in the content EVER
+- Rich, specific content (100-300 chars)
+- Choose appropriate imageCategory from: business, technology, success, motivation, growth, creativity, social_media, entrepreneurship, marketing, lifestyle
+
+YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.
+
+Example format:
+[{"texts":[{"content":"Your content here","position":{"x":50,"y":60}}],"imageCategory":"business"}]
+
+IMPORTANT: Use the user's stored creative preferences and style directions to enhance your slide content, but always prioritize their current explicit request. If they ask for something different from their usual style, respect their current choice.`;
 
     // Generate slide content using OpenAI with enhanced prompt
     const openaiClient = getOpenAI();
@@ -88,45 +188,11 @@ export async function POST(req) {
       messages: [
         {
           role: "system",
-          content: `You are an expert content creator for social media slides. Create ${slideCount} engaging slides based on the user's specific request.
-
-          CRITICAL: The user's prompt is the most important instruction. Create content that directly addresses what they asked for.
-
-          Business Context: ${companyName} (${businessType}) - ${productInfo}
-          ${websiteUrl ? `Website: ${websiteUrl}` : ''}
-          ${userInfo?.name ? `User: ${userInfo.name}` : ''}
-          ${personalization ? `
-          User Profile:
-          - Interests: ${personalization.interests || 'Not specified'}
-          - Goal: ${personalization.goals || 'Not specified'}
-          - Role: ${personalization.role || 'Not specified'}
-          - Experience: ${personalization.experienceLevel || 'Not specified'}
-          - Time: ${personalization.timeCommitment || 'Not specified'}
-          - Audience: ${personalization.targetAudience || 'Not specified'}` : ''}
-
-          Rules:
-          - First slide: Title/overview (no number prefix)
-          - Other slides: Number prefix (e.g., "1. Your content")
-          - Text position: x=50, y=60 (just below center)
-          - No semicolons or dashes
-          - No '#', ':' or '-' in the content EVER
-          - Rich, specific content (100-300 chars)
-          - Choose appropriate imageCategory from: business, technology, success, motivation, growth, creativity, social_media, entrepreneurship, marketing, lifestyle
-
-          YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.
-
-          Example format:
-          [{"texts":[{"content":"Your content here","position":{"x":50,"y":60}}],"imageCategory":"business"}]
-
-          IMPORTANT: 
-          - If the user asks for "dogs", create content about dogs. If they ask for "marketing tips", create marketing tips. Always match their specific request.
-          - Use the user's business context, interests, goals, and target audience to create highly relevant and personalized content.
-          - Adjust the complexity and style based on their experience level and time commitment.
-          - Make content that would resonate with their specific target audience.`
+          content: systemPrompt
         },
         {
           role: "user",
-          content: prompt
+          content: finalPrompt
         }
       ],
       max_tokens: 2000,

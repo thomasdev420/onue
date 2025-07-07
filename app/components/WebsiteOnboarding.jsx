@@ -249,8 +249,8 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
     if (!currentAnswer || currentAnswer.trim() === '') {
       newErrors[currentQuestion.key] = 'This field is required';
     } else if (currentQuestion.type === 'text') {
-      const sanitized = sanitizeText(currentAnswer, currentQuestion.maxLength);
-      if (sanitized !== currentAnswer) {
+      const sanitized = sanitizeText(currentAnswer, currentQuestion.maxLength, true);
+      if (sanitized !== currentAnswer.trim()) {
         newErrors[currentQuestion.key] = `Invalid characters detected. Maximum ${currentQuestion.maxLength} characters allowed.`;
       }
     }
@@ -263,9 +263,9 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
     const value = e.target.value;
     const currentQuestion = PERSONALIZATION_QUESTIONS[personalizationStep];
     
-    // Sanitize text input
+    // Sanitize text input (don't trim during typing to allow spaces)
     if (currentQuestion.type === 'text') {
-      const sanitized = sanitizeText(value, currentQuestion.maxLength);
+      const sanitized = sanitizeText(value, currentQuestion.maxLength, false);
       setPersonalizationAnswers({ ...personalizationAnswers, [currentQuestion.key]: sanitized });
     } else {
       setPersonalizationAnswers({ ...personalizationAnswers, [currentQuestion.key]: value });

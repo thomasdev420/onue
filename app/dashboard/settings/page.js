@@ -6,6 +6,7 @@ import { getSupabase } from '../../../supabaseClient';
 import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X } from 'lucide-react';
 import ErrorAlert from '../../components/ErrorAlert';
 import Image from 'next/image';
+import MemoryManager from '../components/MemoryManager';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -157,7 +158,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Image Management */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Image Management</h2>
@@ -241,6 +242,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Memory Management */}
+      <MemoryManager />
     </div>
   );
 }

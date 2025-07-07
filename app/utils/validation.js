@@ -80,19 +80,20 @@ export function validateEmail(email) {
  * Sanitize text input
  * @param {string} text - Text to sanitize
  * @param {number} maxLength - Maximum length allowed
+ * @param {boolean} trimWhitespace - Whether to trim leading/trailing whitespace (default: true)
  * @returns {string} Sanitized text
  */
-export function sanitizeText(text, maxLength = 1000) {
+export function sanitizeText(text, maxLength = 1000, trimWhitespace = true) {
   if (!text) return '';
   
   // Remove HTML tags
   const sanitized = text.replace(/<[^>]*>/g, '');
   
-  // Trim whitespace
-  const trimmed = sanitized.trim();
+  // Only trim whitespace if requested (for final validation, not during typing)
+  const processed = trimWhitespace ? sanitized.trim() : sanitized;
   
   // Limit length
-  return trimmed.length > maxLength ? trimmed.substring(0, maxLength) : trimmed;
+  return processed.length > maxLength ? processed.substring(0, maxLength) : processed;
 }
 
 /**

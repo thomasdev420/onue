@@ -1,4 +1,18 @@
 import OpenAI from 'openai';
+import { buildContextAwarePrompt } from '../../utils/contextPriority.js';
+import { 
+  extractMemoryInsights, 
+  storeMemoryInsights, 
+  retrieveUserMemory, 
+  buildMemoryContext 
+} from '../../services/aiMemoryService.js';
+import { 
+  analyzePromptClarity, 
+  generateClarificationResponse, 
+  isClarificationResponse,
+  extractClarifiedInformation,
+  buildEnhancedPrompt
+} from '../../utils/clarificationSystem.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -27,9 +41,9 @@ export async function POST(req) {
     // Log the raw request body for debugging
     const rawBody = await req.text();
     console.log('Raw request body:', rawBody);
-    let prompt, businessContext, userInfo;
+    let prompt, businessContext, userInfo, isClarificationFollowup, originalAnalysis;
     try {
-      ({ prompt, businessContext, userInfo } = JSON.parse(rawBody));
+      ({ prompt, businessContext, userInfo, isClarificationFollowup, originalAnalysis } = JSON.parse(rawBody));
     } catch (parseError) {
       console.error('JSON parse error:', parseError.message);
       return Response.json({
@@ -54,71 +68,80 @@ export async function POST(req) {
       }
     }
 
-    // Create context-aware prompt
-    let systemPrompt = `You are Swiftreel, a helpful AI assistant for a content creation platform. Your name is Swiftreel. You can help with:
-- Marketing and business advice
-- Content strategy
-- Content creation
-- Creative ideas
-- Technical questions about content creation
-
-If users ask about your name, identity, or who you are, always respond that your name is Swiftreel.
-
-Provide helpful, actionable advice in a friendly, professional tone. Keep responses concise but informative (2-5 sentences).`;
-
-    // Add user context if available
-    if (userInfo?.name) {
-      systemPrompt += `\n\nUser Context: You are speaking with ${userInfo.name}`;
-      if (userInfo.email) {
-        systemPrompt += ` (${userInfo.email})`;
-      }
-      systemPrompt += `. Personalize your responses to be more engaging and relevant to this specific user.`;
+    // Get user email for memory system
+    let userEmail = null;
+    if (userInfo?.email) {
+      userEmail = userInfo.email;
+    } else if (process.env.NODE_ENV === 'development') {
+      userEmail = 'dev@local.com';
     }
 
-    // Add comprehensive business and user context if available
-    if (businessContext) {
-      systemPrompt += `\n\nBusiness Context:`;
+    // Handle clarification logic
+    let finalPrompt = prompt;
+    let clarificationResponse = null;
+    
+    // If this is a follow-up to a clarification, extract information and enhance the prompt
+    if (isClarificationFollowup && originalAnalysis) {
+      const clarifiedInfo = extractClarifiedInformation(prompt, originalAnalysis);
+      finalPrompt = buildEnhancedPrompt(originalAnalysis.originalPrompt || prompt, clarifiedInfo, { businessContext, userInfo });
+      console.log('Enhanced prompt with clarified information:', { original: prompt, enhanced: finalPrompt });
+    } else {
+      // Analyze prompt for clarity
+      const analysis = analyzePromptClarity(prompt, { businessContext, userInfo });
       
-      if (businessContext.companyName) {
-        systemPrompt += `\n- Company: ${businessContext.companyName}`;
-      }
-      if (businessContext.businessType) {
-        systemPrompt += `\n- Business Type: ${businessContext.businessType}`;
-      }
-      if (businessContext.productInfo) {
-        systemPrompt += `\n- Product/Service: ${businessContext.productInfo}`;
-      }
-      if (businessContext.websiteUrl) {
-        systemPrompt += `\n- Website: ${businessContext.websiteUrl}`;
-      }
-      
-      // Add personalization context
-      if (businessContext.personalization) {
-        systemPrompt += `\n\nUser Profile:`;
-        const personalization = businessContext.personalization;
+      if (analysis.needsClarification) {
+        clarificationResponse = generateClarificationResponse(analysis, prompt, { businessContext, userInfo });
+        console.log('Prompt needs clarification:', { analysis, clarificationResponse });
         
-        if (personalization.interests) {
-          systemPrompt += `\n- Interests: ${personalization.interests}`;
-        }
-        if (personalization.goals) {
-          systemPrompt += `\n- Main Goal: ${personalization.goals}`;
-        }
-        if (personalization.role) {
-          systemPrompt += `\n- Role: ${personalization.role}`;
-        }
-        if (personalization.experienceLevel) {
-          systemPrompt += `\n- Experience Level: ${personalization.experienceLevel}`;
-        }
-        if (personalization.timeCommitment) {
-          systemPrompt += `\n- Time Commitment: ${personalization.timeCommitment}`;
-        }
-        if (personalization.targetAudience) {
-          systemPrompt += `\n- Target Audience: ${personalization.targetAudience}`;
-        }
+        return Response.json({ 
+          response: clarificationResponse,
+          needsClarification: true,
+          analysis: {
+            ...analysis,
+            originalPrompt: prompt
+          }
+        });
       }
-      
-      systemPrompt += `\n\nUse this comprehensive context to provide highly personalized, relevant advice that matches the user's business, goals, and experience level.`;
     }
+
+    // Extract and store memory insights from user input
+    if (userEmail && finalPrompt) {
+      const insights = extractMemoryInsights(finalPrompt, { businessContext, userInfo });
+      if (insights.length > 0) {
+        await storeMemoryInsights(userEmail, insights);
+        console.log(`Extracted ${insights.length} memory insights from user input`);
+      }
+    }
+
+    // Retrieve user memory for context
+    let userMemory = [];
+    if (userEmail) {
+      userMemory = await retrieveUserMemory(userEmail);
+      console.log(`Retrieved ${userMemory.length} memory records for user`);
+    }
+
+    // Build context-aware system prompt with proper priority
+    const context = {
+      businessContext,
+      userInfo
+    };
+    
+    let systemPrompt = buildContextAwarePrompt(context, finalPrompt);
+    
+    // Add memory context if available
+    if (userMemory.length > 0) {
+      const memoryContext = buildMemoryContext(userMemory, finalPrompt);
+      systemPrompt += memoryContext;
+    }
+    
+    // Add Swiftreel-specific instructions
+    systemPrompt += `\n\nYour name is Swiftreel. If users ask about your name, identity, or who you are, always respond that your name is Swiftreel.
+    
+Provide helpful, actionable advice in a friendly, professional tone. Keep responses concise but informative (2-5 sentences).
+
+IMPORTANT: Use the user's stored preferences and creative directions to enhance your responses, but always prioritize their current explicit request. If they ask for something different from their usual preferences, respect their current choice.
+
+CLARIFICATION GUIDANCE: If a user provides additional details after you ask for clarification, acknowledge their response and provide a comprehensive answer based on their clarified request.`;
 
     const openaiClient = getOpenAI();
     const completion = await openaiClient.chat.completions.create({
@@ -130,7 +153,7 @@ Provide helpful, actionable advice in a friendly, professional tone. Keep respon
         },
         {
           role: "user",
-          content: prompt
+          content: finalPrompt
         }
       ],
       max_tokens: 300,

@@ -18,17 +18,35 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
   };
 
   return (
-    <aside className={`bg-gray-50 shadow-md flex flex-col fixed top-0 left-0 h-screen transition-all duration-300 ${isCollapsed ? 'w-20' : 'w-64'}`} style={{ backgroundColor: '#EFEFE7' }}>
-      <div className="flex-1 flex flex-col">
+    <aside
+      className={
+        `glass-sidebar glass-card flex flex-col sidebar-fixed transition-all duration-300`
+      }
+      style={{
+        position: 'fixed',
+        top: 12,
+        left: 12,
+        bottom: 12,
+        width: isCollapsed ? 80 : 288,
+        borderRadius: 32,
+        zIndex: 1000,
+        overflow: 'hidden',
+        transition: 'width 0.3s cubic-bezier(.4,0,.2,1), left 0.3s cubic-bezier(.4,0,.2,1)',
+      }}
+    >
+      <div className="flex-1 flex flex-col sidebar-content">
         {/* Logo and Toggle Button */}
-        <div className={`p-4 flex items-center ${isCollapsed ? 'justify-center' : 'gap-2'}`}>
+        <div className={`p-4 flex ${isCollapsed ? 'justify-center items-center' : 'items-center gap-2'}`}> 
           {!isCollapsed && (
             <Link href="/">
               <ArrowLeft size={20} className="text-gray-800 hover:text-gray-600 transition" />
             </Link>
           )}
-          {!isCollapsed && <h1 className="text-xl font-bold text-gray-800">SwiftReel</h1>}
-          <button onClick={toggleSidebar} className={`${isCollapsed ? '' : 'ml-auto'}`}>
+          <button
+            onClick={toggleSidebar}
+            className={isCollapsed ? '' : 'ml-auto'}
+            style={isCollapsed ? { display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, padding: 0 } : {}}
+          >
             <Menu size={20} className="text-gray-800 hover:text-gray-600 transition" />
           </button>
         </div>
@@ -42,8 +60,8 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
             <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />
             <div className="mt-4"></div>
-            <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} />
-            <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} isCollapsed={isCollapsed} />
+            <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} support />
+            <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} isCollapsed={isCollapsed} settings />
           </ul>
         </nav>
       </div>
@@ -105,7 +123,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
 
         {/* Display Google Account Details */}
         {status === "loading" ? (
-          <p className={`text-gray-800 font-semibold text-sm ${isCollapsed ? 'text-center' : 'mt-4'}`}>Loading...</p>
+          <p className={`font-semibold text-sm ${isCollapsed ? 'text-center' : 'mt-4'}`}>Loading...</p>
         ) : user ? (
           <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center mt-4' : 'mt-4'}`}>
             <Image
@@ -117,8 +135,8 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
             />
             {!isCollapsed && (
               <div>
-                <p className="text-gray-800 font-semibold text-sm">{user.name}</p>
-                <p className="text-gray-500 text-xs">{user.email}</p>
+                <p className="font-semibold text-sm">{user.name}</p>
+                <p className="text-xs">{user.email}</p>
                 <button
                   onClick={() => signOut({ callbackUrl: "/" })}
                   className="text-blue-500 text-xs hover:underline mt-1"
@@ -130,7 +148,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
           </div>
         ) : (
           <div className={` ${isCollapsed ? 'text-center mt-4' : 'mt-4'}`}>
-            <p className="text-gray-800 font-semibold text-sm">Not signed in</p>
+            <p className="font-semibold text-sm">Not signed in</p>
             {!isCollapsed && (
               <Link href="/api/auth/signin">
                 <span className="text-blue-500 text-xs hover:underline">Sign in with Google</span>
@@ -143,24 +161,22 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
   );
 }
 
-function SidebarLink({ href, icon, label, currentPath, isCollapsed }) {
+function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, settings }) {
   const isActive = currentPath === href || 
     (href !== '/dashboard' && href !== '/dashboard/slides' && href !== '/dashboard/lfg' && currentPath?.startsWith(href)) || 
     (href === '/dashboard' && currentPath === '/dashboard') ||
     (href === '/dashboard/slides' && currentPath === '/dashboard/slides') ||
     (href === '/dashboard/lfg' && currentPath === '/dashboard/lfg');
 
-  // Check if the link is for settings or support
-  const isSettingsOrSupport = href.includes('/settings') || href.includes('/support');
+  let linkClass = 'sidebar-nav-link';
+  if (isActive) linkClass += ' sidebar-nav-link-active';
+  if (support) linkClass += ' sidebar-support';
+  if (settings) linkClass += ' sidebar-settings';
 
   return (
     <li>
       <Link href={href}>
-        <span className={`flex items-center gap-3 px-3 py-[5px] ${
-          isSettingsOrSupport ? 'text-gray-500' : 'text-gray-800'
-        } hover:bg-white hover:shadow-sm hover:rounded text-sm transition-colors duration-200 ${
-          isActive ? 'bg-white shadow-sm rounded text-[#ff4514] font-medium' : ''
-        } ${isCollapsed ? 'justify-center' : ''}`}>
+        <span className={linkClass}>
           {icon}
           {!isCollapsed && label}
         </span>
