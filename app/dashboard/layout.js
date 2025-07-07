@@ -15,11 +15,17 @@ export default function DashboardLayout({ children }) {
 
   // Check dev access on mount
   useEffect(() => {
-    const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
-    if (!devAccessGranted && !isDev) {
-      router.push('/');
+    if (isDev) {
+      // In development mode, always allow access
+      setDevAccessChecked(true);
+    } else {
+      // In production, check for dev access
+      const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
+      if (!devAccessGranted) {
+        router.push('/');
+      }
+      setDevAccessChecked(true);
     }
-    setDevAccessChecked(true);
   }, [router, isDev]);
 
   // Handle redirect for unauthenticated users
