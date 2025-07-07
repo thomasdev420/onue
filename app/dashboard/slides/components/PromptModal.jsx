@@ -83,7 +83,11 @@ export default function PromptModal({
         body: JSON.stringify({
           prompt: finalPrompt,
           slideCount: finalSlideCount,
-          businessContext: businessContext
+          businessContext: businessContext,
+          userInfo: {
+            name: 'User',
+            email: 'user@example.com'
+          }
         }),
       });
       
