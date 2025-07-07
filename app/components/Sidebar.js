@@ -1,16 +1,19 @@
 'use client';
 
+import React from 'react';
 import Link from "next/link";
 import Image from 'next/image';
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload, Shield } from 'lucide-react';
+import ModeToggle from '../dashboard/components/ModeToggle';
 
 export default function Sidebar({ isCollapsed, toggleSidebar }) {
   const { data: session, status } = useSession();
   const user = session?.user;
   const pathname = usePathname();
   const router = useRouter();
+  const [mode, setMode] = React.useState('slides');
 
   const handleRevokeDevAccess = () => {
     localStorage.removeItem("devAccessGranted");
@@ -55,7 +58,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
         <nav className="mt-2 px-4 flex-1">
           <ul className="space-y-1 text-sm">
             <SidebarLink href="/dashboard" icon={<Home size={18} />} label="Home" currentPath={pathname} isCollapsed={isCollapsed} />
-            <SidebarLink href="/dashboard/content" icon={<Video size={18} />} label="Content Generator" currentPath={pathname} isCollapsed={isCollapsed} />
+            <SidebarLink href="/dashboard/slides" icon={<Video size={18} />} label="Content Generator" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/upload" icon={<Upload size={18} />} label="Content Upload" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
             <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />

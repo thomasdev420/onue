@@ -13,6 +13,8 @@ import { useSlideManagement } from './hooks/useSlideManagement';
 import { useSlideNavigation } from './hooks/useSlideNavigation';
 import { validateSlide } from '../../utils/validation';
 import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
+import ModeToggle from '../components/ModeToggle';
+import { useRouter } from 'next/navigation';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -36,6 +38,10 @@ export default function SlidesEditor() {
   const [businessContextFetched, setBusinessContextFetched] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(null);
+  const [mode, setMode] = useState('slides');
+  const [confirmedMode, setConfirmedMode] = useState('slides');
+  const [showModeModal, setShowModeModal] = useState(false);
+  const router = useRouter();
 
   // Use persistence hook for slides
   const defaultSlides = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
@@ -399,6 +405,22 @@ export default function SlidesEditor() {
     alert(`Content scheduled for ${date.toLocaleDateString()}`);
   };
 
+  // Handler for closing the mode modal and navigating if needed
+  const handleModeModalClose = () => {
+    setShowModeModal(false);
+    if (mode !== confirmedMode) {
+      const modeToRoute = {
+        videos: '/dashboard/videos',
+        memes: '/dashboard/meme',
+        avatars: '/dashboard/images',
+        slides: '/dashboard/slides',
+        'hook-demo': '/dashboard/hook-demo',
+      };
+      router.push(modeToRoute[mode] || '/dashboard/slides');
+      setConfirmedMode(mode);
+    }
+  };
+
   // Add a guard to prevent rendering with invalid slide data
   if (isLoadingSlides || !slides || slides.length === 0) {
     return (
@@ -411,8 +433,78 @@ export default function SlidesEditor() {
     );
   }
 
+  const modeLabelMap = {
+    videos: 'Videos',
+    memes: 'Memes',
+    avatars: 'Avatars',
+    slides: 'Slides',
+    'hook-demo': 'Demo',
+  };
+  const modeColorMap = {
+    videos: '#3B82F6',
+    memes: '#F59E0B',
+    avatars: '#A855F7',
+    slides: '#10B981',
+    'hook-demo': '#F43F5E',
+  };
+
   return (
     <>
+      {/* Settings button at top right */}
+      <div style={{ position: 'fixed', top: 24, right: 32, zIndex: 1100 }}>
+        <button
+          onClick={() => setShowModeModal(true)}
+          style={{
+            background: modeColorMap[mode] || '#10B981',
+            border: 'none',
+            borderRadius: '9999px',
+            boxShadow: `0 4px 16px 0 ${(modeColorMap[mode] || '#10B981')}44, 0 0 0 3px ${(modeColorMap[mode] || '#10B981')}33`,
+            color: '#fff',
+            fontWeight: 500,
+            fontSize: 18,
+            padding: '12px 32px',
+            minWidth: 120,
+            minHeight: 48,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'background 0.2s',
+            outline: 'none',
+            borderWidth: 0,
+          }}
+          aria-label="Switch content type"
+        >
+          {modeLabelMap[mode] || 'Slides'}
+        </button>
+      </div>
+      {/* ModeToggle Modal */}
+      {showModeModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.25)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 1200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={handleModeModalClose}
+        >
+          {/* Only show the ModeToggle, no white box, no close button */}
+          <div
+            style={{ position: 'relative' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <ModeToggle value={mode} onChange={setMode} />
+          </div>
+        </div>
+      )}
       <SaveStatusIndicator saveStatus={saveStatus} />
 
       {error && (

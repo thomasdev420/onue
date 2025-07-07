@@ -14,7 +14,7 @@ export const SLIDE_CONFIG = {
     MIN_X: 10,
     MAX_X: 90
   },
-  SLIDE_WIDTH_PERCENTAGE: 35 // <-- Narrower width for better slide carousel visibility
+  SLIDE_WIDTH_PERCENTAGE: 32 // Slightly smaller slides for better carousel visibility
 };
 
 export const SLIDE_TYPES = {
@@ -31,7 +31,7 @@ export const SLIDE_TYPES = {
 };
 
 export const SLIDE_VALIDATION = {
-  MAX_TEXT_LENGTH: 500,
+  MAX_TEXT_LENGTH: 700, // Increased from 500
   MAX_TEXTS_PER_SLIDE: 5,
   MIN_TEXT_LENGTH: 1
 };

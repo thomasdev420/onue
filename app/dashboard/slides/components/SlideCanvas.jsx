@@ -160,7 +160,7 @@ export default function SlideCanvas({
                 
                 {slide.texts.map((textItem, textIndex) => (
                   <TextOverlay
-                    key={textItem.id}
+                    key={textItem.id || textIndex}
                     textItem={textItem}
                     textIndex={textIndex}
                     slideIndex={index}
