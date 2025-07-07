@@ -158,16 +158,15 @@ export function usePersistence(pageType, defaultData) {
 
   // Auto-save when data changes
   useEffect(() => {
-    // Do not save if still loading, not authenticated, or if data is the default
+    // Do not save if still loading, not authenticated
     if (isLoading || !isAuthenticated || !session?.user?.email) {
       return;
     }
 
-    // Only auto-save if data has actually changed from the default
-    if (JSON.stringify(data) !== JSON.stringify(defaultData)) {
-      autoSaveWork(session.user.email, pageType, data, setSaveStatus);
-    }
-  }, [data, isAuthenticated, session?.user?.email, pageType, isLoading, defaultData]);
+    // Always auto-save when data changes (removed the default data comparison)
+    console.log(`Auto-saving ${pageType} data:`, data);
+    autoSaveWork(session.user.email, pageType, data, setSaveStatus);
+  }, [data, isAuthenticated, session?.user?.email, pageType, isLoading]);
 
   const updateData = useCallback((newData) => {
     setData(newData);

@@ -399,7 +399,9 @@ export default function SlidesEditor() {
 
   const handleImageSelect = (image) => {
     try {
+      console.log('Image selected:', image);
       handleSelectImageForSlide(image);
+      console.log('Image selection completed, closing modal');
       setIsContentModalOpen(false);
     } catch (error) {
       console.error('Error selecting image:', error);

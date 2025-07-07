@@ -44,8 +44,11 @@ export function useSlideManagement({ slides, setSlides, activeSlideIndex, setAct
   }, [slides, updateSlide]);
 
   const handleSelectImageForSlide = useCallback((image) => {
+    console.log('handleSelectImageForSlide called with:', image);
     const imageToUse = { ...image, image_url: image.image_url || image.url };
+    console.log('Updating slide with image:', imageToUse);
     updateSlide(activeSlideIndex, { image: imageToUse, ratio: '9:16' });
+    console.log('Slide update completed');
   }, [activeSlideIndex, updateSlide]);
 
   return {
