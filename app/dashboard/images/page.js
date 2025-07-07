@@ -217,11 +217,30 @@ export default function AvatarsEditor() {
 
       {/* ModeToggle Modal */}
       {showModeModal && (
-        <ModeToggle
-          currentMode={mode}
-          onModeChange={handleModeChange}
-          onClose={() => setShowModeModal(false)}
-        />
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            background: 'rgba(0,0,0,0.25)',
+            backdropFilter: 'blur(10px)',
+            zIndex: 1200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          onClick={() => setShowModeModal(false)}
+        >
+          {/* Only show the ModeToggle, no white box, no close button */}
+          <div
+            style={{ position: 'relative' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <ModeToggle value={mode} onChange={handleModeChange} />
+          </div>
+        </div>
       )}
 
       <div className="p-8">
