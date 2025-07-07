@@ -38,7 +38,8 @@ export async function POST(req) {
     if (forceGenerate) {
       const context = { businessContext, userInfo };
       let systemPrompt = buildContextAwarePrompt(context, prompt);
-      systemPrompt += `\n\nYou are an expert content creator for social media slides. Create ${slideCount} engaging slides based on the user's request.\nRules: ...`;
+      systemPrompt += `\n\nIMPORTANT: YOU MUST RETURN A VALID JSON ARRAY ONLY. No explanations, no markdown, no --- separators, no extra formatting, just the JSON array.\n\nExample format:\n[\n  {\n    "texts": [\n      { "content": "Otters are playful mammals...", "position": { "x": 50, "y": 60 } }\n    ],\n    "imageCategory": "business"\n  }\n]\n`;
+      systemPrompt += `\nCreate ${slideCount} engaging slides based on the user's request. Each slide should be a separate object in the array. Do not use markdown, dashes, or explanations.`;
       const openaiClient = getOpenAI();
       const completion = await openaiClient.chat.completions.create({
         model: "gpt-4o",
@@ -52,8 +53,30 @@ export async function POST(req) {
       let slides = [];
       try {
         slides = JSON.parse(completion.choices[0].message.content);
+        if (!Array.isArray(slides)) throw new Error('Not an array');
       } catch (e) {
-        slides = [{ texts: [{ content: completion.choices[0].message.content, position: { x: 50, y: 60 } }], imageCategory: 'business' }];
+        // Try to split the content into slides if possible, or wrap as a single slide
+        const content = completion.choices[0].message.content;
+        // Try to split by '---' or '**Slide' or numbered slides
+        let splitSlides = [];
+        if (content.includes('---')) {
+          splitSlides = content.split(/---+/).map(s => s.trim()).filter(Boolean);
+        } else if (content.match(/\*\*Slide \d+/)) {
+          splitSlides = content.split(/\*\*Slide \d+:/).map(s => s.trim()).filter(Boolean);
+        } else if (content.match(/Slide \d+:/)) {
+          splitSlides = content.split(/Slide \d+:/).map(s => s.trim()).filter(Boolean);
+        }
+        if (splitSlides.length > 1) {
+          slides = splitSlides.map(text => ({
+            texts: [{ content: text, position: { x: 50, y: 60 } }],
+            imageCategory: 'business'
+          }));
+        } else {
+          slides = [{
+            texts: [{ content, position: { x: 50, y: 60 } }],
+            imageCategory: 'business'
+          }];
+        }
       }
       return Response.json({ slides });
     }
