@@ -84,7 +84,8 @@ export const authOptions = {
       console.log('🔐 Sign in attempt:', { 
         user: user?.email, 
         provider: account?.provider,
-        account: account ? 'present' : 'missing'
+        account: account ? 'present' : 'missing',
+        timestamp: new Date().toISOString()
       });
       
       // Allow all sign-ins for now
@@ -94,7 +95,8 @@ export const authOptions = {
       console.log('🔄 JWT callback:', { 
         token: token ? 'present' : 'missing',
         user: user ? 'present' : 'missing',
-        account: account ? 'present' : 'missing'
+        account: account ? 'present' : 'missing',
+        timestamp: new Date().toISOString()
       });
       
       // Persist the OAuth access_token to the token right after signin
@@ -109,33 +111,48 @@ export const authOptions = {
       console.log('📋 Session callback:', { 
         session: session ? 'present' : 'missing',
         token: token ? 'present' : 'missing',
-        userEmail: session?.user?.email
+        userEmail: session?.user?.email,
+        timestamp: new Date().toISOString()
       });
       
       // Send properties to the client
-      session.user.id = token.sub;
-      session.accessToken = token.accessToken;
-      session.provider = token.provider;
+      if (token) {
+        session.user.id = token.sub;
+        session.accessToken = token.accessToken;
+        session.provider = token.provider;
+      }
       
       return session;
     },
     async redirect({ url, baseUrl }) {
-      console.log('🔄 Redirect callback:', { url, baseUrl });
+      console.log('🔄 Redirect callback:', { 
+        url, 
+        baseUrl,
+        timestamp: new Date().toISOString()
+      });
       
       // Allows relative callback URLs
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (url.startsWith("/")) {
+        const redirectUrl = `${baseUrl}${url}`;
+        console.log('📍 Redirecting to:', redirectUrl);
+        return redirectUrl;
+      }
       
       // Allows callback URLs on the same origin
       else if (typeof url === 'string' && typeof baseUrl === 'string' && /^https?:\/\//.test(url) && /^https?:\/\//.test(baseUrl)) {
         try {
           const urlOrigin = new URL(url).origin;
           const baseUrlOrigin = new URL(baseUrl).origin;
-          if (urlOrigin === baseUrlOrigin) return url;
+          if (urlOrigin === baseUrlOrigin) {
+            console.log('📍 Redirecting to same origin:', url);
+            return url;
+          }
         } catch (error) {
           console.warn('⚠️ Invalid URL in redirect callback:', error);
         }
       }
       
+      console.log('📍 Default redirect to baseUrl:', baseUrl);
       return baseUrl;
     }
   },

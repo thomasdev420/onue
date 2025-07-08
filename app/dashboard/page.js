@@ -6,6 +6,7 @@ import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpC
 import ChatBar from "./components/ChatBar";
 import WebsiteOnboarding from "../components/WebsiteOnboarding";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 
 //Dashboard page
 
@@ -193,11 +194,59 @@ function DashboardAnalyticsSection() {
 }
 
 export default function Dashboard() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const firstName = session?.user?.name?.split(' ')[0] || 'developer';
   const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [chatBarDocked, setChatBarDocked] = useState(false);
+
+  // Handle authentication state
+  useEffect(() => {
+    if (status === 'loading') {
+      // Still loading, wait
+      return;
+    }
+    
+    if (status === 'unauthenticated') {
+      console.log('🔒 User not authenticated, redirecting to home');
+      router.push('/');
+      return;
+    }
+    
+    if (status === 'authenticated' && session) {
+      console.log('✅ User authenticated:', session.user?.email);
+    }
+  }, [status, session, router]);
+
+  // Show loading state while checking authentication
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if not authenticated
+  if (status === 'unauthenticated') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">You need to be signed in to access the dashboard.</p>
+          <button
+            onClick={() => router.push('/')}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Check if user has completed onboarding on mount
   useEffect(() => {

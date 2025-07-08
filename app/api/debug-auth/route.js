@@ -1,45 +1,18 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../auth/[...nextauth]/route.js";
 
-export async function GET() {
+export async function GET(request) {
+  console.log('🔍 Debug auth endpoint called');
+  
   const authStatus = {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    nextauth: {
-      secret: !!process.env.NEXTAUTH_SECRET,
-      url: process.env.NEXTAUTH_URL || 'MISSING',
-      secretLength: process.env.NEXTAUTH_SECRET ? process.env.NEXTAUTH_SECRET.length : 0
-    },
-    google: {
-      clientId: !!process.env.GOOGLE_CLIENT_ID,
-      clientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
-      clientIdPrefix: process.env.GOOGLE_CLIENT_ID ? process.env.GOOGLE_CLIENT_ID.substring(0, 10) + '...' : 'MISSING'
-    },
-    cookies: {
-      secure: process.env.NODE_ENV === 'production',
-      sessionTokenName: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token'
-    },
     issues: [],
-    session: null
+    ready: false,
+    recommendations: []
   };
 
-  // Try to get current session
-  try {
-    const session = await getServerSession(authOptions);
-    authStatus.session = session ? {
-      user: session.user ? {
-        email: session.user.email,
-        name: session.user.name,
-        id: session.user.id
-      } : null,
-      expires: session.expires,
-      provider: session.provider
-    } : null;
-  } catch (error) {
-    authStatus.sessionError = error.message;
-  }
-
-  // Check for common issues
+  // Check environment variables
   if (!process.env.NEXTAUTH_SECRET) {
     authStatus.issues.push('NEXTAUTH_SECRET is missing');
   } else if (process.env.NEXTAUTH_SECRET.length < 32) {
@@ -48,8 +21,8 @@ export async function GET() {
 
   if (!process.env.NEXTAUTH_URL) {
     authStatus.issues.push('NEXTAUTH_URL is missing');
-  } else if (process.env.NEXTAUTH_URL.includes('localhost') && process.env.NODE_ENV === 'production') {
-    authStatus.issues.push('NEXTAUTH_URL contains localhost in production');
+  } else {
+    authStatus.nexauthUrl = process.env.NEXTAUTH_URL;
   }
 
   if (!process.env.GOOGLE_CLIENT_ID) {
@@ -73,6 +46,15 @@ export async function GET() {
   if (process.env.NODE_ENV === 'production') {
     authStatus.recommendations.push('Ensure Google OAuth redirect URI includes: https://your-domain.vercel.app/api/auth/callback/google');
   }
+
+  // Add current request information
+  authStatus.request = {
+    url: request.url,
+    headers: Object.fromEntries(request.headers.entries()),
+    method: request.method
+  };
+
+  console.log('📊 Auth status:', authStatus);
 
   return Response.json(authStatus, {
     headers: {
