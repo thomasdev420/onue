@@ -43,7 +43,15 @@ const authOptions = {
     async redirect({ url, baseUrl }) {
       console.log('Redirect callback:', { url, baseUrl });
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      else if (new URL(url).origin === baseUrl) return url;
+      else if (typeof url === 'string' && typeof baseUrl === 'string' && /^https?:\/\//.test(url) && /^https?:\/\//.test(baseUrl)) {
+        try {
+          const urlOrigin = new URL(url).origin;
+          const baseUrlOrigin = new URL(baseUrl).origin;
+          if (urlOrigin === baseUrlOrigin) return url;
+        } catch (error) {
+          console.warn('Invalid URL in redirect callback:', error);
+        }
+      }
       return baseUrl;
     }
   }

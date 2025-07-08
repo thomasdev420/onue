@@ -39,7 +39,7 @@ const OPTIONAL_ENV_VARS = {
 export function validateEnvironment() {
   const missing = [];
   const warnings = [];
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = (process.env.NODE_ENV || 'development') === 'development';
 
   // Check required variables
   Object.entries(REQUIRED_ENV_VARS).forEach(([key, description]) => {
@@ -57,7 +57,9 @@ export function validateEnvironment() {
 
   // Special validation for development
   if (isDev) {
-    if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    const googleClientId = process.env.GOOGLE_CLIENT_ID;
+    const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    if (!googleClientId || !googleClientSecret) {
       warnings.push({
         key: 'GOOGLE_OAUTH',
         description: 'Google OAuth not configured - authentication will be bypassed in development'

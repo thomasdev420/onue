@@ -4,7 +4,15 @@
 
 export class ProductionConfigValidator {
   constructor() {
-    this.isProduction = process.env.NODE_ENV === 'production';
+    // Lazy evaluation to avoid build-time issues
+    this._isProduction = null;
+  }
+
+  get isProduction() {
+    if (this._isProduction === null) {
+      this._isProduction = process.env.NODE_ENV === 'production';
+    }
+    return this._isProduction;
   }
 
   /**
@@ -25,7 +33,15 @@ export class ProductionConfigValidator {
       },
       NEXTAUTH_URL: {
         required: true,
-        validate: (value) => value && (value.startsWith('https://') || value.startsWith('http://')),
+        validate: (value) => {
+          if (!value) return false;
+          if (typeof value !== 'string') return false;
+          try {
+            return /^https?:\/\//.test(value);
+          } catch {
+            return false;
+          }
+        },
         message: 'NEXTAUTH_URL must be a valid URL'
       },
       
@@ -76,17 +92,20 @@ export class ProductionConfigValidator {
 
     const warnings = [];
 
-    // Check for development URLs in production
-    if (process.env.NEXTAUTH_URL && process.env.NEXTAUTH_URL.includes('localhost')) {
+    // Check for development URLs in production - with proper guards
+    const nextAuthUrl = process.env.NEXTAUTH_URL;
+    if (nextAuthUrl && typeof nextAuthUrl === 'string' && nextAuthUrl.includes('localhost')) {
       warnings.push('NEXTAUTH_URL contains localhost - should use production domain');
     }
 
-    if (process.env.TIKTOK_REDIRECT_URI && process.env.TIKTOK_REDIRECT_URI.includes('localhost')) {
+    const tiktokRedirectUri = process.env.TIKTOK_REDIRECT_URI;
+    if (tiktokRedirectUri && typeof tiktokRedirectUri === 'string' && tiktokRedirectUri.includes('localhost')) {
       warnings.push('TIKTOK_REDIRECT_URI contains localhost - should use production domain');
     }
 
     // Check for weak secrets
-    if (process.env.NEXTAUTH_SECRET && process.env.NEXTAUTH_SECRET.length < 32) {
+    const nextAuthSecret = process.env.NEXTAUTH_SECRET;
+    if (nextAuthSecret && typeof nextAuthSecret === 'string' && nextAuthSecret.length < 32) {
       warnings.push('NEXTAUTH_SECRET is too short - should be at least 32 characters');
     }
 
@@ -105,7 +124,7 @@ export class ProductionConfigValidator {
 
     return {
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
+      environment: process.env.NODE_ENV || 'development',
       isProduction: this.isProduction,
       environmentVariables: envValidation,
       productionSettings: productionValidation,
@@ -138,5 +157,11 @@ export class ProductionConfigValidator {
   }
 }
 
-// Global validator instance
-export const configValidator = new ProductionConfigValidator(); 
+// Lazy global validator instance
+let _configValidator = null;
+export function getConfigValidator() {
+  if (!_configValidator) {
+    _configValidator = new ProductionConfigValidator();
+  }
+  return _configValidator;
+} 

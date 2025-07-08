@@ -1,8 +1,9 @@
-import { configValidator } from '../../utils/productionConfig';
+import { getConfigValidator } from '../../utils/productionConfig';
 
 export async function GET() {
   try {
     // Get comprehensive configuration status
+    const configValidator = getConfigValidator();
     const configStatus = configValidator.getConfigurationStatus();
     
     // Test Supabase connection if configured

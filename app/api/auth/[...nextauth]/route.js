@@ -1,21 +1,24 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
-// Validate required environment variables
-const requiredEnvVars = {
-  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
-  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-  NEXTAUTH_URL: process.env.NEXTAUTH_URL
-};
+// Lazy validation function to avoid build-time issues
+function validateRequiredEnvVars() {
+  const requiredEnvVars = {
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL
+  };
 
-// Check for missing environment variables
-const missingVars = Object.entries(requiredEnvVars)
-  .filter(([key, value]) => !value)
-  .map(([key]) => key);
+  const missingVars = Object.entries(requiredEnvVars)
+    .filter(([key, value]) => !value)
+    .map(([key]) => key);
 
-if (missingVars.length > 0) {
-  console.error('Missing required environment variables:', missingVars);
+  if (missingVars.length > 0) {
+    console.error('Missing required environment variables:', missingVars);
+  }
+  
+  return missingVars.length === 0;
 }
 
 const providers = [
@@ -53,7 +56,15 @@ export const authOptions = {
       // Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       // Allows callback URLs on the same origin
-      else if (new URL(url).origin === baseUrl) return url;
+      else if (typeof url === 'string' && typeof baseUrl === 'string' && /^https?:\/\//.test(url) && /^https?:\/\//.test(baseUrl)) {
+        try {
+          const urlOrigin = new URL(url).origin;
+          const baseUrlOrigin = new URL(baseUrl).origin;
+          if (urlOrigin === baseUrlOrigin) return url;
+        } catch (error) {
+          console.warn('Invalid URL in redirect callback:', error);
+        }
+      }
       return baseUrl;
     }
   }
