@@ -7,7 +7,6 @@ import { usePersistence } from '../../services/persistenceService';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 import SlideCanvas from '../slides/components/SlideCanvas';
-import SlideControls from '../slides/components/SlideControls';
 import ContentModal from '../slides/components/ContentModal';
 import PromptModal from '../slides/components/PromptModal';
 import { useSlideManagement } from '../slides/hooks/useSlideManagement';
@@ -244,50 +243,33 @@ export default function AvatarsEditor() {
       )}
 
       <div className="p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">Avatars Editor</h1>
-          <SaveStatusIndicator saveStatus={saveStatus} />
-        </div>
+      <SaveStatusIndicator saveStatus={saveStatus} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Canvas */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <SlideCanvas
-                slide={avatars[activeAvatarIndex]}
-                onUpdate={(updatedSlide) => updateAvatar(activeAvatarIndex, updatedSlide)}
-                onImageSelect={handleSelectImageForAvatar}
-                libraryImages={libraryImages}
-                userImages={userImages}
-                contentType={contentType}
-                setContentType={setContentType}
-                isDropdownOpen={isDropdownOpen}
-                setIsDropdownOpen={setIsDropdownOpen}
-                onOpenContentModal={() => setIsContentModalOpen(true)}
-                onOpenPromptModal={() => setIsPromptModalOpen(true)}
-                businessContext={businessContext}
-                isScheduleModalOpen={isScheduleModalOpen}
-                setIsScheduleModalOpen={setIsScheduleModalOpen}
-                scheduledDate={scheduledDate}
-                setScheduledDate={setScheduledDate}
-                mode="avatars"
-              />
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <SlideControls
-                slides={avatars}
-                activeIndex={activeAvatarIndex}
-                onSlideChange={setActiveAvatarIndex}
-                onAddSlide={addAvatar}
-                onDeleteSlide={deleteAvatar}
-                onReset={resetAvatars}
-                mode="avatars"
-              />
-            </div>
+                <div style={{ 
+          display: "flex", 
+          height: "90vh", 
+          padding: "0px 8px", 
+          boxSizing: "border-box", 
+          fontFamily: "'Inter', sans-serif" 
+        }}>
+          <div style={{ 
+            flexBasis: "100%", 
+            display: "flex", 
+            flexDirection: "column",
+            position: "relative"
+          }}>
+            <SlideCanvas
+              slides={avatars}
+              activeSlideIndex={activeAvatarIndex}
+              onSlideSelect={setActiveAvatarIndex}
+              onSlideUpdate={(slideIndex, updatedSlide) => updateAvatar(slideIndex, updatedSlide)}
+              onAddSlide={addAvatar}
+              onDeleteSlide={deleteAvatar}
+              onRatioChange={(slideIndex) => changeRatio(slideIndex)}
+              onContentModalOpen={() => setIsContentModalOpen(true)}
+              onPromptModalOpen={() => setIsPromptModalOpen(true)}
+              onScheduleClick={() => setIsScheduleModalOpen(true)}
+            />
           </div>
         </div>
 
@@ -313,6 +295,28 @@ export default function AvatarsEditor() {
           mode="avatars"
         />
       </div>
+      
+      {/* Schedule Modal */}
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl p-8 relative">
+            <button
+              onClick={() => setIsScheduleModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Pick a day to schedule this content</h2>
+            <MonthlyCalendar onDateSelected={(date) => {
+              setScheduledDate(date);
+              setIsScheduleModalOpen(false);
+              // Save to localStorage for now
+              localStorage.setItem('scheduledContent', JSON.stringify({ date, avatars }));
+              alert(`Content scheduled for ${date.toLocaleDateString()}`);
+            }} />
+          </div>
+        </div>
+      )}
     </>
   );
 } 

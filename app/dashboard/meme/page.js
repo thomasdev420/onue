@@ -7,7 +7,6 @@ import { usePersistence } from '../../services/persistenceService';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 import SlideCanvas from '../slides/components/SlideCanvas';
-import SlideControls from '../slides/components/SlideControls';
 import ContentModal from '../slides/components/ContentModal';
 import PromptModal from '../slides/components/PromptModal';
 import { useSlideManagement } from '../slides/hooks/useSlideManagement';
@@ -244,50 +243,33 @@ export default function MemesEditor() {
       )}
 
       <div className="p-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-gray-800">Memes Editor</h1>
-          <SaveStatusIndicator saveStatus={saveStatus} />
-        </div>
+      <SaveStatusIndicator saveStatus={saveStatus} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Canvas */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <SlideCanvas
-                slide={memes[activeMemeIndex]}
-                onUpdate={(updatedSlide) => updateMeme(activeMemeIndex, updatedSlide)}
-                onImageSelect={handleSelectImageForMeme}
-                libraryImages={libraryImages}
-                userImages={userImages}
-                contentType={contentType}
-                setContentType={setContentType}
-                isDropdownOpen={isDropdownOpen}
-                setIsDropdownOpen={setIsDropdownOpen}
-                onOpenContentModal={() => setIsContentModalOpen(true)}
-                onOpenPromptModal={() => setIsPromptModalOpen(true)}
-                businessContext={businessContext}
-                isScheduleModalOpen={isScheduleModalOpen}
-                setIsScheduleModalOpen={setIsScheduleModalOpen}
-                scheduledDate={scheduledDate}
-                setScheduledDate={setScheduledDate}
-                mode="memes"
-              />
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <SlideControls
-                slides={memes}
-                activeIndex={activeMemeIndex}
-                onSlideChange={setActiveMemeIndex}
-                onAddSlide={addMeme}
-                onDeleteSlide={deleteMeme}
-                onReset={resetMemes}
-                mode="memes"
-              />
-            </div>
+                <div style={{ 
+          display: "flex", 
+          height: "90vh", 
+          padding: "0px 8px", 
+          boxSizing: "border-box", 
+          fontFamily: "'Inter', sans-serif" 
+        }}>
+          <div style={{ 
+            flexBasis: "100%", 
+            display: "flex", 
+            flexDirection: "column",
+            position: "relative"
+          }}>
+            <SlideCanvas
+              slides={memes}
+              activeSlideIndex={activeMemeIndex}
+              onSlideSelect={setActiveMemeIndex}
+              onSlideUpdate={(slideIndex, updatedSlide) => updateMeme(slideIndex, updatedSlide)}
+              onAddSlide={addMeme}
+              onDeleteSlide={deleteMeme}
+              onRatioChange={(slideIndex) => changeRatio(slideIndex)}
+              onContentModalOpen={() => setIsContentModalOpen(true)}
+              onPromptModalOpen={() => setIsPromptModalOpen(true)}
+              onScheduleClick={() => setIsScheduleModalOpen(true)}
+            />
           </div>
         </div>
 
@@ -313,6 +295,28 @@ export default function MemesEditor() {
           mode="memes"
         />
       </div>
+      
+      {/* Schedule Modal */}
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl p-8 relative">
+            <button
+              onClick={() => setIsScheduleModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-xl font-bold mb-4">Pick a day to schedule this content</h2>
+            <MonthlyCalendar onDateSelected={(date) => {
+              setScheduledDate(date);
+              setIsScheduleModalOpen(false);
+              // Save to localStorage for now
+              localStorage.setItem('scheduledContent', JSON.stringify({ date, memes }));
+              alert(`Content scheduled for ${date.toLocaleDateString()}`);
+            }} />
+          </div>
+        </div>
+      )}
     </>
   );
 } 

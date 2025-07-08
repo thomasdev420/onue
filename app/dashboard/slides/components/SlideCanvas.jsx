@@ -118,7 +118,7 @@ export default function SlideCanvas({
         transform: `translateX(calc(50% - ${slideWidth / 2}% - (${activeSlideIndex} * ${slideWidth}%)))`,
         transition: 'transform 0.5s ease-in-out'
       }}>
-        {slides.map((slide, index) => (
+        {slides && slides.length > 0 ? slides.map((slide, index) => (
           <div 
             key={slide.id} 
             ref={el => slideItemRefs.current[index] = el}
@@ -158,7 +158,7 @@ export default function SlideCanvas({
                   style={{ objectFit: 'cover' }}
                 />
                 
-                {slide.texts.map((textItem, textIndex) => (
+                {slide.texts && slide.texts.map((textItem, textIndex) => (
                   <TextOverlay
                     key={textItem.id || textIndex}
                     textItem={textItem}
@@ -234,7 +234,19 @@ export default function SlideCanvas({
               onScheduleClick={onScheduleClick}
             />
           </div>
-        ))}
+        )) : (
+          <div style={{
+            width: `${slideWidth}%`,
+            height: '100%',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            color: '#6B7280',
+            fontSize: '14px'
+          }}>
+            No slides available
+          </div>
+        )}
         
         {/* Add New Slide Button */}
         <div 
