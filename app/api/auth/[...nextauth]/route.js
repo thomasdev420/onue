@@ -51,6 +51,11 @@ export const authOptions = {
       console.log('Sign in attempt:', { user: user?.email, provider: account?.provider });
       return true;
     },
+    async session({ session, token }) {
+      console.log("Session callback:", { session, token });
+      session.user.id = token.sub;
+      return session;
+    },
     async redirect({ url, baseUrl }) {
       console.log('Redirect callback:', { url, baseUrl });
       // Allows relative callback URLs
