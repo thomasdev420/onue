@@ -2,6 +2,8 @@
  * Service for scanning websites and extracting product information
  */
 
+import { safeNewUrl } from '../utils/safeNewUrl';
+
 /**
  * Extract basic information from a website URL
  * @param {string} url - The website URL to scan
@@ -25,13 +27,12 @@ export async function scanWebsite(url) {
     // based on common patterns
     
     let domain, path;
-    try {
-      const urlObj = new URL(url);
-      domain = urlObj.hostname;
-      path = urlObj.pathname;
-    } catch (urlError) {
+    const urlObj = safeNewUrl(url);
+    if (!urlObj) {
       throw new Error('Invalid URL format');
     }
+    domain = urlObj.hostname;
+    path = urlObj.pathname;
     
     // Simulate different types of websites
     let extractedData = {

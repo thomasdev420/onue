@@ -1,6 +1,7 @@
 import * as cheerio from 'cheerio';
 import fetch from 'node-fetch';
 import OpenAI from 'openai';
+import { safeNewUrl } from '../../utils/safeNewUrl';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -263,7 +264,11 @@ export async function POST(request) {
     const bodyText = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 1000);
     
     // Extract domain for fallback
-    const domain = new URL(normalizedUrl).hostname;
+    const urlObj = safeNewUrl(normalizedUrl);
+    if (!urlObj) {
+      return Response.json({ error: 'Invalid URL format' }, { status: 400 });
+    }
+    const domain = urlObj.hostname;
     
     // Prepare AI prompt
     const aiText = `Title: ${title}\nDescription: ${metaDescription}\nContent: ${bodyText}`;
