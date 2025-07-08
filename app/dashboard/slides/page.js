@@ -149,7 +149,7 @@ export default function SlidesEditor() {
   // Check for AI-generated slides from localStorage
   useEffect(() => {
     const aiGeneratedSlides = localStorage.getItem('aiGeneratedSlides');
-    if (aiGeneratedSlides && !isLoading && libraryImages.length > 0) {
+    if (aiGeneratedSlides && !isLoading && Array.isArray(libraryImages) && libraryImages.length > 0) {
       try {
         const parsedSlides = JSON.parse(aiGeneratedSlides);
         console.log('Found AI-generated slides in localStorage:', parsedSlides);
@@ -170,7 +170,7 @@ export default function SlidesEditor() {
                 // Always try to assign an image, even if no category or no library images
                 let selectedImage = null;
                 
-                if (libraryImages.length > 0) {
+                if (Array.isArray(libraryImages) && libraryImages.length > 0) {
                   if (slide.imageCategory) {
                     // Find images that match the category (simple keyword matching)
                     const categoryKeywords = {
@@ -187,7 +187,7 @@ export default function SlidesEditor() {
                     };
                     
                     const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-                    const matchingImages = (libraryImages || []).filter(img => 
+                    const matchingImages = (Array.isArray(libraryImages) ? libraryImages : []).filter(img => 
                       img && img.title && keywords.some(keyword => 
                         img.title.toLowerCase().includes(keyword.toLowerCase())
                       )
@@ -198,10 +198,10 @@ export default function SlidesEditor() {
                     // Select a random matching image, or fallback to any image
                     selectedImage = matchingImages.length > 0 
                       ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
-                      : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
+                      : (Array.isArray(libraryImages) && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
                   } else {
                     // No category specified, select a random image
-                    selectedImage = (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
+                    selectedImage = (Array.isArray(libraryImages) && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
                   }
                   
                   console.log(`Selected image for slide ${index + 1}:`, selectedImage?.title);

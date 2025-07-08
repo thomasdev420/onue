@@ -243,7 +243,7 @@ export default function MemesEditor() {
       )}
 
       <div className="p-8">
-      <SaveStatusIndicator saveStatus={saveStatus} />
+          <SaveStatusIndicator saveStatus={saveStatus} />
 
                 <div style={{ 
           display: "flex", 
@@ -258,13 +258,13 @@ export default function MemesEditor() {
             flexDirection: "column",
             position: "relative"
           }}>
-            <SlideCanvas
-              slides={memes}
+              <SlideCanvas
+                slides={memes}
               activeSlideIndex={activeMemeIndex}
               onSlideSelect={setActiveMemeIndex}
               onSlideUpdate={(slideIndex, updatedSlide) => updateMeme(slideIndex, updatedSlide)}
-              onAddSlide={addMeme}
-              onDeleteSlide={deleteMeme}
+                onAddSlide={addMeme}
+                onDeleteSlide={deleteMeme}
               onRatioChange={(slideIndex) => changeRatio(slideIndex)}
               onContentModalOpen={() => setIsContentModalOpen(true)}
               onPromptModalOpen={() => setIsPromptModalOpen(true)}

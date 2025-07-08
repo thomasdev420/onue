@@ -243,7 +243,7 @@ export default function VideosEditor() {
       )}
 
       <div className="p-8">
-      <SaveStatusIndicator saveStatus={saveStatus} />
+          <SaveStatusIndicator saveStatus={saveStatus} />
 
                 <div style={{ 
           display: "flex", 
@@ -258,13 +258,13 @@ export default function VideosEditor() {
             flexDirection: "column",
             position: "relative"
           }}>
-            <SlideCanvas
-              slides={videos}
+              <SlideCanvas
+                slides={videos}
               activeSlideIndex={activeVideoIndex}
               onSlideSelect={setActiveVideoIndex}
               onSlideUpdate={(slideIndex, updatedSlide) => updateVideo(slideIndex, updatedSlide)}
-              onAddSlide={addVideo}
-              onDeleteSlide={deleteVideo}
+                onAddSlide={addVideo}
+                onDeleteSlide={deleteVideo}
               onRatioChange={(slideIndex) => changeRatio(slideIndex)}
               onContentModalOpen={() => setIsContentModalOpen(true)}
               onPromptModalOpen={() => setIsPromptModalOpen(true)}

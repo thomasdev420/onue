@@ -243,7 +243,7 @@ export default function AvatarsEditor() {
       )}
 
       <div className="p-8">
-      <SaveStatusIndicator saveStatus={saveStatus} />
+          <SaveStatusIndicator saveStatus={saveStatus} />
 
                 <div style={{ 
           display: "flex", 
@@ -258,13 +258,13 @@ export default function AvatarsEditor() {
             flexDirection: "column",
             position: "relative"
           }}>
-            <SlideCanvas
-              slides={avatars}
+              <SlideCanvas
+                slides={avatars}
               activeSlideIndex={activeAvatarIndex}
               onSlideSelect={setActiveAvatarIndex}
               onSlideUpdate={(slideIndex, updatedSlide) => updateAvatar(slideIndex, updatedSlide)}
-              onAddSlide={addAvatar}
-              onDeleteSlide={deleteAvatar}
+                onAddSlide={addAvatar}
+                onDeleteSlide={deleteAvatar}
               onRatioChange={(slideIndex) => changeRatio(slideIndex)}
               onContentModalOpen={() => setIsContentModalOpen(true)}
               onPromptModalOpen={() => setIsPromptModalOpen(true)}

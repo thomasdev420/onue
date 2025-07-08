@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Sparkles, ImagePlus, Lightbulb, Camera, CreditCard, Pocket, Package, Upload, Pencil, TrendingUp, Zap, Target, BarChart3, Globe, Palette } from 'lucide-react';
+import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Sparkles, Lightbulb, Camera, CreditCard, Pocket, Package, Upload, Pencil, TrendingUp, Zap, Target, BarChart3, Globe, Palette } from 'lucide-react';
 import ChatBar from "./components/ChatBar";
 import WebsiteOnboarding from "../components/WebsiteOnboarding";
 import { useState, useEffect, useRef } from "react";
@@ -253,12 +253,7 @@ export default function Dashboard() {
             {
               label: 'Create Memes',
               icon: <Palette size={18} />,
-              href: '/dashboard/memes',
-            },
-            {
-              label: 'Avatar Generator',
-              icon: <ImagePlus size={18} />,
-              href: '/dashboard/avatars',
+              href: '/dashboard/meme',
             },
             {
               label: 'Slides',

@@ -9,6 +9,11 @@
  */
 export async function scanWebsite(url) {
   try {
+    // Validate URL first
+    if (!url || typeof url !== 'string') {
+      throw new Error('Invalid URL provided');
+    }
+    
     // In a real implementation, this would:
     // 1. Fetch the website HTML
     // 2. Parse meta tags, title, description
@@ -19,8 +24,14 @@ export async function scanWebsite(url) {
     // For now, we'll simulate the process with mock data
     // based on common patterns
     
-    const domain = new URL(url).hostname;
-    const path = new URL(url).pathname;
+    let domain, path;
+    try {
+      const urlObj = new URL(url);
+      domain = urlObj.hostname;
+      path = urlObj.pathname;
+    } catch (urlError) {
+      throw new Error('Invalid URL format');
+    }
     
     // Simulate different types of websites
     let extractedData = {
@@ -164,7 +175,7 @@ function generateProductInfo(domain, path) {
  * @returns {Object} Validation result with normalized URL
  */
 export function validateWebsiteUrl(url) {
-  if (!url) {
+  if (!url || typeof url !== 'string') {
     return { valid: false, error: 'URL is required' };
   }
   
@@ -176,9 +187,13 @@ export function validateWebsiteUrl(url) {
   }
   
   try {
-    new URL(normalizedUrl);
+    const urlObj = new URL(normalizedUrl);
+    // Additional validation to ensure it's a valid web URL
+    if (!urlObj.protocol || !urlObj.hostname) {
+      return { valid: false, error: 'Invalid URL format' };
+    }
     return { valid: true, normalizedUrl };
-  } catch {
+  } catch (error) {
     return { valid: false, error: 'Invalid URL format' };
   }
 }

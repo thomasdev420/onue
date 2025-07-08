@@ -243,7 +243,7 @@ export default function HookDemoEditor() {
       )}
 
       <div className="p-8">
-      <SaveStatusIndicator saveStatus={saveStatus} />
+          <SaveStatusIndicator saveStatus={saveStatus} />
 
                 <div style={{ 
           display: "flex", 
@@ -258,13 +258,13 @@ export default function HookDemoEditor() {
             flexDirection: "column",
             position: "relative"
           }}>
-            <SlideCanvas
-              slides={hookDemo}
+              <SlideCanvas
+                slides={hookDemo}
               activeSlideIndex={activeHookDemoIndex}
               onSlideSelect={setActiveHookDemoIndex}
               onSlideUpdate={(slideIndex, updatedSlide) => updateHookDemo(slideIndex, updatedSlide)}
-              onAddSlide={addHookDemo}
-              onDeleteSlide={deleteHookDemo}
+                onAddSlide={addHookDemo}
+                onDeleteSlide={deleteHookDemo}
               onRatioChange={(slideIndex) => changeRatio(slideIndex)}
               onContentModalOpen={() => setIsContentModalOpen(true)}
               onPromptModalOpen={() => setIsPromptModalOpen(true)}
