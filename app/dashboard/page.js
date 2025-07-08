@@ -201,10 +201,12 @@ export default function Dashboard() {
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [chatBarDocked, setChatBarDocked] = useState(false);
 
-  // Handle authentication state
+  // Handle authentication state with better debugging
   useEffect(() => {
+    console.log('🔍 Auth status changed:', { status, hasSession: !!session, userEmail: session?.user?.email });
+    
     if (status === 'loading') {
-      // Still loading, wait
+      console.log('⏳ Still loading authentication...');
       return;
     }
     
@@ -215,7 +217,7 @@ export default function Dashboard() {
     }
     
     if (status === 'authenticated' && session) {
-      console.log('✅ User authenticated:', session.user?.email);
+      console.log('✅ User authenticated successfully:', session.user?.email);
     }
   }, [status, session, router]);
 
@@ -223,6 +225,7 @@ export default function Dashboard() {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       if (session?.user?.email) {
+        console.log('🔍 Checking onboarding status for:', session.user.email);
         try {
           const response = await fetch('/api/user/onboarding-status', {
             method: 'GET',
@@ -233,6 +236,7 @@ export default function Dashboard() {
           
           if (response.ok) {
             const { hasCompleted } = await response.json();
+            console.log('📋 Onboarding status:', { hasCompleted });
             setHasCompletedOnboarding(hasCompleted);
             
             // Show website onboarding for new users
@@ -241,7 +245,7 @@ export default function Dashboard() {
             }
           }
         } catch (error) {
-          console.error('Error checking onboarding status:', error);
+          console.error('❌ Error checking onboarding status:', error);
           // Default to showing onboarding for new users
           setShowWebsiteOnboarding(true);
         }
@@ -257,7 +261,7 @@ export default function Dashboard() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Loading authentication...</p>
         </div>
       </div>
     );

@@ -57,7 +57,8 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 30 * 24 * 60 * 60 // 30 days
       }
     },
     callbackUrl: {
@@ -66,7 +67,8 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 // 1 hour
       }
     },
     csrfToken: {
@@ -75,7 +77,8 @@ export const authOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 60 * 60 // 1 hour
       }
     }
   },
