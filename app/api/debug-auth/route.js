@@ -1,3 +1,6 @@
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/route.js";
+
 export async function GET() {
   const authStatus = {
     timestamp: new Date().toISOString(),
@@ -16,8 +19,25 @@ export async function GET() {
       secure: process.env.NODE_ENV === 'production',
       sessionTokenName: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token'
     },
-    issues: []
+    issues: [],
+    session: null
   };
+
+  // Try to get current session
+  try {
+    const session = await getServerSession(authOptions);
+    authStatus.session = session ? {
+      user: session.user ? {
+        email: session.user.email,
+        name: session.user.name,
+        id: session.user.id
+      } : null,
+      expires: session.expires,
+      provider: session.provider
+    } : null;
+  } catch (error) {
+    authStatus.sessionError = error.message;
+  }
 
   // Check for common issues
   if (!process.env.NEXTAUTH_SECRET) {
@@ -43,5 +63,21 @@ export async function GET() {
   // Check if all required variables are present
   authStatus.ready = authStatus.issues.length === 0;
 
-  return Response.json(authStatus);
+  // Add recommendations
+  authStatus.recommendations = [];
+  
+  if (!authStatus.ready) {
+    authStatus.recommendations.push('Fix the issues listed above');
+  }
+  
+  if (process.env.NODE_ENV === 'production') {
+    authStatus.recommendations.push('Ensure Google OAuth redirect URI includes: https://your-domain.vercel.app/api/auth/callback/google');
+  }
+
+  return Response.json(authStatus, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-cache, no-store, must-revalidate'
+    }
+  });
 } 

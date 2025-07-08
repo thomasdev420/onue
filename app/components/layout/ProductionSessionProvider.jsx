@@ -4,7 +4,7 @@ import SessionProviderWrapper from "../../SessionProviderWrapper";
 
 export default function ProductionSessionProvider({ children }) {
     return (
-      <SessionProviderWrapper session={null}>
+      <SessionProviderWrapper>
         {children}
       </SessionProviderWrapper>
     );
