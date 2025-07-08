@@ -153,9 +153,12 @@ export default function Sidebar({ isCollapsed, toggleSidebar }) {
           <div className={` ${isCollapsed ? 'text-center mt-4' : 'mt-4'}`}>
             <p className="font-semibold text-sm">Not signed in</p>
             {!isCollapsed && (
-              <Link href="/api/auth/signin">
-                <span className="text-blue-500 text-xs hover:underline">Sign in with Google</span>
-              </Link>
+              <button
+                onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+                className="text-blue-500 text-xs hover:underline"
+              >
+                Sign in with Google
+              </button>
             )}
           </div>
         )}

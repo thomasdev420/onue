@@ -2,9 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { signIn, useSession } from 'next-auth/react';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
   const isDev = process.env.NODE_ENV === 'development';
 
   useEffect(() => {
@@ -14,6 +16,24 @@ export default function LoginPage() {
     }
   }, [router, isDev]);
 
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (session && !isDev) {
+      router.push('/dashboard');
+    }
+  }, [session, router, isDev]);
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn('google', { 
+        callbackUrl: '/dashboard',
+        redirect: true 
+      });
+    } catch (error) {
+      console.error('Sign in error:', error);
+    }
+  };
+
   // In production, show Google login
   if (isDev) {
     return (
@@ -21,6 +41,18 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading while checking session
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -36,7 +68,7 @@ export default function LoginPage() {
           Please sign in with Google to continue.
         </p>
         <button
-          onClick={() => window.location.href = '/api/auth/signin/google'}
+          onClick={handleGoogleSignIn}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
         >
           Sign in with Google
