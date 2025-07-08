@@ -88,7 +88,8 @@ export const authOptions = {
         user: user?.email, 
         provider: account?.provider,
         account: account ? 'present' : 'missing',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server'
       });
       
       // Allow all sign-ins for now
@@ -99,7 +100,9 @@ export const authOptions = {
         token: token ? 'present' : 'missing',
         user: user ? 'present' : 'missing',
         account: account ? 'present' : 'missing',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tokenSub: token?.sub,
+        userEmail: user?.email
       });
       
       // Persist the OAuth access_token to the token right after signin
@@ -115,7 +118,9 @@ export const authOptions = {
         session: session ? 'present' : 'missing',
         token: token ? 'present' : 'missing',
         userEmail: session?.user?.email,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        tokenSub: token?.sub,
+        sessionUser: session?.user ? 'present' : 'missing'
       });
       
       // Send properties to the client

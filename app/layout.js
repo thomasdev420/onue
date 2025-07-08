@@ -2,6 +2,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ProductionSessionProvider from "./components/layout/ProductionSessionProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "./api/auth/[...nextauth]/route";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,12 +20,15 @@ export const metadata = {
   description: "Create viral, self-improving videos and posts that drive millions of views, boost traffic, and grow your brand automatically.",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  // Fetch session on server side to prevent hydration mismatch
+  const session = await getServerSession(authOptions);
+  
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ErrorBoundary>
-          <ProductionSessionProvider>
+          <ProductionSessionProvider session={session}>
             {children}
           </ProductionSessionProvider>
         </ErrorBoundary>

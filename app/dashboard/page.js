@@ -5,8 +5,8 @@ import { useSession } from "next-auth/react";
 import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Sparkles, Lightbulb, Camera, CreditCard, Pocket, Package, Upload, Pencil, TrendingUp, Zap, Target, BarChart3, Globe, Palette } from 'lucide-react';
 import ChatBar from "./components/ChatBar";
 import WebsiteOnboarding from "../components/WebsiteOnboarding";
+import AuthGuard from "../components/AuthGuard";
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
 
 //Dashboard page
 
@@ -193,33 +193,12 @@ function DashboardAnalyticsSection() {
   );
 }
 
-export default function Dashboard() {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+function DashboardContent() {
+  const { data: session } = useSession();
   const firstName = session?.user?.name?.split(' ')[0] || 'developer';
   const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [chatBarDocked, setChatBarDocked] = useState(false);
-
-  // Handle authentication state with better debugging
-  useEffect(() => {
-    console.log('🔍 Auth status changed:', { status, hasSession: !!session, userEmail: session?.user?.email });
-    
-    if (status === 'loading') {
-      console.log('⏳ Still loading authentication...');
-      return;
-    }
-    
-    if (status === 'unauthenticated') {
-      console.log('🔒 User not authenticated, redirecting to home');
-      router.push('/');
-      return;
-    }
-    
-    if (status === 'authenticated' && session) {
-      console.log('✅ User authenticated successfully:', session.user?.email);
-    }
-  }, [status, session, router]);
 
   // Check if user has completed onboarding on mount
   useEffect(() => {
@@ -254,35 +233,6 @@ export default function Dashboard() {
 
     checkOnboardingStatus();
   }, [session?.user?.email]);
-
-  // Show loading state while checking authentication
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading authentication...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state if not authenticated
-  if (status === 'unauthenticated') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">You need to be signed in to access the dashboard.</p>
-          <button
-            onClick={() => router.push('/')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Go to Home
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -347,5 +297,13 @@ export default function Dashboard() {
         }} 
       />
     </>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   );
 }

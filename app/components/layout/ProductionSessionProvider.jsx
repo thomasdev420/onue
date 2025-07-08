@@ -2,9 +2,9 @@
 
 import SessionProviderWrapper from "../../SessionProviderWrapper";
 
-export default function ProductionSessionProvider({ children }) {
+export default function ProductionSessionProvider({ children, session }) {
     return (
-      <SessionProviderWrapper>
+      <SessionProviderWrapper session={session}>
         {children}
       </SessionProviderWrapper>
     );
