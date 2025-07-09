@@ -7,6 +7,7 @@ import ChatBar from "./components/ChatBar";
 import WebsiteOnboarding from "../components/WebsiteOnboarding";
 import AuthGuard from "../components/AuthGuard";
 import { useState, useEffect, useRef } from "react";
+import { useOnboardingModal } from './OnboardingModalContext';
 
 //Dashboard page
 
@@ -194,9 +195,9 @@ function DashboardAnalyticsSection() {
 }
 
 function DashboardContent() {
+  const { showWebsiteOnboarding, setShowWebsiteOnboarding } = useOnboardingModal();
   const { data: session } = useSession();
   const firstName = session?.user?.name?.split(' ')[0] || 'developer';
-  const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
   const [chatBarDocked, setChatBarDocked] = useState(false);
 
@@ -232,10 +233,10 @@ function DashboardContent() {
     };
 
     checkOnboardingStatus();
-  }, [session?.user?.email]);
+  }, [session?.user?.email, setShowWebsiteOnboarding]);
 
   return (
-    <>
+    <AuthGuard>
       {/* Header with Centered Welcome */}
       {!chatBarDocked && (
         <div className="mb-8 mt-8">
@@ -263,47 +264,26 @@ function DashboardContent() {
               icon: <Book size={18} />,
               href: '/dashboard/slides',
             },
+            {
+              label: 'Personalize',
+              icon: <Globe size={18} />,
+              href: undefined,
+              onClick: () => setShowWebsiteOnboarding(true),
+            },
+            {
+              label: 'Schedule',
+              icon: <Calendar size={18} />,
+              href: '/dashboard/schedule',
+            },
           ]}
           docked={chatBarDocked}
           onMessageSubmit={() => setChatBarDocked(true)}
         />
-      {/* Personalize Button below ChatBar */}
-      {!chatBarDocked && (
-        <div className="w-full flex flex-wrap justify-center gap-4 mb-8 mt-4">
-          <button
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
-            onClick={() => setShowWebsiteOnboarding(true)}
-          >
-            <Globe size={18} className="text-gray-500 group-hover:text-blue-500 transition-colors" />
-            Personalize
-          </button>
-          <Link href="/dashboard/schedule" className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group">
-            <Calendar size={18} className="text-gray-500 group-hover:text-blue-500 transition-colors" />
-            Schedule
-          </Link>
-          <Link href="/dashboard/content" className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group">
-            <Sparkles size={18} className="text-gray-500 group-hover:text-blue-500 transition-colors" />
-            Videos
-          </Link>
-        </div>
-      )}
-      <WebsiteOnboarding 
-        open={showWebsiteOnboarding} 
-        onClose={() => setShowWebsiteOnboarding(false)} 
-        onComplete={(data) => {
-          setShowWebsiteOnboarding(false);
-          setHasCompletedOnboarding(true);
-          console.log('Website onboarding completed:', data);
-        }} 
-      />
-    </>
+      {/* Removed separate Personalize, Schedule, and Videos buttons for unified layout */}
+    </AuthGuard>
   );
 }
 
 export default function Dashboard() {
-  return (
-    <AuthGuard>
-      <DashboardContent />
-    </AuthGuard>
-  );
+  return <DashboardContent />;
 }

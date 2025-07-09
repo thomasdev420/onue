@@ -31,7 +31,10 @@ export default function ContentModal({
           <div 
             key={image.id} 
             className="cursor-pointer relative aspect-square" 
-            onClick={() => onImageSelect(image)}
+            onClick={() => {
+              onImageSelect(image);
+              onClose();
+            }}
           >
             <Image
               src={image.image_url || image.url}

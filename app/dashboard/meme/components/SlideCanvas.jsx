@@ -60,6 +60,14 @@ export default function SlideCanvas({
     handleMouseDown(e, textIndex);
   };
 
+  // Direct click handler for text editing
+  const handleTextClick = (e, textIndex) => {
+    e.stopPropagation();
+    if (!inlineEditing.isEditing) {
+      startInlineEditing(activeSlideIndex, textIndex);
+    }
+  };
+
   // GIF mouse down handler
   const handleGifMouseDown = (e, gifIndex) => {
     handleMouseDown(e, gifIndex, 'gif');
@@ -151,6 +159,7 @@ export default function SlideCanvas({
               opacity: index === activeSlideIndex ? 1 : 0.6
             }}
           >
+            {/* Colored dot above the active slide - REMOVED DUPLICATE */}
             {slide.image ? (
               <div
                 ref={el => imageContainerRefs.current[index] = el}
@@ -190,6 +199,7 @@ export default function SlideCanvas({
                     onInlineEditChange={handleInlineEditChange}
                     onKeyDown={handleKeyDown}
                     onBlur={saveInlineEdit}
+                    onClick={handleTextClick}
                   />
                 ))}
                 

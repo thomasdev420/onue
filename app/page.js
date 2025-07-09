@@ -259,7 +259,7 @@ export default function Home() {
                 lineHeight: 1.2,
               }}
             >
-              Version (Most recent working version 01/27/2025)
+              The best version - 09/07/25
             </span>
           </div>
         </div>

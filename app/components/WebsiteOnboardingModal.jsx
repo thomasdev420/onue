@@ -20,13 +20,6 @@ const VIDEO_FORMATS = [
     color: 'from-purple-500 to-pink-500'
   },
   {
-    id: 'hook-demo',
-    name: 'Hook & Demo',
-    description: 'Attention-grabbing hook with product demonstration',
-    icon: <Target className="w-6 h-6" />,
-    color: 'from-blue-500 to-cyan-500'
-  },
-  {
     id: 'veo3',
     name: 'Veo 3-style',
     description: 'Advanced AI-generated video format',

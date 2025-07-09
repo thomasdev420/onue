@@ -15,12 +15,6 @@ export default function SettingsPage() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  useEffect(() => {
-    if (session?.user?.email) {
-      fetchUserImages();
-    }
-  }, [session, fetchUserImages]);
-
   const fetchUserImages = useCallback(async () => {
     try {
       const supabase = getSupabase();
@@ -36,6 +30,12 @@ export default function SettingsPage() {
       setError('Failed to load your images');
     }
   }, [session?.user?.email]);
+
+  useEffect(() => {
+    if (session?.user?.email) {
+      fetchUserImages();
+    }
+  }, [session, fetchUserImages]);
 
   const handleFileUpload = async (event) => {
     if (!session?.user?.email) {

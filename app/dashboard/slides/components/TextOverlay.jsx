@@ -15,7 +15,8 @@ export default function TextOverlay({
   onMouseDown,
   onInlineEditChange,
   onKeyDown,
-  onBlur
+  onBlur,
+  onClick
 }) {
   const textRef = React.useRef(null);
 
@@ -78,6 +79,7 @@ export default function TextOverlay({
       ref={textRef}
       data-text-overlay
       onMouseDown={(e) => slideIndex === activeSlideIndex && !isInlineEditing && onMouseDown(e, textIndex)}
+      onClick={(e) => slideIndex === activeSlideIndex && !isInlineEditing && onClick && onClick(e, textIndex)}
       style={getTextStyle()}
     >
       {isInlineEditing ? (

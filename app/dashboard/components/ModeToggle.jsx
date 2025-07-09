@@ -6,7 +6,6 @@ const MODES = [
   { label: 'Memes', value: 'memes', color: '#D97706' }, // softer orange
   { label: 'Avatars', value: 'avatars', color: '#9333EA' }, // softer purple
   { label: 'Slides', value: 'slides', color: '#059669' }, // softer green
-  { label: 'Demo', value: 'hook-demo', color: '#DC2626' }, // softer red
 ];
 
 export default function ModeToggle({

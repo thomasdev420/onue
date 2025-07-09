@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import Image from "next/image";
 import { useSlideCanvas } from '../hooks/useSlideCanvas';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
@@ -18,7 +18,7 @@ export default function SlideCanvas({
   onRatioChange,
   onContentModalOpen,
   onPromptModalOpen,
-  onScheduleClick
+  modeColor
 }) {
   const {
     slideWidth,
@@ -57,6 +57,14 @@ export default function SlideCanvas({
     if (inlineEditing.isEditing) return; // Don't start dragging if editing
     
     handleMouseDown(e, textIndex);
+  };
+
+  // Direct click handler for text editing
+  const handleTextClick = (e, textIndex) => {
+    e.stopPropagation();
+    if (!inlineEditing.isEditing) {
+      startInlineEditing(activeSlideIndex, textIndex);
+    }
   };
 
   // Enhanced mouse up handler that integrates with inline editing
@@ -102,8 +110,10 @@ export default function SlideCanvas({
     onSlideUpdate(activeSlideIndex, { texts: newTexts });
   };
 
+  const containerRef = useRef(null);
+
   return (
-    <div ref={canvasRef} className="editor-canvas" style={{ 
+    <div ref={containerRef} className="editor-canvas" style={{ 
       flexGrow: 1, 
       display: "flex", 
       alignItems: 'center', 
@@ -111,6 +121,7 @@ export default function SlideCanvas({
       overflow: 'hidden',
       height: '100%'
     }}>
+      {/* No dot here! Only the mode toggle dot should exist in the parent/layout. */}
       <div className="slides-track" style={{
         display: 'flex',
         height: '100%',
@@ -121,9 +132,8 @@ export default function SlideCanvas({
         {slides && slides.length > 0 ? slides.map((slide, index) => (
           <div 
             key={slide.id} 
-            ref={el => slideItemRefs.current[index] = el}
-            onClick={() => onSlideSelect(index)} 
             className="slide-item" 
+            onClick={() => onSlideSelect(index)} 
             style={{
               width: `${slideWidth}%`,
               height: '100%',
@@ -176,6 +186,7 @@ export default function SlideCanvas({
                     onInlineEditChange={handleInlineEditChange}
                     onKeyDown={handleKeyDown}
                     onBlur={saveInlineEdit}
+                    onClick={handleTextClick}
                   />
                 ))}
                 
@@ -231,7 +242,6 @@ export default function SlideCanvas({
               onContentModalOpen={onContentModalOpen}
               onAddText={handleAddText}
               onPromptModalOpen={onPromptModalOpen}
-              onScheduleClick={onScheduleClick}
             />
           </div>
         )) : (

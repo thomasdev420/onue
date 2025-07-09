@@ -42,7 +42,7 @@ export const useSessionManager = (options = {}) => {
         enableRetry
       });
     }
-  }, [session, status, isHydrated, retryCount, isPrivateMode, enableDebug]);
+  }, [session, status, isHydrated, retryCount, isPrivateMode, enableDebug, enableRetry]);
 
   // Retry mechanism for session loading
   useEffect(() => {
@@ -64,7 +64,7 @@ export const useSessionManager = (options = {}) => {
     }, retryDelay * (retryCount + 1));
 
     return () => clearTimeout(timer);
-  }, [isHydrated, status, retryCount, maxRetries, retryDelay, enableRetry, update]);
+  }, [isHydrated, status, retryCount, maxRetries, retryDelay, enableRetry, update, enableDebug]);
 
   // Computed values
   const isReady = isSessionReady(session, status, isHydrated);

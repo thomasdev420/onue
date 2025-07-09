@@ -41,12 +41,6 @@ export default function NewContentPage() {
       icon: <Book size={24} />,
       href: '/dashboard/slides',
     },
-    {
-      title: 'Hook & Demo',
-      description: 'Create engaging hooks and demonstrations',
-      icon: <Sparkles size={24} />,
-      href: '/dashboard/hook-demo',
-    }
   ];
 
   return (

@@ -52,8 +52,6 @@ export default function AvatarsEditor() {
       setMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
       setMode('slides');
-    } else if (pathname.includes('/dashboard/hook-demo')) {
-      setMode('hook-demo');
     }
   }, [pathname]);
   
@@ -162,7 +160,6 @@ export default function AvatarsEditor() {
       memes: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
-      'hook-demo': '/dashboard/hook-demo'
     };
     
     const targetRoute = routeMap[newMode];
@@ -188,33 +185,34 @@ export default function AvatarsEditor() {
     memes: 'Memes',
     avatars: 'Avatars',
     slides: 'Slides',
-    'hook-demo': 'Demo',
   };
   const modeColorMap = {
     videos: '#6366F1', // Softer blue
     memes: '#D97706', // Softer orange
     avatars: '#9333EA', // Softer purple
     slides: '#059669', // Softer green
-    'hook-demo': '#DC2626', // Softer red
   };
 
   return (
     <>
-      {/* Settings button at top right */}
-      <div style={{ position: 'fixed', top: 24, right: 160, zIndex: 1100 }}>
+      {/* Centered colored dot above main content area, always present */}
+      <div style={{
+        position: 'absolute',
+        top: 12,
+        left: 'calc(50% + 40px)',
+        transform: 'translateX(-50%)',
+        zIndex: 1100
+      }}>
         <button
           onClick={() => setShowModeModal(true)}
           style={{
             background: modeColorMap[mode] || '#9333EA',
             border: 'none',
-            borderRadius: '9999px',
+            borderRadius: '50%',
             boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#9333EA')}22, 0 0 0 1px ${(modeColorMap[mode] || '#9333EA')}11`,
             color: '#fff',
-            fontWeight: 500,
-            fontSize: 18,
-            padding: '12px 32px',
-            minWidth: 120,
-            minHeight: 48,
+            width: 16,
+            height: 16,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -224,11 +222,8 @@ export default function AvatarsEditor() {
             borderWidth: 0,
           }}
           aria-label="Switch content type"
-        >
-          {modeLabelMap[mode] || 'Avatars'}
-        </button>
+        />
       </div>
-
       {/* ModeToggle Modal */}
       {showModeModal && (
         <div
@@ -247,7 +242,6 @@ export default function AvatarsEditor() {
           }}
           onClick={() => setShowModeModal(false)}
         >
-          {/* Only show the ModeToggle, no white box, no close button */}
           <div
             style={{ position: 'relative' }}
             onClick={e => e.stopPropagation()}
@@ -256,61 +250,66 @@ export default function AvatarsEditor() {
           </div>
         </div>
       )}
-
-      <div className="p-8">
-          <SaveStatusIndicator saveStatus={saveStatus} />
-
-                <div style={{ 
-          display: "flex", 
-          height: "90vh", 
-          padding: "0px 8px", 
-          boxSizing: "border-box", 
-          fontFamily: "'Inter', sans-serif" 
-        }}>
-          <div style={{ 
-            flexBasis: "100%", 
-            display: "flex", 
-            flexDirection: "column",
-            position: "relative"
-          }}>
-              <SlideCanvas
-                slides={avatars}
-              activeSlideIndex={activeAvatarIndex}
-              onSlideSelect={setActiveAvatarIndex}
-              onSlideUpdate={(slideIndex, updatedSlide) => updateAvatar(slideIndex, updatedSlide)}
-                onAddSlide={addAvatar}
-                onDeleteSlide={deleteAvatar}
-              onRatioChange={(slideIndex) => changeRatio(slideIndex)}
-              onContentModalOpen={() => setIsContentModalOpen(true)}
-              onPromptModalOpen={() => setIsPromptModalOpen(true)}
-              onScheduleClick={() => setIsScheduleModalOpen(true)}
-            />
+      <SaveStatusIndicator saveStatus={saveStatus} />
+      {error && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{error}</span>
+            <button 
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700"
+            >
+              ×
+            </button>
           </div>
         </div>
-
-        {/* Modals */}
-        <ContentModal
-          isOpen={isContentModalOpen}
-          onClose={() => setIsContentModalOpen(false)}
-          onImageSelect={handleSelectImageForAvatar}
-          libraryImages={libraryImages}
-          userImages={userImages}
-          contentType={contentType}
-          setContentType={setContentType}
-        />
-
-        <PromptModal
-          isOpen={isPromptModalOpen}
-          onClose={() => setIsPromptModalOpen(false)}
-          onGenerateSlides={(generatedSlides) => {
-            setAvatars(generatedSlides);
-            setIsPromptModalOpen(false);
-          }}
-          businessContext={businessContext}
-          mode="avatars"
-        />
+      )}
+      <ContentModal
+        isOpen={isContentModalOpen}
+        onClose={() => setIsContentModalOpen(false)}
+        onImageSelect={handleSelectImageForAvatar}
+        libraryImages={libraryImages}
+        userImages={userImages}
+        contentType={contentType}
+        setContentType={setContentType}
+      />
+      <PromptModal
+        isOpen={isPromptModalOpen}
+        onClose={() => setIsPromptModalOpen(false)}
+        onGenerateSlides={(generatedSlides) => {
+          setAvatars(generatedSlides);
+          setIsPromptModalOpen(false);
+        }}
+        businessContext={businessContext}
+        mode="avatars"
+      />
+      <div style={{ 
+        display: "flex", 
+        height: "90vh", 
+        padding: "0px 8px", 
+        boxSizing: "border-box", 
+        fontFamily: "'Inter', sans-serif" 
+      }}>
+        <div style={{ 
+          flexBasis: "100%", 
+          display: "flex", 
+          flexDirection: "column",
+          position: "relative"
+        }}>
+          <SlideCanvas
+            slides={avatars}
+            activeSlideIndex={activeAvatarIndex}
+            onSlideSelect={setActiveAvatarIndex}
+            onSlideUpdate={(slideIndex, updatedSlide) => updateAvatar(slideIndex, updatedSlide)}
+            onAddSlide={addAvatar}
+            onDeleteSlide={deleteAvatar}
+            onRatioChange={(slideIndex) => changeRatio(slideIndex)}
+            onContentModalOpen={() => setIsContentModalOpen(true)}
+            onPromptModalOpen={() => setIsPromptModalOpen(true)}
+            modeColor={modeColorMap[mode] || '#9333EA'}
+          />
+        </div>
       </div>
-      
       {/* Schedule Modal */}
       {isScheduleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

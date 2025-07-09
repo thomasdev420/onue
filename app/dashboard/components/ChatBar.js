@@ -595,30 +595,56 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           <div className="text-red-500 text-sm text-center mt-2">{error}</div>
         )}
 
-        {!docked && (
-        <div className="flex gap-3 justify-center mt-4 overflow-x-auto whitespace-nowrap scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-          {actions.map((action, idx) => (
-            action.href ? (
-              <Link
-                key={idx}
-                href={action.href}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
-              >
-                <span className="text-gray-500 group-hover:text-blue-500 transition-colors">{action.icon}</span>
-                {action.label}
-              </Link>
-            ) : (
-              <button
-                key={idx}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
-              >
-                <span className="text-gray-500 group-hover:text-blue-500 transition-colors">{action.icon}</span>
-                {action.label}
-              </button>
-            )
-          ))}
-        </div>
-        )}
+        {!docked && actions.length > 0 && (
+  <div className="flex flex-col items-center gap-2 mt-4">
+    <div className="flex gap-3 justify-center">
+      {actions.slice(0, 3).map((action, idx) => (
+        action.href ? (
+          <Link
+            key={idx}
+            href={action.href}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
+          >
+            <span className="text-gray-500 group-hover:text-blue-500 transition-colors">{action.icon}</span>
+            {action.label}
+          </Link>
+        ) : (
+          <button
+            key={idx}
+            onClick={action.onClick}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
+          >
+            <span className="text-gray-500 group-hover:text-blue-500 transition-colors">{action.icon}</span>
+            {action.label}
+          </button>
+        )
+      ))}
+    </div>
+    <div className="flex gap-3 justify-center">
+      {actions.slice(3).map((action, idx) => (
+        action.href ? (
+          <Link
+            key={3+idx}
+            href={action.href}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
+          >
+            <span className="text-gray-500 group-hover:text-blue-500 transition-colors">{action.icon}</span>
+            {action.label}
+          </Link>
+        ) : (
+          <button
+            key={3+idx}
+            onClick={action.onClick}
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 border border-gray-200 text-gray-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-sm font-medium transition-colors group"
+          >
+            <span className="text-gray-500 group-hover:text-blue-500 transition-colors">{action.icon}</span>
+            {action.label}
+          </button>
+        )
+      ))}
+    </div>
+  </div>
+)}
       </div>
 
       {/* AI Generated Slides Modal */}

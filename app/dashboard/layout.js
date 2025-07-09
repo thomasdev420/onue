@@ -5,13 +5,16 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import WebsiteOnboarding from '../components/WebsiteOnboarding';
+import { OnboardingModalContext } from './OnboardingModalContext';
 
 export default function DashboardLayout({ children }) {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [devAccessChecked, setDevAccessChecked] = useState(false);
   const [hasOAuthParams, setHasOAuthParams] = useState(false);
+  const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
 
   // Check dev access and OAuth params on mount
@@ -42,7 +45,7 @@ export default function DashboardLayout({ children }) {
       router.push('/');
     }
     setDevAccessChecked(true);
-  }, [router, isDev]);
+  }, [router, isDev, status, session]);
 
   // Handle redirect for unauthenticated users (with OAuth grace period)
   useEffect(() => {
@@ -75,11 +78,20 @@ export default function DashboardLayout({ children }) {
   }
 
   return (
-    <div className="flex min-h-screen" style={{ backgroundColor: '#FAF9F6' }}>
-      <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
-      <main className={`flex-1 p-8 bg-[#FAF9F6] overflow-y-auto transition-all duration-300 ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
-        {React.isValidElement(children) ? cloneElement(children, { isCollapsed }) : children}
-      </main>
-    </div>
+    <OnboardingModalContext.Provider value={{ showWebsiteOnboarding, setShowWebsiteOnboarding }}>
+      <div className="flex min-h-screen" style={{ backgroundColor: '#FAF9F6', position: 'relative' }}>
+        <div className={`flex w-full h-full${showWebsiteOnboarding ? ' blur-[6px] pointer-events-none' : ''}`}> 
+          <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
+          <main className={`flex-1 p-8 bg-[#FAF9F6] overflow-y-auto ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+            {children}
+          </main>
+        </div>
+      </div>
+      <WebsiteOnboarding 
+        open={showWebsiteOnboarding} 
+        onClose={() => setShowWebsiteOnboarding(false)} 
+        onComplete={() => setShowWebsiteOnboarding(false)} 
+      />
+    </OnboardingModalContext.Provider>
   );
 }

@@ -134,7 +134,7 @@ export default function MonthlyCalendar() {
                   aspect-square p-2 text-center rounded-lg transition-colors
                   ${isToday(day) ? 'bg-blue-50 text-blue-600' : ''}
                   ${isSelected(day) 
-                    ? 'bg-[#ff4514]/10 text-[#ff4514] border-2 border-[#ff4514] font-medium' 
+                    ? 'bg-gray-100 text-gray-800 border-2 border-gray-300 font-medium' 
                     : 'hover:bg-gray-100'
                   }
                   ${!isToday(day) && !isSelected(day) ? 'text-gray-700' : ''}

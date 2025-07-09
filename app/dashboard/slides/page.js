@@ -51,8 +51,6 @@ export default function SlidesEditor() {
       setMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
       setMode('slides');
-    } else if (pathname.includes('/dashboard/hook-demo')) {
-      setMode('hook-demo');
     }
   }, [pathname]);
   const [showModeModal, setShowModeModal] = useState(false);
@@ -458,7 +456,6 @@ export default function SlidesEditor() {
       memes: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
-      'hook-demo': '/dashboard/hook-demo'
     };
     
     const targetRoute = routeMap[newMode];
@@ -475,7 +472,6 @@ export default function SlidesEditor() {
       memes: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
-      'hook-demo': '/dashboard/hook-demo',
     };
     const targetRoute = modeToRoute[mode];
     if (targetRoute && pathname !== targetRoute) {
@@ -500,46 +496,17 @@ export default function SlidesEditor() {
     memes: 'Memes',
     avatars: 'Avatars',
     slides: 'Slides',
-    'hook-demo': 'Demo',
   };
   const modeColorMap = {
     videos: '#6366F1', // Softer blue
     memes: '#D97706', // Softer orange
     avatars: '#9333EA', // Softer purple
     slides: '#059669', // Softer green
-    'hook-demo': '#DC2626', // Softer red
   };
 
   return (
     <>
       {/* Settings button at top right */}
-      <div style={{ position: 'fixed', top: 24, right: 160, zIndex: 1100 }}>
-        <button
-          onClick={() => setShowModeModal(true)}
-          style={{
-            background: modeColorMap[mode] || '#059669',
-            border: 'none',
-            borderRadius: '9999px',
-            boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#059669')}22, 0 0 0 1px ${(modeColorMap[mode] || '#059669')}11`,
-            color: '#fff',
-            fontWeight: 500,
-            fontSize: 18,
-            padding: '12px 32px',
-            minWidth: 120,
-            minHeight: 48,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            outline: 'none',
-            borderWidth: 0,
-          }}
-          aria-label="Switch content type"
-        >
-          {modeLabelMap[mode] || 'Slides'}
-        </button>
-      </div>
       {/* ModeToggle Modal */}
       {showModeModal && (
         <div
@@ -615,6 +582,7 @@ export default function SlidesEditor() {
           flexDirection: "column",
           position: "relative"
         }}>
+          {/* Colored dot centered above the slide */}
           <SlideCanvas
             slides={slides}
             activeSlideIndex={activeSlideIndex}
@@ -644,6 +612,37 @@ export default function SlidesEditor() {
           </div>
         </div>
       )}
+      {/* Centered colored dot above main content area, always present */}
+      <div style={{
+        position: 'absolute',
+        top: 8,
+        left: 'calc(50% + 40px)',
+        transform: 'translateX(-50%)',
+        zIndex: 1100
+      }}>
+        <button
+          onClick={() => setShowModeModal(true)}
+          style={{
+            background: modeColorMap[mode] || '#059669',
+            border: 'none',
+            borderRadius: '50%',
+            boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#059669')}22, 0 0 0 1px ${(modeColorMap[mode] || '#059669')}11`,
+            color: '#fff',
+            width: 16,
+            height: 16,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            outline: 'none',
+            borderWidth: 0,
+            filter: (showModeModal || isPromptModalOpen || isContentModalOpen || isScheduleModalOpen) ? 'blur(2px)' : 'none',
+            opacity: (showModeModal || isPromptModalOpen || isContentModalOpen || isScheduleModalOpen) ? 0.5 : 1,
+          }}
+          aria-label="Switch content type"
+        />
+      </div>
     </>
   );
 } 
