@@ -2,13 +2,27 @@
 
 import Link from "next/link";
 import { Lightbulb, Rocket, Users, X } from "lucide-react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
+import { useSessionManager } from "./shared/hooks/useSessionManager";
 
 // Landing page
 export default function Home() {
-  const { data: session } = useSession();
+  const { 
+    session, 
+    status, 
+    isReady, 
+    isLoading, 
+    isAuthenticated, 
+    isHydrated,
+    retryCount 
+  } = useSessionManager({
+    enableRetry: true,
+    maxRetries: 3,
+    enableDebug: false // Disable debug in production
+  });
+
   const [showDevModal, setShowDevModal] = useState(false);
   const [devCode, setDevCode] = useState("");
   const [devCodeError, setDevCodeError] = useState("");
@@ -53,6 +67,33 @@ export default function Home() {
     const granted = localStorage.getItem("devAccessGranted") === "true";
     setDevAccessGranted(granted);
   }, []);
+
+  // Handle Google sign-in with better error handling
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn("google", { 
+        callbackUrl: "/dashboard",
+        redirect: true // Let NextAuth handle the redirect
+      });
+    } catch (error) {
+      console.error('❌ Google sign-in error:', error);
+    }
+  };
+
+  // Show loading state while session is being determined
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+          {retryCount > 0 && (
+            <p className="text-sm text-gray-500 mt-2">Retry attempt {retryCount}/3</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center justify-center px-6 py-32 sm:px-20 font-sans text-gray-900 relative">
@@ -138,7 +179,7 @@ export default function Home() {
               <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">Pricing</span>
             </Link>
           </li>
-          {session ? (
+          {isAuthenticated ? (
             <>
               <li>
                 <Link href="/dashboard">
@@ -156,7 +197,7 @@ export default function Home() {
           ) : (
             <li>
               <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                onClick={handleGoogleSignIn}
                 className="bg-[#4285F4] text-white font-semibold px-3 py-1 rounded-full shadow-sm hover:bg-[#357ae8] transition text-sm"
               >
                 Sign In with Google
@@ -209,7 +250,7 @@ export default function Home() {
         </p>
         <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '48px' }}>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          {session ? (
+          {isAuthenticated && session ? (
               <Link href="/dashboard">
                 <button
                   style={{
@@ -253,7 +294,7 @@ export default function Home() {
               </Link>
             ) : (
               <button
-                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                onClick={handleGoogleSignIn}
                 style={{
                   width: '220px',
                   height: '64px',

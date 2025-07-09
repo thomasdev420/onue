@@ -9,7 +9,13 @@ export default function LoginPage() {
   const { data: session, status } = useSession();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [error, setError] = useState(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Track hydration state to prevent flash of content
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   useEffect(() => {
     if (isDev) {
@@ -20,38 +26,27 @@ export default function LoginPage() {
 
   // If already authenticated, redirect to dashboard
   useEffect(() => {
-    if (session && !isDev) {
-      console.log('✅ User already authenticated, redirecting to dashboard');
+    if (status === 'authenticated' && session && !isDev) {
       router.push('/dashboard');
     }
-  }, [session, router, isDev]);
+  }, [session, status, router, isDev]);
 
   const handleGoogleSignIn = async () => {
     try {
       setIsSigningIn(true);
       setError(null);
       
-      console.log('🚀 Starting Google sign-in...');
-      
       const result = await signIn('google', { 
         callbackUrl: '/dashboard',
         redirect: false // Don't redirect automatically, we'll handle it
       });
       
-      console.log('📋 Sign-in result:', result);
-      
       if (result?.error) {
-        console.error('❌ Sign-in error:', result.error);
         setError(`Sign-in failed: ${result.error}`);
       } else if (result?.ok) {
-        console.log('✅ Sign-in successful, redirecting...');
         router.push('/dashboard');
-      } else {
-        console.log('⏳ Sign-in in progress...');
-        // The sign-in process will handle the redirect
       }
     } catch (error) {
-      console.error('💥 Sign-in exception:', error);
       setError(`Sign-in failed: ${error.message}`);
     } finally {
       setIsSigningIn(false);
@@ -60,15 +55,24 @@ export default function LoginPage() {
 
   const handleDebugSession = async () => {
     try {
-      console.log('🔍 Debugging session...');
       const session = await getSession();
-      console.log('📋 Current session:', session);
-      console.log('📊 Session status:', status);
-      console.log('👤 Session data:', session);
+      console.log('Current session:', session);
     } catch (error) {
-      console.error('❌ Debug error:', error);
+      console.error('Debug error:', error);
     }
   };
+
+  // Show loading while checking session or if not hydrated
+  if (!isHydrated || status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   // In development, show loading while redirecting
   if (isDev) {
@@ -77,18 +81,6 @@ export default function LoginPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Redirecting to dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show loading while checking session
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking authentication...</p>
         </div>
       </div>
     );
@@ -140,6 +132,7 @@ export default function LoginPage() {
         <div className="mt-4 text-xs text-gray-500 text-center">
           <p>Status: {status}</p>
           <p>Session: {session ? 'Present' : 'None'}</p>
+          <p>Hydrated: {isHydrated ? 'Yes' : 'No'}</p>
         </div>
       </div>
     </div>
