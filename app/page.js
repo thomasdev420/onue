@@ -2,26 +2,13 @@
 
 import Link from "next/link";
 import { Lightbulb, Rocket, Users, X } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useSessionManager } from "./shared/hooks/useSessionManager";
 
 // Landing page
 export default function Home() {
-  const { 
-    session, 
-    status, 
-    isReady, 
-    isLoading, 
-    isAuthenticated, 
-    isHydrated,
-    retryCount 
-  } = useSessionManager({
-    enableRetry: true,
-    maxRetries: 3,
-    enableDebug: false // Disable debug in production
-  });
+  const { data: session, status } = useSession();
 
   const [showDevModal, setShowDevModal] = useState(false);
   const [devCode, setDevCode] = useState("");
@@ -68,12 +55,13 @@ export default function Home() {
     setDevAccessGranted(granted);
   }, []);
 
-  // Handle Google sign-in with better error handling
+  // Handle Google sign-in with direct redirect to dashboard
   const handleGoogleSignIn = async () => {
     try {
+      // Use NextAuth signIn with redirect to dashboard
       await signIn("google", { 
         callbackUrl: "/dashboard",
-        redirect: true // Let NextAuth handle the redirect
+        redirect: true
       });
     } catch (error) {
       console.error('❌ Google sign-in error:', error);
@@ -81,15 +69,12 @@ export default function Home() {
   };
 
   // Show loading state while session is being determined
-  if (isLoading) {
+  if (status === 'loading') {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
-          {retryCount > 0 && (
-            <p className="text-sm text-gray-500 mt-2">Retry attempt {retryCount}/3</p>
-          )}
         </div>
       </div>
     );
@@ -179,7 +164,7 @@ export default function Home() {
               <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">Pricing</span>
             </Link>
           </li>
-          {isAuthenticated ? (
+          {session ? (
             <>
               <li>
                 <Link href="/dashboard">
@@ -250,7 +235,7 @@ export default function Home() {
         </p>
         <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '48px' }}>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          {isAuthenticated && session ? (
+          {session ? (
               <Link href="/dashboard">
                 <button
                   style={{

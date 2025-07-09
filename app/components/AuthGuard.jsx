@@ -1,39 +1,26 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useSessionManager } from '../shared/hooks/useSessionManager';
 
 export default function AuthGuard({ children, fallback = null }) {
+  const { data: session, status } = useSession();
   const router = useRouter();
-  const { 
-    isReady, 
-    isLoading, 
-    isAuthenticated, 
-    isUnauthenticated,
-    retryCount 
-  } = useSessionManager({
-    enableRetry: true,
-    maxRetries: 3,
-    enableDebug: false // Disable debug in production
-  });
 
-  // Show fallback during initial load or if loading
-  if (isLoading) {
+  // Show fallback during initial load
+  if (status === 'loading') {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading authentication...</p>
-          {retryCount > 0 && (
-            <p className="text-sm text-gray-500 mt-2">Retry attempt {retryCount}/3</p>
-          )}
         </div>
       </div>
     );
   }
 
   // Redirect if not authenticated
-  if (isUnauthenticated) {
+  if (status === 'unauthenticated') {
     router.push('/');
     return fallback || (
       <div className="min-h-screen flex items-center justify-center">
@@ -44,8 +31,8 @@ export default function AuthGuard({ children, fallback = null }) {
     );
   }
 
-  // Show children if authenticated and ready
-  if (isReady && isAuthenticated) {
+  // Show children if authenticated
+  if (status === 'authenticated' && session) {
     return children;
   }
 
