@@ -11,31 +11,53 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [devAccessChecked, setDevAccessChecked] = useState(false);
+  const [hasOAuthParams, setHasOAuthParams] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
 
-  // Check dev access on mount
+  // Check dev access and OAuth params on mount
   useEffect(() => {
     const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
-    if (!devAccessGranted && !isDev) {
+    
+    // Check for OAuth parameters (indicates recent Google login)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasOAuth = urlParams.has('code') || urlParams.has('state');
+    setHasOAuthParams(hasOAuth);
+    
+    console.log('🔍 Dashboard Auth Debug:', {
+      devAccessGranted,
+      isDev,
+      hasOAuth,
+      status,
+      session: !!session
+    });
+    
+    // Clean up OAuth params if present
+    if (hasOAuth) {
+      console.log('✅ OAuth params detected in dashboard - allowing access');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    if (!devAccessGranted && !isDev && !hasOAuth) {
+      console.log('❌ No auth detected - redirecting to landing page');
       router.push('/');
     }
     setDevAccessChecked(true);
   }, [router, isDev]);
 
-  // Handle redirect for unauthenticated users
+  // Handle redirect for unauthenticated users (with OAuth grace period)
   useEffect(() => {
-    // Only redirect if not in development and not authenticated
-    if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted")) {
+    // Only redirect if not in development, not authenticated, no dev access, and no recent OAuth
+    if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted") && !hasOAuthParams) {
       router.push('/');
     }
-  }, [isDev, status, router]);
+  }, [isDev, status, router, hasOAuthParams]);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
   // Show loading state while checking authentication and dev access
-  if (!devAccessChecked || (!isDev && status === 'loading')) {
+  if (!devAccessChecked || (!isDev && status === 'loading' && !hasOAuthParams)) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#FAF9F6' }}>
         <div className="flex items-center gap-3">
@@ -47,8 +69,8 @@ export default function DashboardLayout({ children }) {
   }
 
   // In development, always allow access
-  // In production, only redirect if not authenticated AND no dev access
-  if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted")) {
+  // In production, only redirect if not authenticated AND no dev access AND no recent OAuth
+  if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted") && !hasOAuthParams) {
     return null;
   }
 
