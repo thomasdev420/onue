@@ -14,6 +14,39 @@ export default function Home() {
   const [devCode, setDevCode] = useState("");
   const [devCodeError, setDevCodeError] = useState("");
   const [devAccessGranted, setDevAccessGranted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Enhanced authentication check that works in private windows
+  useEffect(() => {
+    // Check if we're coming back from OAuth (URL params)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasOAuthParams = urlParams.has('code') || urlParams.has('state');
+    
+    // Debug logging for private window issues
+    console.log('🔍 Auth Debug:', {
+      hasOAuthParams,
+      session: !!session,
+      status,
+      isAuthenticated
+    });
+    
+    // If we have OAuth params, we're likely authenticated
+    if (hasOAuthParams) {
+      console.log('✅ OAuth params detected - setting authenticated');
+      setIsAuthenticated(true);
+      // Clean up URL params
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
+    // Also check session state
+    if (session) {
+      console.log('✅ Session detected - setting authenticated');
+      setIsAuthenticated(true);
+    }
+  }, [session, status, isAuthenticated]);
+
+  // Combined auth state - use session if available, otherwise use our enhanced check
+  const isUserAuthenticated = session || isAuthenticated;
 
   const handleDevAccessClick = () => {
     setShowDevModal(true);
@@ -55,7 +88,7 @@ export default function Home() {
     setDevAccessGranted(granted);
   }, []);
 
-  // Handle Google sign-in with direct redirect to dashboard
+  // Handle Google sign-in with direct redirect to dashboard (like Dev Access)
   const handleGoogleSignIn = async () => {
     try {
       // Use NextAuth signIn with redirect to dashboard
@@ -65,11 +98,13 @@ export default function Home() {
       });
     } catch (error) {
       console.error('❌ Google sign-in error:', error);
+      // Fallback: direct redirect like Dev Access
+      window.location.href = "/dashboard";
     }
   };
 
-  // Show loading state while session is being determined
-  if (status === 'loading') {
+  // Show loading state while session is being determined (but allow OAuth redirects)
+  if (status === 'loading' && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#FAF9F6] flex items-center justify-center">
         <div className="text-center">
@@ -164,14 +199,15 @@ export default function Home() {
               <span className="text-gray-600 hover:text-gray-800 transition cursor-pointer">Pricing</span>
             </Link>
           </li>
-          {session ? (
+          {isUserAuthenticated ? (
             <>
               <li>
-                <Link href="/dashboard">
-                  <button className="bg-white text-gray-500 font-semibold px-3 py-1 rounded-full shadow-sm hover:bg-gray-100 transition text-sm">
-                    Go to app
-                  </button>
-                </Link>
+                <button 
+                  onClick={() => window.location.href = "/dashboard"}
+                  className="bg-white text-gray-500 font-semibold px-3 py-1 rounded-full shadow-sm hover:bg-gray-100 transition text-sm"
+                >
+                  Go to app
+                </button>
               </li>
               <li>
                 <Link href="/api/auth/signout">
@@ -233,92 +269,51 @@ export default function Home() {
         <p className="text-lg font-semibold text-gray-500 mb-4" style={{ marginBottom: '18px' }}>
         Generate viral, self-improving content that boosts your traffic on autopilot.
         </p>
-        <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '48px' }}>
+                <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '48px' }}>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          {session ? (
-              <Link href="/dashboard">
-                <button
-                  style={{
-                    width: '220px',
-                    height: '64px',
-                    position: 'relative',
-                    background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
-                    border: 'none',
-                    borderRadius: '16px',
-                    color: 'white',
-                    fontSize: '24px',
-                    fontWeight: '600',
-                    boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    transition: 'transform 0.1s ease',
-                    letterSpacing: '0.01em',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
-                  onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
-                >
-                  <span style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '55%',
-                    borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
-                    pointerEvents: 'none',
-                    zIndex: 1,
-                    filter: 'blur(0.5px)',
-                  }} />
-                  <span style={{ position: 'relative', zIndex: 2 }}>Unlock now</span>
-                </button>
-              </Link>
-            ) : (
-              <button
-                onClick={handleGoogleSignIn}
-                style={{
-                  width: '220px',
-                  height: '64px',
-                  position: 'relative',
-                  background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
-                  border: 'none',
-                  borderRadius: '16px',
-                  color: 'white',
-                  fontSize: '24px',
-                  fontWeight: '600',
-                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  textAlign: 'center',
-                  transition: 'transform 0.1s ease',
-                  letterSpacing: '0.01em',
-                  overflow: 'hidden',
-                }}
-                onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
-                onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
-              >
-                <span style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '55%',
-                  borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  filter: 'blur(0.5px)',
-                }} />
-                <span style={{ position: 'relative', zIndex: 2 }}>Unlock now</span>
-              </button>
-            )}
+            {/* Always show the main CTA button - it will handle auth state internally */}
+            <button
+              onClick={isUserAuthenticated ? () => window.location.href = "/dashboard" : handleGoogleSignIn}
+              style={{
+                width: '220px',
+                height: '64px',
+                position: 'relative',
+                background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                border: 'none',
+                borderRadius: '16px',
+                color: 'white',
+                fontSize: '24px',
+                fontWeight: '600',
+                boxShadow: '0 8px 32px 0 rgba(0,0,0,0.18), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                cursor: 'pointer',
+                outline: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                transition: 'transform 0.1s ease',
+                letterSpacing: '0.01em',
+                overflow: 'hidden',
+              }}
+              onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+              onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+            >
+              <span style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '55%',
+                borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                pointerEvents: 'none',
+                zIndex: 1,
+                filter: 'blur(0.5px)',
+              }} />
+              <span style={{ position: 'relative', zIndex: 2 }}>
+                {isUserAuthenticated ? 'Go to app' : 'Unlock now'}
+              </span>
+            </button>
             <span style={{
               fontSize: '14px',
               color: '#6B7280',
