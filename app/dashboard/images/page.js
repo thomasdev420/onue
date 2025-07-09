@@ -120,9 +120,12 @@ export default function AvatarsEditor() {
     fetchImages();
   }, []);
 
-  // Fetch business context for AI generation - only once on mount
+  // Fetch business context for AI generation - only after authentication
   useEffect(() => {
-    if (businessContextFetched) return;
+    // Only fetch if user is authenticated and we haven't fetched yet
+    if (effectiveStatus !== 'authenticated' || businessContextFetched) {
+      return;
+    }
     
     const fetchBusinessContext = async () => {
       try {
@@ -130,12 +133,24 @@ export default function AvatarsEditor() {
         setBusinessContext(context);
       } catch (error) {
         console.error('Error fetching business context:', error);
+        // Set default context to prevent app from breaking
+        setBusinessContext({
+          companyName: 'Your Business',
+          businessType: 'General',
+          productInfo: 'Your products and services'
+        });
       } finally {
         setBusinessContextFetched(true);
       }
     };
-    fetchBusinessContext();
-  }, [businessContextFetched]);
+    
+    // Add a small delay to ensure session is fully ready
+    const timer = setTimeout(() => {
+      fetchBusinessContext();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [effectiveStatus, businessContextFetched]); // Depend on effectiveStatus
 
   // Handle mode navigation
   const handleModeChange = (newMode) => {

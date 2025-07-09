@@ -93,13 +93,36 @@ export async function getCurrentUserBusinessContext() {
     // Create new promise for this request
     globalBusinessContextPromise = (async () => {
       try {
+        // Check if we're in a private window
+        const isPrivate = (() => {
+          try {
+            const test = 'test';
+            localStorage.setItem(test, test);
+            localStorage.removeItem(test);
+            sessionStorage.setItem(test, test);
+            sessionStorage.removeItem(test);
+            return false;
+          } catch (e) {
+            return true;
+          }
+        })();
+
+        if (isPrivate) {
+          businessLogger.warn('Detected private window, using default context to avoid fetch issues');
+          return {
+            companyName: 'Your Business',
+            businessType: 'General',
+            productInfo: 'Your products and services'
+          };
+        }
+
         const response = await fetch('/api/user/context', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
           // Add timeout and better error handling
-          signal: AbortSignal.timeout(5000) // 5 second timeout
+          signal: AbortSignal.timeout(3000) // Reduced timeout for faster fallback
         });
 
         if (!response.ok) {
@@ -140,7 +163,9 @@ export async function getCurrentUserBusinessContext() {
     globalBusinessContextFetched = true; // Mark as fetched
     return globalBusinessContext;
   } catch (error) {
-    console.error('Unexpected error in getCurrentUserBusinessContext:', error);
+    businessLogger.error('Unexpected error in getCurrentUserBusinessContext:', error);
+    
+    // Always return a default context to prevent app crashes
     return {
       companyName: 'Your Business',
       businessType: 'General',

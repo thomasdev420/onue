@@ -27,6 +27,7 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
   const [error, setError] = useState('');
   const [businessContext, setBusinessContext] = useState(null);
   const [businessContextFetched, setBusinessContextFetched] = useState(false);
+  const [businessContextError, setBusinessContextError] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const textareaRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -42,25 +43,43 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     getOriginalPrompt
   } = useClarification();
 
-  // Fetch business context on mount only
+  // Fetch business context only after user is properly authenticated
   useEffect(() => {
+    // Only fetch if user is authenticated and we haven't fetched yet
+    if (effectiveStatus !== 'authenticated' || businessContextFetched) {
+      return;
+    }
+    
     console.log('ChatBar: business context useEffect triggered, fetched:', businessContextFetched);
-    if (businessContextFetched) return;
     
     const fetchBusinessContext = async () => {
       console.log('ChatBar: fetching business context');
       try {
         const context = await getCurrentUserBusinessContext();
         setBusinessContext(context);
+        setBusinessContextError(false);
       } catch (error) {
         console.error('Error fetching business context:', error);
+        setBusinessContextError(true);
+        // Set a default context so the app doesn't break
+        setBusinessContext({
+          companyName: 'Your Business',
+          businessType: 'General',
+          productInfo: 'Your products and services'
+        });
       } finally {
         setBusinessContextFetched(true);
         console.log('ChatBar: business context fetch completed');
       }
     };
-    fetchBusinessContext();
-  }, [businessContextFetched]); // Only depend on the fetch flag
+    
+    // Add a small delay to ensure session is fully ready
+    const timer = setTimeout(() => {
+      fetchBusinessContext();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [effectiveStatus, businessContextFetched]); // Depend on effectiveStatus instead of just the fetch flag
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
