@@ -42,15 +42,15 @@ body {
   filter: none !important;
 }
 
-/* Glass Sidebar Effect (from sidebar-demo.html) with blue tint */
+/* Glass Sidebar Effect (from sidebar-demo.html) with dynamic page color tint */
 .glass-sidebar {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(147, 197, 253, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, var(--page-color-light, rgba(147, 197, 253, 0.15)) 100%);
   backdrop-filter: blur(24px) saturate(1.1);
   -webkit-backdrop-filter: blur(24px) saturate(1.1);
-  border-right: 1.5px solid rgba(147, 197, 253, 0.25);
+  border-right: 1.5px solid var(--page-color-medium, rgba(147, 197, 253, 0.25));
   box-shadow: 
     0 8px 32px 0 rgba(31, 38, 135, 0.12),
-    0 0 0 1px rgba(147, 197, 253, 0.1),
+    0 0 0 1px var(--page-color-light, rgba(147, 197, 253, 0.1)),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   color: #1e293b;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -68,9 +68,9 @@ body {
   isolation: isolate;
   box-shadow: 
     0px 6px 24px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(147, 197, 253, 0.15),
+    0 0 0 1px var(--page-color-light, rgba(147, 197, 253, 0.15)),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(147, 197, 253, 0.3);
+  border: 1px solid var(--page-color-medium, rgba(147, 197, 253, 0.3));
   overflow: hidden;
   background: transparent;
   z-index: 1000;
@@ -84,7 +84,7 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(147, 197, 253, 0.15) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, var(--page-color-light, rgba(147, 197, 253, 0.15)) 100%);
   backdrop-filter: blur(24px) saturate(1.1);
   -webkit-backdrop-filter: blur(24px) saturate(1.1);
   border-radius: 32px;
@@ -124,13 +124,13 @@ body {
 
 .sidebar-nav-link:hover,
 .sidebar-nav-link-active {
-  background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(147, 197, 253, 0.1) 100%);
-  border: 1px solid rgba(147, 197, 253, 0.28);
+  background: linear-gradient(135deg, rgba(255,255,255,0.22) 0%, var(--page-color-light, rgba(147, 197, 253, 0.1)) 100%);
+  border: 1px solid var(--page-color-medium, rgba(147, 197, 253, 0.28));
   backdrop-filter: blur(8px) saturate(1.1);
   -webkit-backdrop-filter: blur(8px) saturate(1.1);
   box-shadow: 
     0 2px 8px 0 rgba(31,38,135,0.06) inset,
-    0 0 0 1px rgba(147, 197, 253, 0.1);
+    0 0 0 1px var(--page-color-light, rgba(147, 197, 253, 0.1));
   color: rgba(30,41,59,0.82);
   font-weight: 500;
   transition: background 0.2s, color 0.2s;

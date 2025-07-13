@@ -7,13 +7,14 @@ export default function PromptModal({
   isOpen,
   onClose,
   onSubmit,
-  businessContext = null
+  businessContext = null,
+  existingSlides = [],
+  mode = 'slides'
 }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [slideCount, setSlideCount] = useState(3);
   const [error, setError] = useState('');
-  const [step, setStep] = useState(2); // 2: enter prompt (skip format selection)
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -21,7 +22,6 @@ export default function PromptModal({
       setPrompt('');
       setError('');
       setIsGenerating(false);
-      setStep(2); // Always start at text input step
     }
   }, [isOpen]);
 
@@ -34,16 +34,12 @@ export default function PromptModal({
   };
   useEffect(() => { adjustTextareaHeight(); }, [prompt]);
 
-
-
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
     }
   };
-
-
 
   const handleSubmit = async () => {
     if (!prompt.trim()) {
@@ -57,9 +53,14 @@ export default function PromptModal({
     
     console.log('Starting AI generation with prompt:', userMessage);
     console.log('Business context:', businessContext);
+    console.log('Existing slides count:', existingSlides?.length || 0);
 
-    // Use the prompt directly without format selection
-    const finalPrompt = userMessage;
+    // Let the AI figure out the intent from the user's prompt
+    // Include existing content context so AI can make informed decisions
+    let enhancedPrompt = userMessage;
+    if (existingSlides && existingSlides.length > 0) {
+      enhancedPrompt = `User has ${existingSlides.length} existing ${mode}. User request: ${userMessage}. Please understand their intent and respond appropriately.`;
+    }
 
     let finalSlideCount = slideCount;
     const slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
@@ -72,23 +73,25 @@ export default function PromptModal({
     
     try {
       console.log('Sending request to API with:', {
-        prompt: finalPrompt,
+        prompt: enhancedPrompt,
         slideCount: finalSlideCount,
-        businessContext: businessContext
+        businessContext: businessContext,
+        existingSlides: existingSlides?.length || 0
       });
       
       const response = await fetch('/api/generate-slides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: finalPrompt,
+          prompt: enhancedPrompt,
           slideCount: finalSlideCount,
           businessContext: businessContext,
           userInfo: {
             name: 'User',
             email: 'user@example.com'
           },
-          forceGenerate: true // Always force slide generation for slides page
+          forceGenerate: true,
+          existingSlides: existingSlides || []
         }),
       });
       
@@ -105,8 +108,12 @@ export default function PromptModal({
         throw new Error('Invalid response format: slides array not found');
       }
       
+      // Let the AI response determine the final content
+      // The AI should return the complete content based on user intent
+      let finalSlides = data.slides;
+      
       // Automatically apply the generated slides
-      onSubmit(data.slides, userMessage);
+      onSubmit(finalSlides, userMessage);
       setIsGenerating(false);
       onClose();
       
@@ -115,8 +122,6 @@ export default function PromptModal({
       setIsGenerating(false);
     }
   };
-
-
 
   if (!isOpen) return null;
 
@@ -148,11 +153,9 @@ export default function PromptModal({
         }}>
           <Loader2 size={48} className="animate-spin" />
           <div style={{ fontSize: '20px', fontWeight: '600' }}>
-            Generating your slides...
+            Generating slides...
           </div>
-          <div style={{ fontSize: '16px', opacity: 0.8 }}>
-          </div>
-        </div>
+        </div>''
       </div>
     );
   }
@@ -210,89 +213,106 @@ export default function PromptModal({
           <X size={24} />
         </button>
 
-        {/* Step 2: Prompt Input */}
-        {step === 2 && (
-          <>
-            <h2 style={{
-              fontSize: '28px',
-              fontWeight: 700,
-              color: '#23272F',
-              textAlign: 'center',
-              margin: 0,
-              marginBottom: '8px',
-              fontFamily: "'Inter', sans-serif"
-            }}>
-              AI Prompt
-            </h2>
-            <div style={{
-              fontSize: '17px',
-              color: '#7B8493',
-              textAlign: 'center',
-              marginBottom: '24px',
-              fontWeight: 500,
-              fontFamily: "'Inter', sans-serif"
-            }}>
-              Describe what you want to create and let AI help you
-            </div>
-            <textarea
-              ref={textareaRef}
-              value={prompt}
-              onChange={e => setPrompt(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="e.g., Create a motivational slide about entrepreneurship with a modern design..."
-              disabled={isGenerating}
-              style={{
-                width: '100%',
-                minHeight: '100px',
-                fontSize: '16px',
-                color: '#23272F',
-                border: '2px solid #E5E7EB',
-                borderRadius: '12px',
-                padding: '16px',
-                fontFamily: "'Inter', sans-serif",
-                marginBottom: '32px',
-                boxSizing: 'border-box',
-                resize: 'none',
-                background: '#FFF',
-                outline: 'none',
-                transition: 'border-color 0.2s ease',
-              }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={handleSubmit}
-                disabled={isGenerating || !prompt.trim()}
-                style={{
-                  height: '56px',
-                  padding: '0 48px',
-                  borderRadius: '12px',
-                  border: 'none',
-                  background: isGenerating || !prompt.trim() ? '#A5B4FC' : '#2563EB',
-                  color: '#FFF',
-                  fontWeight: 700,
-                  fontSize: '18px',
-                  cursor: isGenerating || !prompt.trim() ? 'not-allowed' : 'pointer',
-                  fontFamily: "'Inter', sans-serif",
-                  transition: 'all 0.2s',
-                  boxShadow: isGenerating || !prompt.trim() ? 'none' : '0 1px 2px rgba(37,99,235,0.08)',
-                }}
-              >
-                Generate
-              </button>
-            </div>
-            {error && (
-              <div style={{
-                color: '#EF4444',
-                fontSize: '14px',
-                textAlign: 'center',
-                marginTop: '20px',
-                maxWidth: '360px',
-                fontFamily: "'Inter', sans-serif"
-              }}>
-                {error}
-              </div>
-            )}
-          </>
+        <h2 style={{
+          fontSize: '28px',
+          fontWeight: 700,
+          color: '#23272F',
+          textAlign: 'center',
+          margin: 0,
+          marginBottom: '8px',
+          fontFamily: "'Inter', sans-serif"
+        }}>
+          AI Prompt
+        </h2>
+        <div style={{
+          fontSize: '17px',
+          color: '#7B8493',
+          textAlign: 'center',
+          marginBottom: '24px',
+          fontWeight: 500,
+          fontFamily: "'Inter', sans-serif"
+        }}>
+          {existingSlides && existingSlides.length > 0 
+            ? `You have ${existingSlides.length} existing ${mode}. Tell me what you want to do.`
+            : 'Describe what you want to create and let AI help you'
+          }
+        </div>
+        {existingSlides && existingSlides.length > 0 && (
+          <div style={{
+            fontSize: '14px',
+            color: '#9CA3AF',
+            textAlign: 'center',
+            marginBottom: '16px',
+            fontFamily: "'Inter', sans-serif",
+            padding: '12px',
+            backgroundColor: '#F9FAFB',
+            borderRadius: '8px',
+            border: '1px solid #E5E7EB'
+          }}>
+            💡 <strong>Tip:</strong> Use "add another slide" to keep existing content, or "create new slides" to start fresh
+          </div>
+        )}
+        <textarea
+          ref={textareaRef}
+          value={prompt}
+          onChange={e => setPrompt(e.target.value)}
+          onKeyPress={handleKeyPress}
+          placeholder={
+            existingSlides && existingSlides.length > 0
+              ? `e.g., "Add another slide about success", "Make one more motivational slide", "Create new slides about entrepreneurship"...`
+              : `e.g., Create a motivational ${mode.slice(0, -1)} about entrepreneurship with a modern design...`
+          }
+          disabled={isGenerating}
+          style={{
+            width: '100%',
+            minHeight: '100px',
+            fontSize: '16px',
+            color: '#23272F',
+            border: '2px solid #E5E7EB',
+            borderRadius: '12px',
+            padding: '16px',
+            fontFamily: "'Inter', sans-serif",
+            marginBottom: '32px',
+            boxSizing: 'border-box',
+            resize: 'none',
+            background: '#FFF',
+            outline: 'none',
+            transition: 'border-color 0.2s ease',
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+          <button
+            onClick={handleSubmit}
+            disabled={isGenerating || !prompt.trim()}
+            style={{
+              height: '56px',
+              padding: '0 48px',
+              borderRadius: '12px',
+              border: 'none',
+              background: isGenerating || !prompt.trim() ? '#A5B4FC' : '#2563EB',
+              color: '#FFF',
+              fontWeight: '700',
+              fontSize: '18px',
+              cursor: isGenerating || !prompt.trim() ? 'not-allowed' : 'pointer',
+              fontFamily: "'Inter', sans-serif",
+              transition: 'all 0.2s',
+              boxShadow: isGenerating || !prompt.trim() ? 'none' : '0 1px 2px rgba(37,99,235,0.08)',
+            }}
+          >
+            Generate
+          </button>
+        </div>
+        {error && (
+          <div style={{
+            color: '#EF4444',
+            fontSize: '14px',
+            textAlign: 'center',
+            marginTop: '20px',
+            maxWidth: '360px',
+            fontFamily: "'Inter', sans-serif"
+          }}>
+            {error}
+          </div>
         )}
       </div>
     </div>

@@ -18,7 +18,7 @@ import { useRouter, usePathname } from 'next/navigation';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-export default function MemesEditor() {
+export default function TextEditor() {
   const { data: session, status } = useSession();
   const effectiveStatus = isDev ? 'authenticated' : status;
   const effectiveSession = useMemo(() => {
@@ -40,14 +40,14 @@ export default function MemesEditor() {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(null);
   const pathname = usePathname();
-  const [mode, setMode] = useState('memes');
+  const [mode, setMode] = useState('text');
   
   // Determine current mode based on route
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-    } else if (pathname.includes('/dashboard/meme')) {
-      setMode('memes');
+    } else if (pathname.includes('/dashboard/text')) {
+      setMode('text');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
@@ -58,40 +58,40 @@ export default function MemesEditor() {
   const [showModeModal, setShowModeModal] = useState(false);
   const router = useRouter();
 
-  // Use persistence hook for memes - INDEPENDENT from slides
-  const defaultMemes = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
+  // Use persistence hook for texts - INDEPENDENT from slides
+  const defaultTexts = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
   const { 
-    data: memes, 
-    updateData: setMemes, 
-    resetData: resetMemes,
+    data: texts, 
+    updateData: setTexts, 
+    resetData: resetTexts,
     saveStatus, 
-    isLoading: isLoadingMemes 
-  } = usePersistence('memes', defaultMemes);
+    isLoading: isLoadingTexts 
+  } = usePersistence('texts', defaultTexts);
 
   const { data: userImages } = usePersistence('userImages', []);
 
-  // Active meme state
-  const [activeMemeIndex, setActiveMemeIndex] = useState(0);
+  // Active text state
+  const [activeTextIndex, setActiveTextIndex] = useState(0);
 
-  // Custom hooks for meme management
+  // Custom hooks for text management
   const {
-    updateSlide: updateMeme,
-    addSlide: addMeme,
-    deleteSlide: deleteMeme,
+    updateSlide: updateText,
+    addSlide: addText,
+    deleteSlide: deleteText,
     changeRatio,
-    handleSelectImageForSlide: handleSelectImageForMeme
+    handleSelectImageForSlide: handleSelectImageForText
   } = useSlideManagement({
-    slides: memes,
-    setSlides: setMemes,
-    activeSlideIndex: activeMemeIndex,
-    setActiveSlideIndex: setActiveMemeIndex
+    slides: texts,
+    setSlides: setTexts,
+    activeSlideIndex: activeTextIndex,
+    setActiveSlideIndex: setActiveTextIndex
   });
 
   // Navigation hook
   useSlideNavigation({
-    activeSlideIndex: activeMemeIndex,
-    setActiveSlideIndex: setActiveMemeIndex,
-    slidesLength: memes.length
+    activeSlideIndex: activeTextIndex,
+    setActiveSlideIndex: setActiveTextIndex,
+    slidesLength: texts.length
   });
 
   // Fetch images from database
@@ -157,7 +157,7 @@ export default function MemesEditor() {
     
     const routeMap = {
       videos: '/dashboard/videos',
-      memes: '/dashboard/meme',
+      text: '/dashboard/text',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -168,13 +168,13 @@ export default function MemesEditor() {
     }
   };
 
-  // Add a guard to prevent rendering with invalid meme data
-  if (isLoadingMemes || !memes || memes.length === 0) {
+  // Add a guard to prevent rendering with invalid text data
+  if (isLoadingTexts || !texts || texts.length === 0) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">Memes Editor</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-8">Text Editor</h1>
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-gray-600">Loading your memes...</p>
+          <p className="text-gray-600">Loading your texts...</p>
         </div>
       </div>
     );
@@ -182,48 +182,19 @@ export default function MemesEditor() {
 
   const modeLabelMap = {
     videos: 'Videos',
-    memes: 'Memes',
+    text: 'Text',
     avatars: 'Avatars',
     slides: 'Slides',
   };
   const modeColorMap = {
     videos: '#6366F1', // Softer blue
-    memes: '#D97706', // Softer orange
+    text: '#DC2626', // Softer red
     avatars: '#9333EA', // Softer purple
     slides: '#059669', // Softer green
   };
 
   return (
     <>
-      {/* Centered colored dot above main content area, always present */}
-      <div style={{
-        position: 'absolute',
-        top: 12,
-        left: 'calc(50% + 40px)',
-        transform: 'translateX(-50%)',
-        zIndex: 1100
-      }}>
-        <button
-          onClick={() => setShowModeModal(true)}
-          style={{
-            background: modeColorMap[mode] || '#D97706',
-            border: 'none',
-            borderRadius: '50%',
-            boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#D97706')}22, 0 0 0 1px ${(modeColorMap[mode] || '#D97706')}11`,
-            color: '#fff',
-            width: 16,
-            height: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            outline: 'none',
-            borderWidth: 0,
-          }}
-          aria-label="Switch content type"
-        />
-      </div>
       {/* Settings button at top right */}
       {/* ModeToggle Modal */}
       {showModeModal && (
@@ -268,7 +239,7 @@ export default function MemesEditor() {
       <ContentModal
         isOpen={isContentModalOpen}
         onClose={() => setIsContentModalOpen(false)}
-        onImageSelect={handleSelectImageForMeme}
+        onImageSelect={handleSelectImageForText}
         libraryImages={libraryImages}
         userImages={userImages}
         contentType={contentType}
@@ -277,12 +248,13 @@ export default function MemesEditor() {
       <PromptModal
         isOpen={isPromptModalOpen}
         onClose={() => setIsPromptModalOpen(false)}
-        onGenerateSlides={(generatedSlides) => {
-          setMemes(generatedSlides);
+        onSubmit={(generatedTexts) => {
+          setTexts(generatedTexts);
           setIsPromptModalOpen(false);
         }}
         businessContext={businessContext}
-        mode="memes"
+        existingSlides={texts}
+        mode="texts"
       />
       <div style={{ 
         display: "flex", 
@@ -298,16 +270,16 @@ export default function MemesEditor() {
           position: "relative"
         }}>
           <SlideCanvas
-            slides={memes}
-            activeSlideIndex={activeMemeIndex}
-            onSlideSelect={setActiveMemeIndex}
-            onSlideUpdate={(slideIndex, updatedSlide) => updateMeme(slideIndex, updatedSlide)}
-            onAddSlide={addMeme}
-            onDeleteSlide={deleteMeme}
+            slides={texts}
+            activeSlideIndex={activeTextIndex}
+            onSlideSelect={setActiveTextIndex}
+            onSlideUpdate={(slideIndex, updatedSlide) => updateText(slideIndex, updatedSlide)}
+            onAddSlide={addText}
+            onDeleteSlide={deleteText}
             onRatioChange={(slideIndex) => changeRatio(slideIndex)}
             onContentModalOpen={() => setIsContentModalOpen(true)}
             onPromptModalOpen={() => setIsPromptModalOpen(true)}
-            modeColor={modeColorMap[mode] || '#D97706'}
+            modeColor={modeColorMap[mode] || '#DC2626'}
           />
         </div>
       </div>
@@ -326,7 +298,7 @@ export default function MemesEditor() {
               setScheduledDate(date);
               setIsScheduleModalOpen(false);
               // Save to localStorage for now
-              localStorage.setItem('scheduledContent', JSON.stringify({ date, memes }));
+              localStorage.setItem('scheduledContent', JSON.stringify({ date, texts }));
               alert(`Content scheduled for ${date.toLocaleDateString()}`);
             }} />
           </div>

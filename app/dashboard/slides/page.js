@@ -45,8 +45,8 @@ export default function SlidesEditor() {
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-    } else if (pathname.includes('/dashboard/meme')) {
-      setMode('memes');
+    } else if (pathname.includes('/dashboard/text')) {
+      setMode('text');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
@@ -180,46 +180,48 @@ export default function SlidesEditor() {
               
               // Auto-select images based on imageCategory
               const slidesWithImages = positionedSlides.map((slide, index) => {
-                // Always try to assign an image, even if no category or no library images
                 let selectedImage = null;
                 
-                if (Array.isArray(libraryImages) && libraryImages.length > 0) {
-                  if (slide.imageCategory) {
-                    // Find images that match the category (simple keyword matching)
-                    const categoryKeywords = {
-                      'business': ['business', 'office', 'corporate', 'professional'],
-                      'technology': ['tech', 'computer', 'digital', 'innovation'],
-                      'success': ['success', 'achievement', 'winning', 'trophy'],
-                      'motivation': ['motivation', 'inspiration', 'positive', 'energy'],
-                      'growth': ['growth', 'progress', 'development', 'improvement'],
-                      'creativity': ['creative', 'art', 'design', 'imagination'],
-                      'social_media': ['social', 'media', 'connection', 'network'],
-                      'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership'],
-                      'marketing': ['marketing', 'advertising', 'promotion', 'brand'],
-                      'lifestyle': ['lifestyle', 'life', 'daily', 'personal']
-                    };
-                    
-                    const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-                    const matchingImages = (Array.isArray(libraryImages) ? libraryImages : []).filter(img => 
-                      img && img.title && keywords.some(keyword => 
-                        img.title.toLowerCase().includes(keyword.toLowerCase())
-                      )
-                    );
-                    
-                    console.log(`Slide ${index + 1} - Category: ${slide.imageCategory}, Keywords: ${keywords.join(', ')}, Matching images: ${matchingImages.length}`);
-                    
-                    // Select a random matching image, or fallback to any image
-                    selectedImage = matchingImages.length > 0 
-                      ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
-                      : (Array.isArray(libraryImages) && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
-                  } else {
-                    // No category specified, select a random image
-                    selectedImage = (Array.isArray(libraryImages) && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
-                  }
+                if (slide.imageCategory && libraryImages.length > 0) {
+                  // Find images that match the category (simple keyword matching)
+                  const categoryKeywords = {
+                    'business': ['business', 'office', 'corporate', 'professional'],
+                    'technology': ['tech', 'computer', 'digital', 'innovation'],
+                    'success': ['success', 'achievement', 'winning', 'trophy'],
+                    'motivation': ['motivation', 'inspiration', 'positive', 'energy'],
+                    'growth': ['growth', 'progress', 'development', 'improvement'],
+                    'creativity': ['creative', 'art', 'design', 'imagination'],
+                    'social_media': ['social', 'media', 'connection', 'network'],
+                    'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership'],
+                    'marketing': ['marketing', 'advertising', 'promotion', 'brand'],
+                    'lifestyle': ['lifestyle', 'life', 'daily', 'personal']
+                  };
                   
-                  console.log(`Selected image for slide ${index + 1}:`, selectedImage?.title);
-                } else {
-                  console.log(`No library images available for slide ${index + 1}`);
+                  const keywords = categoryKeywords[slide.imageCategory] || ['business'];
+                  const matchingImages = (libraryImages || []).filter(img => 
+                    img && img.title && keywords.some(keyword => 
+                      img.title.toLowerCase().includes(keyword.toLowerCase())
+                    )
+                  );
+                  
+                  // Select a random matching image, or fallback to any image
+                  selectedImage = matchingImages.length > 0 
+                    ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
+                    : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
+                }
+                
+                // If no image was selected and we have library images, pick a random one
+                if (!selectedImage && libraryImages && libraryImages.length > 0) {
+                  selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
+                }
+                
+                // If still no image, create a placeholder image object
+                if (!selectedImage) {
+                  selectedImage = {
+                    id: `placeholder-${Date.now()}-${index}`,
+                    title: 'Placeholder Image',
+                    image_url: 'https://via.placeholder.com/400x600/cccccc/666666?text=Select+Image'
+                  };
                 }
                 
                 return {
@@ -344,7 +346,8 @@ export default function SlidesEditor() {
       console.log('handlePromptSubmit called with:', {
         generatedSlides,
         prompt,
-        slidesLength: generatedSlides?.length
+        slidesLength: generatedSlides?.length,
+        existingSlidesCount: slides.length
       });
 
       // Validate generated slides
@@ -368,6 +371,8 @@ export default function SlidesEditor() {
       
       // Auto-select images based on imageCategory
       const slidesWithImages = positionedSlides.map((slide, index) => {
+        let selectedImage = null;
+        
         if (slide.imageCategory && libraryImages.length > 0) {
           // Find images that match the category (simple keyword matching)
           const categoryKeywords = {
@@ -391,25 +396,59 @@ export default function SlidesEditor() {
           );
           
           // Select a random matching image, or fallback to any image
-          const selectedImage = matchingImages.length > 0 
+          selectedImage = matchingImages.length > 0 
             ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
             : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
-          
-          return {
-            ...slide,
-            image: selectedImage
+        }
+        
+        // If no image was selected and we have library images, pick a random one
+        if (!selectedImage && libraryImages && libraryImages.length > 0) {
+          selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
+        }
+        
+        // If still no image, create a placeholder image object
+        if (!selectedImage) {
+          selectedImage = {
+            id: `placeholder-${Date.now()}-${index}`,
+            title: 'Placeholder Image',
+            image_url: 'https://via.placeholder.com/400x600/cccccc/666666?text=Select+Image'
           };
         }
-        return slide;
+        
+        return {
+          ...slide,
+          image: selectedImage
+        };
       });
       
-      // Replace all slides with the positioned ones
-      setSlides(slidesWithImages);
+      // Analyze user intent to determine whether to add or replace slides
+      const lowerPrompt = prompt.toLowerCase();
+      const addKeywords = ['add', 'another', 'more', 'additional', 'extra', 'one more', 'two more', 'three more', 'four more', 'five more'];
+      const replaceKeywords = ['replace', 'new', 'completely new', 'start over', 'fresh', 'different', 'change', 'redo', 'remake'];
       
-      // Set active slide to first generated slide
-      setActiveSlideIndex(0);
+      const isAddRequest = addKeywords.some(keyword => lowerPrompt.includes(keyword));
+      const isReplaceRequest = replaceKeywords.some(keyword => lowerPrompt.includes(keyword));
       
-      console.log('AI-generated slides applied successfully:', positionedSlides.length, 'slides');
+      let finalSlides;
+      let newActiveIndex;
+      
+      if (isAddRequest && !isReplaceRequest) {
+        // Add slides to existing ones
+        finalSlides = [...slides, ...slidesWithImages];
+        newActiveIndex = slides.length; // Set active to first new slide
+        console.log(`Adding ${slidesWithImages.length} new slides to existing ${slides.length} slides`);
+      } else {
+        // Replace all slides (default behavior for new requests, replace requests, or unclear intent)
+        finalSlides = slidesWithImages;
+        newActiveIndex = 0;
+        console.log(`Replacing all slides with ${slidesWithImages.length} new slides`);
+      }
+      
+      // Update slides
+      setSlides(finalSlides);
+      setActiveSlideIndex(newActiveIndex);
+      
+      console.log('AI-generated slides applied successfully:', finalSlides.length, 'total slides');
       console.log('Generated slides structure:', positionedSlides);
       
       // Close the modal
@@ -453,7 +492,7 @@ export default function SlidesEditor() {
     
     const routeMap = {
       videos: '/dashboard/videos',
-      memes: '/dashboard/meme',
+      text: '/dashboard/text',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -469,7 +508,7 @@ export default function SlidesEditor() {
     setShowModeModal(false);
     const modeToRoute = {
       videos: '/dashboard/videos',
-      memes: '/dashboard/meme',
+      text: '/dashboard/text',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -493,13 +532,13 @@ export default function SlidesEditor() {
 
   const modeLabelMap = {
     videos: 'Videos',
-    memes: 'Memes',
+    text: 'Text',
     avatars: 'Avatars',
     slides: 'Slides',
   };
   const modeColorMap = {
     videos: '#6366F1', // Softer blue
-    memes: '#D97706', // Softer orange
+    text: '#DC2626', // Softer red
     avatars: '#9333EA', // Softer purple
     slides: '#059669', // Softer green
   };
@@ -567,6 +606,8 @@ export default function SlidesEditor() {
         onClose={handlePromptModalClose}
         onSubmit={handlePromptSubmit}
         businessContext={businessContext}
+        existingSlides={slides}
+        mode="slides"
       />
 
       <div style={{ 
@@ -612,37 +653,7 @@ export default function SlidesEditor() {
           </div>
         </div>
       )}
-      {/* Centered colored dot above main content area, always present */}
-      <div style={{
-        position: 'absolute',
-        top: 8,
-        left: 'calc(50% + 40px)',
-        transform: 'translateX(-50%)',
-        zIndex: 1100
-      }}>
-        <button
-          onClick={() => setShowModeModal(true)}
-          style={{
-            background: modeColorMap[mode] || '#059669',
-            border: 'none',
-            borderRadius: '50%',
-            boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#059669')}22, 0 0 0 1px ${(modeColorMap[mode] || '#059669')}11`,
-            color: '#fff',
-            width: 16,
-            height: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            outline: 'none',
-            borderWidth: 0,
-            filter: (showModeModal || isPromptModalOpen || isContentModalOpen || isScheduleModalOpen) ? 'blur(2px)' : 'none',
-            opacity: (showModeModal || isPromptModalOpen || isContentModalOpen || isScheduleModalOpen) ? 0.5 : 1,
-          }}
-          aria-label="Switch content type"
-        />
-      </div>
+
     </>
   );
 } 

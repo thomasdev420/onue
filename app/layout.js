@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ProductionSessionProvider from "./components/layout/ProductionSessionProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
+import FeedbackButton from "./components/FeedbackButton";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 
@@ -30,6 +31,7 @@ export default async function RootLayout({ children }) {
         <ErrorBoundary>
           <ProductionSessionProvider session={session}>
             {children}
+            <FeedbackButton />
           </ProductionSessionProvider>
         </ErrorBoundary>
       </body>

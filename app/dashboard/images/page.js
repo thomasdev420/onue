@@ -46,8 +46,8 @@ export default function AvatarsEditor() {
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-    } else if (pathname.includes('/dashboard/meme')) {
-      setMode('memes');
+    } else if (pathname.includes('/dashboard/text')) {
+      setMode('text');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
@@ -157,7 +157,7 @@ export default function AvatarsEditor() {
     
     const routeMap = {
       videos: '/dashboard/videos',
-      memes: '/dashboard/meme',
+      text: '/dashboard/text',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -182,48 +182,20 @@ export default function AvatarsEditor() {
 
   const modeLabelMap = {
     videos: 'Videos',
-    memes: 'Memes',
+    text: 'Text',
     avatars: 'Avatars',
     slides: 'Slides',
   };
   const modeColorMap = {
     videos: '#6366F1', // Softer blue
-    memes: '#D97706', // Softer orange
+    text: '#DC2626', // Softer red
     avatars: '#9333EA', // Softer purple
     slides: '#059669', // Softer green
   };
 
   return (
     <>
-      {/* Centered colored dot above main content area, always present */}
-      <div style={{
-        position: 'absolute',
-        top: 12,
-        left: 'calc(50% + 40px)',
-        transform: 'translateX(-50%)',
-        zIndex: 1100
-      }}>
-        <button
-          onClick={() => setShowModeModal(true)}
-          style={{
-            background: modeColorMap[mode] || '#9333EA',
-            border: 'none',
-            borderRadius: '50%',
-            boxShadow: `0 2px 8px 0 ${(modeColorMap[mode] || '#9333EA')}22, 0 0 0 1px ${(modeColorMap[mode] || '#9333EA')}11`,
-            color: '#fff',
-            width: 16,
-            height: 16,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            outline: 'none',
-            borderWidth: 0,
-          }}
-          aria-label="Switch content type"
-        />
-      </div>
+
       {/* ModeToggle Modal */}
       {showModeModal && (
         <div
@@ -276,11 +248,12 @@ export default function AvatarsEditor() {
       <PromptModal
         isOpen={isPromptModalOpen}
         onClose={() => setIsPromptModalOpen(false)}
-        onGenerateSlides={(generatedSlides) => {
+        onSubmit={(generatedSlides) => {
           setAvatars(generatedSlides);
           setIsPromptModalOpen(false);
         }}
         businessContext={businessContext}
+        existingSlides={avatars}
         mode="avatars"
       />
       <div style={{ 

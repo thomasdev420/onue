@@ -42,7 +42,8 @@ export async function getBusinessContext(userEmail) {
       businessType: onboardingData.extractedData?.productType || null,
       productInfo: onboardingData.extractedData?.productInfo || null,
       websiteUrl: onboardingData.websiteUrl || null,
-      personalization: onboardingData.personalizationAnswers || {}
+      personalization: onboardingData.personalizationAnswers || {},
+      brandManual: onboardingData.personalizationAnswers?.brandManual || null
     };
   } catch (error) {
     console.error('Error in getBusinessContext:', error);

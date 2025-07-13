@@ -2,20 +2,38 @@
 
 import React, { useState, cloneElement, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import WebsiteOnboarding from '../components/WebsiteOnboarding';
+import FeedbackButton from '../components/FeedbackButton';
 import { OnboardingModalContext } from './OnboardingModalContext';
 
 export default function DashboardLayout({ children }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [devAccessChecked, setDevAccessChecked] = useState(false);
   const [hasOAuthParams, setHasOAuthParams] = useState(false);
   const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Determine page color based on current pathname
+  const getPageColor = () => {
+    if (pathname.includes('/dashboard/slides')) return '#059669'; // Green for slides
+    if (pathname.includes('/dashboard/text')) return '#DC2626'; // Red for text
+    if (pathname.includes('/dashboard/videos')) return '#6366F1'; // Blue for videos
+    if (pathname.includes('/dashboard/images')) return '#9333EA'; // Purple for avatars
+    if (pathname.includes('/dashboard/analytics')) return '#10B981'; // Green for analytics
+    if (pathname.includes('/dashboard/schedule')) return '#F59E0B'; // Amber for schedule
+    if (pathname.includes('/dashboard/support')) return '#3B82F6'; // Blue for support
+    if (pathname.includes('/dashboard/settings')) return '#6B7280'; // Gray for settings
+    if (pathname.includes('/dashboard/upload')) return '#8B5CF6'; // Purple for upload
+    return '#93C5FD'; // Default blue for dashboard home
+  };
+
+  const currentPageColor = getPageColor();
 
   // Check dev access and OAuth params on mount
   useEffect(() => {
@@ -81,7 +99,7 @@ export default function DashboardLayout({ children }) {
     <OnboardingModalContext.Provider value={{ showWebsiteOnboarding, setShowWebsiteOnboarding }}>
       <div className="flex min-h-screen" style={{ backgroundColor: '#FAF9F6', position: 'relative' }}>
         <div className={`flex w-full h-full${showWebsiteOnboarding ? ' blur-[6px] pointer-events-none' : ''}`}> 
-          <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} />
+          <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} pageColor={currentPageColor} />
           <main className={`flex-1 p-8 bg-[#FAF9F6] overflow-y-auto ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
             {children}
           </main>
@@ -92,6 +110,7 @@ export default function DashboardLayout({ children }) {
         onClose={() => setShowWebsiteOnboarding(false)} 
         onComplete={() => setShowWebsiteOnboarding(false)} 
       />
+      <FeedbackButton />
     </OnboardingModalContext.Provider>
   );
 }

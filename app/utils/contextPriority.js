@@ -148,6 +148,20 @@ export function buildContextAwarePrompt(context, userPrompt) {
     }
   }
 
+  // Add brand manual information (second priority)
+  if (context.businessContext?.brandManual) {
+    systemPrompt += `\n\nBrand Manual Information:`;
+    const brandManual = context.businessContext.brandManual;
+    
+    if (brandManual.fileName) {
+      systemPrompt += `\n- Brand Manual: ${brandManual.fileName}`;
+    }
+    if (brandManual.fileUrl) {
+      systemPrompt += `\n- Brand Manual URL: ${brandManual.fileUrl}`;
+      systemPrompt += `\n\nIMPORTANT: The user has uploaded a brand manual. When creating content, follow their brand guidelines, style, colors, fonts, and tone of voice as specified in their brand manual. This should influence the visual style, color scheme, typography, and overall aesthetic of the content you generate.`;
+    }
+  }
+
   // Add user metadata (lowest priority - for reference only)
   if (context.userInfo?.name) {
     systemPrompt += `\n\nUser: ${context.userInfo.name}`;

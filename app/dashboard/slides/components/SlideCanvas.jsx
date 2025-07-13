@@ -168,27 +168,31 @@ export default function SlideCanvas({
                   style={{ objectFit: 'cover' }}
                 />
                 
-                {slide.texts && slide.texts.map((textItem, textIndex) => (
-                  <TextOverlay
-                    key={textItem.id || textIndex}
-                    textItem={textItem}
-                    textIndex={textIndex}
-                    slideIndex={index}
-                    activeSlideIndex={activeSlideIndex}
-                    isInlineEditing={inlineEditing.isEditing && 
-                      inlineEditing.slideIndex === index && 
-                      inlineEditing.textIndex === textIndex}
-                    isBeingDragged={draggingInfo.isDragging && draggingInfo.textIndex === textIndex}
-                    draggingInfo={draggingInfo}
-                    inlineEditText={inlineEditText}
-                    inlineEditRef={inlineEditRef}
-                    onMouseDown={handleTextMouseDown}
-                    onInlineEditChange={handleInlineEditChange}
-                    onKeyDown={handleKeyDown}
-                    onBlur={saveInlineEdit}
-                    onClick={handleTextClick}
-                  />
-                ))}
+                {slide.texts && slide.texts.length > 0 && (
+                  slide.texts.map((textItem, i) => {
+                    const isEditing = inlineEditing.isEditing && inlineEditing.slideIndex === index && inlineEditing.textIndex === i;
+                    const isDragging = draggingInfo.isDragging && draggingInfo.textIndex === i;
+                    return (
+                      <TextOverlay
+                        key={textItem.id || i}
+                        textItem={textItem}
+                        textIndex={i}
+                        slideIndex={index}
+                        activeSlideIndex={activeSlideIndex}
+                        isInlineEditing={isEditing}
+                        isBeingDragged={isDragging}
+                        draggingInfo={draggingInfo}
+                        inlineEditText={inlineEditText}
+                        inlineEditRef={inlineEditRef}
+                        onMouseDown={handleTextMouseDown}
+                        onInlineEditChange={handleInlineEditChange}
+                        onKeyDown={handleKeyDown}
+                        onBlur={saveInlineEdit}
+                        onClick={handleTextClick}
+                      />
+                    );
+                  })
+                )}
                 
                 {/* Center Guides - Vertical line with magnetic snapping */}
                 {draggingInfo.isDragging && draggingInfo.textIndex !== -1 && index === activeSlideIndex && (

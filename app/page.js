@@ -15,6 +15,7 @@ export default function Home() {
   const [devCodeError, setDevCodeError] = useState("");
   const [devAccessGranted, setDevAccessGranted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMonthly, setIsMonthly] = useState(false);
 
   // Enhanced authentication check that works in private windows
   useEffect(() => {
@@ -259,15 +260,15 @@ export default function Home() {
                 lineHeight: 1.2,
               }}
             >
-              The best version - 09/07/25
+              Version 1.1.6
             </span>
           </div>
         </div>
-        <h1 className="text-5xl font-extrabold mb-2 tracking-tight text-gray-800" style={{ fontWeight: "800", marginBottom: '16px' }}>
-        Automate content that boosts your website traffic
+        <h1 className="text-6xl font-extrabold mb-2 tracking-tight text-gray-800" style={{ fontWeight: "800", marginBottom: '16px' }}>
+        Getting attention isn&apos;t a lottery anymore
         </h1>
         <p className="text-lg font-semibold text-gray-500 mb-4" style={{ marginBottom: '18px' }}>
-        Generate viral, self-improving content that boosts your traffic on autopilot.
+        Effortlessly create and optimize content for all platforms,<br />sending floods of traffic to your website.
         </p>
                 <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '48px' }}>
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -311,7 +312,7 @@ export default function Home() {
                 filter: 'blur(0.5px)',
               }} />
               <span style={{ position: 'relative', zIndex: 2 }}>
-                {isUserAuthenticated ? 'Go to app' : 'Unlock now'}
+                {isUserAuthenticated ? 'Go to app' : 'Try for free'}
               </span>
             </button>
             <span style={{
@@ -508,12 +509,46 @@ export default function Home() {
       <section id="pricing" className="py-16 bg-[#FAF9F6]">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Pricing</h2>
+          <div className="relative flex justify-center mb-10" style={{ minHeight: 48 }}>
+            <div className="bg-white rounded-2xl p-1 shadow-lg border border-gray-100 flex items-center gap-2 z-10">
+              <button
+                onClick={() => setIsMonthly(true)}
+                className={`px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                  isMonthly 
+                    ? 'bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white shadow-md' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setIsMonthly(false)}
+                className={`relative px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 ${
+                  !isMonthly 
+                    ? 'bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white shadow-md' 
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
+              >
+                <span>Yearly</span>
+                {!isMonthly && (
+                  <span className="ml-2 bg-gradient-to-r from-green-400 to-emerald-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-sm" style={{lineHeight: '1.1', fontSize: '11px'}}>
+                    Save 20%
+                  </span>
+                )}
+              </button>
+            </div>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Starter</h3>
               <p className="mb-4">
-                <span className="text-gray-800 font-bold text-3xl">$29</span>
-                <span className="text-gray-400 text-base ml-1">per month</span>
+                <span className="text-gray-800 font-bold text-3xl">
+                  ${isMonthly ? Math.round(29 * 1.2) : 29}
+                </span>
+                <span className="text-gray-400 text-base ml-1">
+                  per {isMonthly ? 'month' : 'month'}
+                </span>
               </p>
               {/* Starter Plan Button (black gradient, lifted/glossy) */}
               <button
@@ -572,8 +607,12 @@ export default function Home() {
               </span>
               <h3 className="text-xl font-semibold text-gray-800 mb-2 mt-8">Growth</h3>
               <p className="mb-4">
-                <span className="text-gray-800 font-bold text-3xl">$79</span>
-                <span className="text-gray-400 text-base ml-1">per month</span>
+                <span className="text-gray-800 font-bold text-3xl">
+                  ${isMonthly ? Math.round(79 * 1.2) : 79}
+                </span>
+                <span className="text-gray-400 text-base ml-1">
+                  per {isMonthly ? 'month' : 'month'}
+                </span>
               </p>
               {/* Growth Plan Button (blue gradient/gloss) */}
               <button
@@ -638,8 +677,12 @@ export default function Home() {
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col items-start">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Scale</h3>
               <p className="mb-4">
-                <span className="text-gray-800 font-bold text-3xl">$149</span>
-                <span className="text-gray-400 text-base ml-1">per month</span>
+                <span className="text-gray-800 font-bold text-3xl">
+                  ${isMonthly ? Math.round(149 * 1.2) : 149}
+                </span>
+                <span className="text-gray-400 text-base ml-1">
+                  per {isMonthly ? 'month' : 'month'}
+                </span>
               </p>
               {/* Scale Plan Button (black gradient, lifted/glossy) */}
               <button

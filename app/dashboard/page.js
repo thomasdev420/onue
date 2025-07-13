@@ -250,19 +250,19 @@ function DashboardContent() {
       <ChatBar
           actions={[
             {
-              label: 'UGC videos',
-              icon: <Camera size={18} />,
-              href: '/dashboard/videos',
+              label: 'Analytics',
+              icon: <BarChart3 size={18} />,
+              href: '/dashboard/analytics',
             },
             {
-              label: 'Create Memes',
+              label: 'Create content',
               icon: <Palette size={18} />,
-              href: '/dashboard/meme',
+              href: '/dashboard/slides',
             },
             {
-              label: 'Slides',
-              icon: <Book size={18} />,
-              href: '/dashboard/slides',
+              label: 'Settings',
+              icon: <Settings size={18} />,
+              href: '/dashboard/settings',
             },
             {
               label: 'Personalize',
@@ -279,6 +279,170 @@ function DashboardContent() {
           docked={chatBarDocked}
           onMessageSubmit={() => setChatBarDocked(true)}
         />
+
+      {/* Four Content Sections - Hidden when ChatBar is docked */}
+      {!chatBarDocked && (
+        <section className="w-full max-w-4xl mx-auto mt-32 mb-8 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Slides Section */}
+            <Link href="/dashboard/slides">
+              <div 
+                className="glass-card rounded-2xl p-6 h-52 cursor-pointer transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(59, 130, 246, 0.15) 100%)',
+                  backdropFilter: 'blur(24px) saturate(1.1)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(1.1)',
+                  border: '1.5px solid rgba(59, 130, 246, 0.25)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                      }}
+                    >
+                      <Video size={20} className="text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Slides</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Create engaging slide content with AI-powered text and image generation
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">12 recent</span>
+                    <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                      <span>Create</span>
+                      <ArrowLeft size={12} className="rotate-180" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Videos Section */}
+            <Link href="/dashboard/videos">
+              <div 
+                className="glass-card rounded-2xl p-6 h-52 cursor-pointer transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(59, 130, 246, 0.15) 100%)',
+                  backdropFilter: 'blur(24px) saturate(1.1)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(1.1)',
+                  border: '1.5px solid rgba(59, 130, 246, 0.25)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                      }}
+                    >
+                      <Camera size={20} className="text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Videos</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Generate dynamic video content with automated editing and effects
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">8 recent</span>
+                    <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                      <span>Create</span>
+                      <ArrowLeft size={12} className="rotate-180" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Text Section */}
+            <Link href="/dashboard/text">
+              <div 
+                className="glass-card rounded-2xl p-6 h-52 cursor-pointer transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(59, 130, 246, 0.15) 100%)',
+                  backdropFilter: 'blur(24px) saturate(1.1)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(1.1)',
+                  border: '1.5px solid rgba(59, 130, 246, 0.25)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                      }}
+                    >
+                      <Pencil size={20} className="text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Text</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Create compelling text content with AI-powered writing assistance
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">15 recent</span>
+                    <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                      <span>Create</span>
+                      <ArrowLeft size={12} className="rotate-180" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+
+            {/* Avatars Section */}
+            <Link href="/dashboard/images">
+              <div 
+                className="glass-card rounded-2xl p-6 h-52 cursor-pointer transition-all duration-300 hover:scale-105"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, rgba(59, 130, 246, 0.15) 100%)',
+                  backdropFilter: 'blur(24px) saturate(1.1)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(1.1)',
+                  border: '1.5px solid rgba(59, 130, 246, 0.25)',
+                  boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.12), 0 0 0 1px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div 
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
+                      }}
+                    >
+                      <ImageIcon size={20} className="text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-800">Avatars</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4 flex-grow">
+                    Generate custom avatar images with AI-powered character creation
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">6 recent</span>
+                    <div className="flex items-center gap-1 text-blue-600 text-sm font-medium">
+                      <span>Create</span>
+                      <ArrowLeft size={12} className="rotate-180" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* Removed separate Personalize, Schedule, and Videos buttons for unified layout */}
     </AuthGuard>
   );

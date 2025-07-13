@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronRight, Check, Globe, Loader2, Upload, SkipForward, Video, Sparkles, Target, User, Building, Briefcase, Star, Clock, Users } from 'lucide-react';
+import { X, ChevronRight, Check, Globe, Loader2, Upload, SkipForward, Video, Sparkles, Target, User, Building, Briefcase, Star, Clock, Users, FileText } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { saveUserWork } from '../services/persistenceService';
 import { scanWebsite, validateWebsiteUrl, getScanningSteps } from '../services/websiteScanService';
@@ -68,6 +68,15 @@ const PERSONALIZATION_QUESTIONS = [
     description: 'This helps us tailor content suggestions and AI prompts',
     maxLength: 200
   },
+  {
+    key: 'brandManual',
+    label: 'Upload your brand manual (optional)',
+    type: 'file',
+    icon: <FileText className="w-5 h-5" />,
+    description: 'Upload your brand guidelines, style guide, or brand manual so AI can learn your brand\'s style, colors, fonts, and tone of voice',
+    acceptedTypes: '.pdf,.doc,.docx,.txt,.jpg,.jpeg,.png',
+    maxSize: 10 // 10MB
+  },
 ];
 
 const VIDEO_FORMATS = [
@@ -98,6 +107,8 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
   const [personalizationStep, setPersonalizationStep] = useState(0);
   const [errors, setErrors] = useState({});
   const [show, setShow] = useState(open);
+  const [uploadedFiles, setUploadedFiles] = useState({});
+  const [uploadingFiles, setUploadingFiles] = useState({});
 
   useEffect(() => {
     setShow(open);
@@ -239,6 +250,13 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
     // Clear previous error for this field
     delete newErrors[currentQuestion.key];
 
+    // File uploads are optional, so skip validation if no file is uploaded
+    if (currentQuestion.type === 'file') {
+      // File uploads are optional, so always allow proceeding
+      setErrors(newErrors);
+      return true;
+    }
+
     if (!currentAnswer || currentAnswer.trim() === '') {
       newErrors[currentQuestion.key] = 'This field is required';
     } else if (currentQuestion.type === 'text') {
@@ -286,6 +304,72 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
   const handlePersonalizationKeyPress = (e) => {
     if (e.key === 'Enter' && personalizationAnswers[PERSONALIZATION_QUESTIONS[personalizationStep].key] && !errors[PERSONALIZATION_QUESTIONS[personalizationStep].key]) {
       handlePersonalizationNext();
+    }
+  };
+
+  const handleFileUpload = async (questionKey, file) => {
+    const question = PERSONALIZATION_QUESTIONS.find(q => q.key === questionKey);
+    if (!question || question.type !== 'file') return;
+
+    // Validate file size
+    if (file.size > question.maxSize * 1024 * 1024) {
+      setErrors({ ...errors, [questionKey]: `File size must be less than ${question.maxSize}MB` });
+      return;
+    }
+
+    // Validate file type
+    const acceptedTypes = question.acceptedTypes.split(',');
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    if (!acceptedTypes.includes(fileExtension)) {
+      setErrors({ ...errors, [questionKey]: `File type not supported. Accepted types: ${acceptedTypes.join(', ')}` });
+      return;
+    }
+
+    setUploadingFiles({ ...uploadingFiles, [questionKey]: true });
+    setErrors({ ...errors, [questionKey]: null });
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('questionKey', questionKey);
+      formData.append('userEmail', session?.user?.email || '');
+
+      const response = await fetch('/api/upload-brand-manual', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const result = await response.json();
+      
+      // Store file info in personalization answers
+      setPersonalizationAnswers({
+        ...personalizationAnswers,
+        [questionKey]: {
+          fileName: file.name,
+          fileUrl: result.fileUrl,
+          fileSize: file.size,
+          uploadedAt: new Date().toISOString()
+        }
+      });
+
+      setUploadedFiles({ ...uploadedFiles, [questionKey]: file.name });
+    } catch (error) {
+      console.error('File upload error:', error);
+      setErrors({ ...errors, [questionKey]: 'Failed to upload file. Please try again.' });
+    } finally {
+      setUploadingFiles({ ...uploadingFiles, [questionKey]: false });
+    }
+  };
+
+  const handleFileChange = (e, questionKey) => {
+    const file = e.target.files[0];
+    if (file) {
+      handleFileUpload(questionKey, file);
     }
   };
 
@@ -484,6 +568,68 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
                           )}
                         </div>
                       )}
+                      {q.type === 'file' && (
+                        <div>
+                          <div className={`border-2 border-dashed rounded-xl p-6 transition-all duration-200 ${
+                            currentError 
+                              ? 'border-red-400 bg-red-50' 
+                              : uploadedFiles[q.key]
+                              ? 'border-green-400 bg-green-50'
+                              : 'border-gray-300 hover:border-purple-400 hover:bg-purple-50'
+                          }`}>
+                            {uploadedFiles[q.key] ? (
+                              <div className="text-center">
+                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                  <Check className="w-6 h-6 text-green-600" />
+                                </div>
+                                <p className="text-green-700 font-medium mb-1">File uploaded successfully!</p>
+                                <p className="text-green-600 text-sm mb-3">{uploadedFiles[q.key]}</p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setUploadedFiles({ ...uploadedFiles, [q.key]: null });
+                                    setPersonalizationAnswers({ ...personalizationAnswers, [q.key]: null });
+                                  }}
+                                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                >
+                                  Remove file
+                                </button>
+                              </div>
+                            ) : uploadingFiles[q.key] ? (
+                              <div className="text-center">
+                                <Loader2 className="w-8 h-8 text-purple-600 animate-spin mx-auto mb-3" />
+                                <p className="text-purple-700 font-medium">Uploading file...</p>
+                              </div>
+                            ) : (
+                              <div className="text-center">
+                                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                  <FileText className="w-6 h-6 text-purple-600" />
+                                </div>
+                                <p className="text-gray-700 font-medium mb-2">Upload your brand manual</p>
+                                <p className="text-gray-500 text-sm mb-4">
+                                  Accepted formats: {q.acceptedTypes}<br />
+                                  Max size: {q.maxSize}MB
+                                </p>
+                                <label className="cursor-pointer">
+                                  <input
+                                    type="file"
+                                    className="hidden"
+                                    accept={q.acceptedTypes}
+                                    onChange={(e) => handleFileChange(e, q.key)}
+                                    disabled={uploadingFiles[q.key]}
+                                  />
+                                  <span className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                                    Choose File
+                                  </span>
+                                </label>
+                              </div>
+                            )}
+                          </div>
+                          {currentError && (
+                            <p className="text-red-500 text-sm mt-2">{currentError}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -588,15 +734,19 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
             const q = PERSONALIZATION_QUESTIONS[personalizationStep];
             const isLastPersonalizationStep = personalizationStep === PERSONALIZATION_QUESTIONS.length - 1;
             const currentError = errors[q.key];
+            
+            // For file uploads, allow proceeding even without upload (they're optional)
+            const canProceed = q.type === 'file' ? !currentError : (personalizationAnswers[q.key] && !currentError);
+            
             return (
               <button
                 className={`w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-semibold transition-all duration-200 ${
-                  personalizationAnswers[q.key] && !currentError
+                  canProceed
                     ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105' 
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
                 onClick={handlePersonalizationNext}
-                disabled={!personalizationAnswers[q.key] || currentError}
+                disabled={!canProceed}
               >
                 {isLastPersonalizationStep ? (
                   <>

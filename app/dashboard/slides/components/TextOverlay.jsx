@@ -21,7 +21,6 @@ export default function TextOverlay({
   const textRef = React.useRef(null);
 
   const getTextStyle = () => {
-    // Use default styling for all text elements - no AI-generated styles
     return {
       position: 'absolute',
       left: `${textItem.position.x}%`,

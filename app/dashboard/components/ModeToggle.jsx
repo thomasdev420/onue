@@ -3,7 +3,7 @@ import { COLORS, BORDER_RADIUS } from '../../shared/constants/slideConstants';
 
 const MODES = [
   { label: 'Videos', value: 'videos', color: '#6366F1' }, // softer blue
-  { label: 'Memes', value: 'memes', color: '#D97706' }, // softer orange
+  { label: 'Text', value: 'text', color: '#DC2626' }, // softer red
   { label: 'Avatars', value: 'avatars', color: '#9333EA' }, // softer purple
   { label: 'Slides', value: 'slides', color: '#059669' }, // softer green
 ];

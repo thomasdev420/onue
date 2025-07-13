@@ -511,7 +511,7 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
               onKeyPress={handleKeyPress}
               className="min-h-[40px] max-h-32 resize-none bg-transparent outline-none text-base text-gray-900 placeholder-gray-400 border-none flex-1"
               placeholder={effectiveStatus === 'authenticated' 
-                ? "Send a message..."
+                ? "What should we create today?..."
                 : "Please sign in to start creating content"
               }
               disabled={isGenerating || effectiveStatus !== 'authenticated'}
