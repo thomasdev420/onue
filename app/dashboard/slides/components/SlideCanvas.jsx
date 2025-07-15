@@ -18,6 +18,9 @@ export default function SlideCanvas({
   onRatioChange,
   onContentModalOpen,
   onPromptModalOpen,
+  onFontSizeIncrease,
+  onFontSizeDecrease,
+  onDeleteText,
   modeColor
 }) {
   const {
@@ -104,7 +107,12 @@ export default function SlideCanvas({
     const newText = {
       id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
       content: 'New Text',
-      position: { x: 50, y: 50 } // Center at 50% for both x and y
+      position: { x: 50, y: 50 }, // Center at 50% for both x and y
+      style: {
+        fontSize: '16px',
+        color: 'white',
+        fontWeight: 'normal'
+      }
     };
     const newTexts = [...activeSlide.texts, newText];
     onSlideUpdate(activeSlideIndex, { texts: newTexts });
@@ -153,7 +161,7 @@ export default function SlideCanvas({
                 style={{
                   position: 'relative',
                   width: '100%',
-                  aspectRatio: typeof slide.ratio === 'string' ? slide.ratio.replace(':', ' / ') : '9 / 16',
+                  aspectRatio: (slide.ratio === '16:9') ? '16 / 9' : (slide.ratio === '4:3') ? '4 / 3' : (slide.ratio === '1:1') ? '1 / 1' : '9 / 16',
                   maxWidth: '100%',
                   maxHeight: '100%',
                   borderRadius: '12px',
@@ -161,6 +169,7 @@ export default function SlideCanvas({
                   boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                 }}
               >
+                {/* Slide number display removed */}
                 <Image
                   fill
                   src={slide.image.image_url}
@@ -189,26 +198,46 @@ export default function SlideCanvas({
                         onKeyDown={handleKeyDown}
                         onBlur={saveInlineEdit}
                         onClick={handleTextClick}
+                        onFontSizeIncrease={onFontSizeIncrease}
+                        onFontSizeDecrease={onFontSizeDecrease}
+                        onDeleteText={onDeleteText}
                       />
                     );
                   })
                 )}
                 
-                {/* Center Guides - Vertical line with magnetic snapping */}
+                {/* Center Guides - Vertical and Horizontal lines with magnetic snapping */}
                 {draggingInfo.isDragging && draggingInfo.textIndex !== -1 && index === activeSlideIndex && (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: '50%',
-                      top: '0',
-                      width: '1px',
-                      height: '100%',
-                      backgroundColor: 'rgba(59, 130, 246, 0.8)',
-                      transform: 'translateX(-50%)',
-                      pointerEvents: 'none',
-                      zIndex: 1000,
-                    }}
-                  />
+                  <>
+                    {/* Vertical line */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '50%',
+                        top: '0',
+                        width: '1px',
+                        height: '100%',
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        transform: 'translateX(-50%)',
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                      }}
+                    />
+                    {/* Horizontal line */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '0',
+                        top: '50%',
+                        width: '100%',
+                        height: '1px',
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        transform: 'translateY(-50%)',
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                      }}
+                    />
+                  </>
                 )}
               </div>
             ) : ( 
@@ -218,21 +247,26 @@ export default function SlideCanvas({
                   onContentModalOpen();
                 } : undefined}
                 style={{
+                  position: 'relative',
+                  width: '100%',
+                  aspectRatio: (slide.ratio === '16:9') ? '16 / 9' : (slide.ratio === '4:3') ? '4 / 3' : (slide.ratio === '1:1') ? '1 / 1' : '9 / 16',
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  borderRadius: '12px',
+                  backgroundColor: '#F7F7F7',
+                  border: '2px dashed #D1D5DB',
+                  transition: 'all 0.2s ease-in-out',
                   color: "#6B7280",
                   fontWeight: "500",
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '12px',
-                  backgroundColor: '#F7F7F7',
-                  border: '2px dashed #D1D5DB',
-                  transition: 'all 0.2s ease-in-out',
-                  cursor: index === activeSlideIndex ? 'pointer' : 'default'
+                  cursor: index === activeSlideIndex ? 'pointer' : 'default',
+                  fontSize: '18px',
                 }}
               >
+                {/* Slide number display for placeholder removed */}
                 Select an image
               </div> 
             )}

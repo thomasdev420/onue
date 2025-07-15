@@ -195,13 +195,15 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-4">
                 {userImages.map((image) => (
                   <div key={image.id} className="relative group">
-                    <Image
-                      src={image.image_url}
-                      alt={image.title}
-                      width={256}
-                      height={128}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
+                    <div className="aspect-[4/3] rounded-lg overflow-hidden">
+                      <Image
+                        src={image.image_url}
+                        alt={image.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 50vw, 50vw"
+                      />
+                    </div>
                     <button
                       onClick={() => handleDeleteImage(image.id)}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"

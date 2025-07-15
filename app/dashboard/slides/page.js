@@ -57,7 +57,7 @@ export default function SlidesEditor() {
   const router = useRouter();
 
   // Use persistence hook for slides
-  const defaultSlides = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
+  const defaultSlides = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
   const { 
     data: slidesData, 
     updateData: setSlides, 
@@ -66,8 +66,11 @@ export default function SlidesEditor() {
     isLoading: isLoadingSlides 
   } = usePersistence('slides', defaultSlides);
   
-  // Ensure slides is always an array
-  const slides = Array.isArray(slidesData) ? slidesData : defaultSlides;
+  // Ensure slides is always an array and patch missing ratio
+  const slides = (Array.isArray(slidesData) ? slidesData : defaultSlides).map(slide => ({
+    ...slide,
+    ratio: ['16:9', '4:3', '1:1', '9:16'].includes(slide.ratio) ? slide.ratio : '9:16'
+  }));
 
   const { data: userImagesData } = usePersistence('userImages', []);
   const userImages = Array.isArray(userImagesData) ? userImagesData : [];
@@ -86,7 +89,8 @@ export default function SlidesEditor() {
     slides,
     setSlides,
     activeSlideIndex,
-    setActiveSlideIndex
+    setActiveSlideIndex,
+    onError: setError
   });
 
   // Navigation hook
@@ -157,11 +161,12 @@ export default function SlidesEditor() {
     }, 100);
     
     return () => clearTimeout(timer);
-  }, [effectiveStatus, businessContextFetched]); // Depend on effectiveStatus
+  }, [effectiveStatus, businessContextFetched, isPromptModalOpen]); // Depend on effectiveStatus and isPromptModalOpen
 
   // Check for AI-generated slides from localStorage
   useEffect(() => {
     const aiGeneratedSlides = localStorage.getItem('aiGeneratedSlides');
+    console.log('Checking for AI-generated slides in localStorage:', aiGeneratedSlides);
     if (aiGeneratedSlides && !isLoading && Array.isArray(libraryImages) && libraryImages.length > 0) {
       try {
         const parsedSlides = JSON.parse(aiGeneratedSlides);
@@ -175,26 +180,71 @@ export default function SlidesEditor() {
               console.log('Available library images:', libraryImages.length);
               
               // Apply smart text positioning to each slide
-              const { applySmartPositioning } = await import('../../utils/textPositioning');
-              const positionedSlides = parsedSlides.map(slide => applySmartPositioning(slide));
+              let positionedSlides;
+              try {
+                const { applySmartPositioning } = await import('../../utils/textPositioning');
+                positionedSlides = parsedSlides.map(slide => applySmartPositioning(slide));
+              } catch (error) {
+                console.error('Error importing textPositioning:', error);
+                // Fallback to unprocessed slides
+                positionedSlides = parsedSlides;
+              }
+              
+              // Ensure all text elements have proper styling
+              positionedSlides = positionedSlides.map(slide => ({
+                ...slide,
+                texts: slide.texts.map(text => ({
+                  ...text,
+                  content: text.content, // Keep original formatting from AI
+                  style: {
+                    fontSize: '16px',
+                    color: 'white',
+                    fontWeight: 'normal',
+                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                    textAlign: 'center',
+                    lineHeight: '1.4',
+                    maxWidth: '90%'
+                  }
+                }))
+              }));
               
               // Auto-select images based on imageCategory
+              console.log('Processing slides with images. Library images count:', libraryImages.length);
+              console.log('Sample library images:', libraryImages.slice(0, 3));
+              
               const slidesWithImages = positionedSlides.map((slide, index) => {
                 let selectedImage = null;
+                
+                console.log(`Processing slide ${index + 1}, imageCategory:`, slide.imageCategory);
                 
                 if (slide.imageCategory && libraryImages.length > 0) {
                   // Find images that match the category (simple keyword matching)
                   const categoryKeywords = {
-                    'business': ['business', 'office', 'corporate', 'professional'],
-                    'technology': ['tech', 'computer', 'digital', 'innovation'],
-                    'success': ['success', 'achievement', 'winning', 'trophy'],
-                    'motivation': ['motivation', 'inspiration', 'positive', 'energy'],
-                    'growth': ['growth', 'progress', 'development', 'improvement'],
-                    'creativity': ['creative', 'art', 'design', 'imagination'],
-                    'social_media': ['social', 'media', 'connection', 'network'],
-                    'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership'],
-                    'marketing': ['marketing', 'advertising', 'promotion', 'brand'],
-                    'lifestyle': ['lifestyle', 'life', 'daily', 'personal']
+                    'business': ['business', 'office', 'corporate', 'professional', 'executive'],
+                    'technology': ['tech', 'computer', 'digital', 'innovation', 'ai', 'data'],
+                    'success': ['success', 'achievement', 'winning', 'trophy', 'accomplishment'],
+                    'motivation': ['motivation', 'inspiration', 'positive', 'energy', 'drive'],
+                    'growth': ['growth', 'progress', 'development', 'improvement', 'evolution'],
+                    'creativity': ['creative', 'art', 'design', 'imagination', 'aesthetic'],
+                    'social_media': ['social', 'media', 'connection', 'network', 'community'],
+                    'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership', 'founder'],
+                    'marketing': ['marketing', 'advertising', 'promotion', 'brand', 'strategy'],
+                    'lifestyle': ['lifestyle', 'life', 'daily', 'personal', 'wellness'],
+                    'luxury': ['luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant'],
+                    'nature': ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green'],
+                    'health': ['health', 'wellness', 'fitness', 'medical', 'healthcare', 'healthy'],
+                    'education': ['education', 'learning', 'academic', 'school', 'university', 'knowledge'],
+                    'finance': ['finance', 'money', 'investment', 'banking', 'financial', 'wealth'],
+                    'travel': ['travel', 'adventure', 'exploration', 'journey', 'destination', 'tourism'],
+                    'food': ['food', 'dining', 'restaurant', 'culinary', 'gastronomy', 'cuisine'],
+                    'fashion': ['fashion', 'style', 'clothing', 'apparel', 'trendy', 'designer'],
+                    'sports': ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete'],
+                    'family': ['family', 'relationships', 'love', 'connection', 'togetherness'],
+                    'abstract': ['abstract', 'conceptual', 'minimal', 'geometric', 'modern', 'contemporary'],
+                    'industrial': ['industrial', 'manufacturing', 'factory', 'production', 'machinery'],
+                    'urban': ['urban', 'city', 'metropolitan', 'architecture', 'skyline', 'downtown'],
+                    'rural': ['rural', 'countryside', 'farm', 'agriculture', 'pastoral', 'village'],
+                    'science': ['science', 'research', 'laboratory', 'experiment', 'discovery', 'scientific']
                   };
                   
                   const keywords = categoryKeywords[slide.imageCategory] || ['business'];
@@ -217,11 +267,27 @@ export default function SlidesEditor() {
                 
                 // If still no image, create a placeholder image object
                 if (!selectedImage) {
-                  selectedImage = {
-                    id: `placeholder-${Date.now()}-${index}`,
-                    title: 'Placeholder Image',
-                    image_url: 'https://via.placeholder.com/400x600/cccccc/666666?text=Select+Image'
-                  };
+                  // Use some default technology/business images
+                  const defaultImages = [
+                    {
+                      id: `default-tech-${index}`,
+                      title: 'Technology Background',
+                      image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop'
+                    },
+                    {
+                      id: `default-business-${index}`,
+                      title: 'Business Background',
+                      image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=600&fit=crop'
+                    },
+                    {
+                      id: `default-abstract-${index}`,
+                      title: 'Abstract Background',
+                      image_url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=600&fit=crop'
+                    }
+                  ];
+                  
+                  selectedImage = defaultImages[index % defaultImages.length];
+                  console.log(`Using default image for slide ${index + 1}:`, selectedImage.title);
                 }
                 
                 return {
@@ -255,15 +321,40 @@ export default function SlidesEditor() {
     }
   }, [setSlides, libraryImages, isLoading]);
 
-  // Validate slides data
+  // Validate slides data and ensure text styles are properly initialized
   useEffect(() => {
     if (slides && slides.length > 0) {
       const validationErrors = [];
-      slides.forEach((slide, index) => {
+      let needsUpdate = false;
+      const updatedSlides = slides.map((slide, slideIndex) => {
         const validation = validateSlide(slide);
         if (!validation.success) {
-          validationErrors.push(`Slide ${index + 1}: ${validation.error}`);
+          validationErrors.push(`Slide ${slideIndex + 1}: ${validation.error}`);
         }
+        
+        // Ensure all text items have proper style structure
+        if (slide.texts && slide.texts.length > 0) {
+          const updatedTexts = slide.texts.map(text => {
+            if (!text.style) {
+              needsUpdate = true;
+              return {
+                ...text,
+                style: {
+                  fontSize: '16px',
+                  color: 'white',
+                  fontWeight: 'normal'
+                }
+              };
+            }
+            return text;
+          });
+          
+          if (needsUpdate) {
+            return { ...slide, texts: updatedTexts };
+          }
+        }
+        
+        return slide;
       });
       
       if (validationErrors.length > 0) {
@@ -272,8 +363,14 @@ export default function SlidesEditor() {
       } else {
         setError(null);
       }
+      
+      // Update slides if text styles needed initialization
+      if (needsUpdate) {
+        console.log('Initializing text styles for existing slides');
+        setSlides(updatedSlides);
+      }
     }
-  }, [slides]);
+  }, [slides, setSlides]);
 
   // Event handlers
   const handleSlideSelect = (index) => {
@@ -363,63 +460,10 @@ export default function SlidesEditor() {
         return;
       }
 
-      console.log('Applying generated slides...');
+      console.log('Applying generated slides from unified content engine...');
       
-      // Apply smart text positioning to each slide
-      const { applySmartPositioning } = require('../../utils/textPositioning');
-      const positionedSlides = generatedSlides.map(slide => applySmartPositioning(slide));
-      
-      // Auto-select images based on imageCategory
-      const slidesWithImages = positionedSlides.map((slide, index) => {
-        let selectedImage = null;
-        
-        if (slide.imageCategory && libraryImages.length > 0) {
-          // Find images that match the category (simple keyword matching)
-          const categoryKeywords = {
-            'business': ['business', 'office', 'corporate', 'professional'],
-            'technology': ['tech', 'computer', 'digital', 'innovation'],
-            'success': ['success', 'achievement', 'winning', 'trophy'],
-            'motivation': ['motivation', 'inspiration', 'positive', 'energy'],
-            'growth': ['growth', 'progress', 'development', 'improvement'],
-            'creativity': ['creative', 'art', 'design', 'imagination'],
-            'social_media': ['social', 'media', 'connection', 'network'],
-            'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership'],
-            'marketing': ['marketing', 'advertising', 'promotion', 'brand'],
-            'lifestyle': ['lifestyle', 'life', 'daily', 'personal']
-          };
-          
-          const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-          const matchingImages = (libraryImages || []).filter(img => 
-            img && img.title && keywords.some(keyword => 
-              img.title.toLowerCase().includes(keyword.toLowerCase())
-            )
-          );
-          
-          // Select a random matching image, or fallback to any image
-          selectedImage = matchingImages.length > 0 
-            ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
-            : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
-        }
-        
-        // If no image was selected and we have library images, pick a random one
-        if (!selectedImage && libraryImages && libraryImages.length > 0) {
-          selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
-        }
-        
-        // If still no image, create a placeholder image object
-        if (!selectedImage) {
-          selectedImage = {
-            id: `placeholder-${Date.now()}-${index}`,
-            title: 'Placeholder Image',
-            image_url: 'https://via.placeholder.com/400x600/cccccc/666666?text=Select+Image'
-          };
-        }
-        
-        return {
-          ...slide,
-          image: selectedImage
-        };
-      });
+      // Slides are already complete with text and images from unified engine
+      const slidesWithImages = generatedSlides;
       
       // Analyze user intent to determine whether to add or replace slides
       const lowerPrompt = prompt.toLowerCase();
@@ -449,7 +493,7 @@ export default function SlidesEditor() {
       setActiveSlideIndex(newActiveIndex);
       
       console.log('AI-generated slides applied successfully:', finalSlides.length, 'total slides');
-      console.log('Generated slides structure:', positionedSlides);
+      console.log('Generated slides structure:', finalSlides);
       
       // Close the modal
       setIsPromptModalOpen(false);
@@ -475,6 +519,82 @@ export default function SlidesEditor() {
   // Handler for scheduling
   const handleScheduleClick = () => {
     setIsScheduleModalOpen(true);
+  };
+
+  const handleFontSizeIncrease = (slideIndex, textIndex) => {
+    try {
+      console.log('handleFontSizeIncrease called for slideIndex:', slideIndex, 'textIndex:', textIndex);
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        console.log('Text not found');
+        return;
+      }
+
+      const updatedTexts = [...currentSlide.texts];
+      const text = updatedTexts[textIndex];
+      const currentStyle = text.style || {};
+      const currentFontSize = parseInt(currentStyle.fontSize) || 16;
+      const newFontSize = Math.min(currentFontSize + 2, 48); // Max 48px
+      
+      console.log('Text:', text.content, 'Current fontSize:', currentFontSize, 'New fontSize:', newFontSize);
+      
+      updatedTexts[textIndex] = {
+        ...text,
+        style: {
+          ...currentStyle,
+          fontSize: `${newFontSize}px`
+        }
+      };
+
+      console.log('Updated texts:', updatedTexts);
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error increasing font size:', error);
+      setError('Failed to increase font size. Please try again.');
+    }
+  };
+
+  const handleFontSizeDecrease = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = [...currentSlide.texts];
+      const text = updatedTexts[textIndex];
+      const currentStyle = text.style || {};
+      const currentFontSize = parseInt(currentStyle.fontSize) || 16;
+      const newFontSize = Math.max(currentFontSize - 2, 8); // Min 8px
+      
+      updatedTexts[textIndex] = {
+        ...text,
+        style: {
+          ...currentStyle,
+          fontSize: `${newFontSize}px`
+        }
+      };
+
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error decreasing font size:', error);
+      setError('Failed to decrease font size. Please try again.');
+    }
+  };
+
+  const handleDeleteText = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.filter((_, index) => index !== textIndex);
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error deleting text:', error);
+      setError('Failed to delete text. Please try again.');
+    }
   };
 
   const handleDateSelected = (date) => {
@@ -635,6 +755,9 @@ export default function SlidesEditor() {
             onContentModalOpen={handleContentModalOpen}
             onPromptModalOpen={handlePromptModalOpen}
             onScheduleClick={handleScheduleClick}
+            onFontSizeIncrease={handleFontSizeIncrease}
+            onFontSizeDecrease={handleFontSizeDecrease}
+            onDeleteText={handleDeleteText}
           />
         </div>
       </div>

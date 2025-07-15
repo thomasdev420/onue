@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronRight, Check, Globe, Loader2, Upload, SkipForward, Video, Sparkles, Target } from 'lucide-react';
+import { X, ChevronRight, Check, Globe, Loader2, Upload, SkipForward, Video, Sparkles } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { saveUserWork } from '../services/persistenceService';
 
@@ -173,11 +173,11 @@ export default function WebsiteOnboardingModal({ open, onClose, onComplete }) {
           </button>
           
           <h2 className="text-2xl font-bold text-gray-900 text-center pr-8">
-            {currentStep === ONBOARDING_STEPS.URL_INPUT && ""}
-            {currentStep === ONBOARDING_STEPS.SCANNING && ""}
-            {currentStep === ONBOARDING_STEPS.CONFIRMATION && ""}
-            {currentStep === ONBOARDING_STEPS.MEDIA_UPLOAD && ""}
-            {currentStep === ONBOARDING_STEPS.VIDEO_CREATION && ""}
+            {currentStep === ONBOARDING_STEPS.URL_INPUT && "Website Setup"}
+            {currentStep === ONBOARDING_STEPS.SCANNING && "Scanning Website"}
+            {currentStep === ONBOARDING_STEPS.CONFIRMATION && "Review Information"}
+            {currentStep === ONBOARDING_STEPS.MEDIA_UPLOAD && "Add Media"}
+            {currentStep === ONBOARDING_STEPS.VIDEO_CREATION && "Choose Format"}
           </h2>
         </div>
 

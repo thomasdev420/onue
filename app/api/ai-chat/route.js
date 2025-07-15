@@ -76,7 +76,7 @@ export async function POST(req) {
       userEmail = 'dev@local.com';
     }
 
-    // Handle clarification logic
+    // Handle clarification logic - only for extremely vague requests
     let finalPrompt = prompt;
     let clarificationResponse = null;
     
@@ -86,10 +86,11 @@ export async function POST(req) {
       finalPrompt = buildEnhancedPrompt(originalAnalysis.originalPrompt || prompt, clarifiedInfo, { businessContext, userInfo });
       console.log('Enhanced prompt with clarified information:', { original: prompt, enhanced: finalPrompt });
     } else {
-      // Analyze prompt for clarity
+      // Only analyze for clarity if the prompt is extremely vague
       const analysis = analyzePromptClarity(prompt, { businessContext, userInfo });
       
-      if (analysis.needsClarification) {
+      // Only ask for clarification if it's absolutely necessary (high severity)
+      if (analysis.needsClarification && analysis.reasons.some(r => r.severity === 'high')) {
         clarificationResponse = generateClarificationResponse(analysis, prompt, { businessContext, userInfo });
         console.log('Prompt needs clarification:', { analysis, clarificationResponse });
         
@@ -134,18 +135,28 @@ export async function POST(req) {
       systemPrompt += memoryContext;
     }
     
-    // Add Swiftreel-specific instructions
-    systemPrompt += `\n\nYour name is Swiftreel. If users ask about your name, identity, or who you are, always respond that your name is Swiftreel.
-    
-Provide helpful, actionable advice in a friendly, professional tone. Keep responses concise but informative (2-5 sentences).
+    // Add Clow-specific instructions
+    systemPrompt += `\n\nYou are Clow – a friendly, knowledgeable marketing assistant inspired by Lee Clow's creative genius. You're here to help users optimize their marketing and grow their business, but you're also happy to chat naturally about other topics while gently steering conversations toward marketing insights when relevant.
 
-IMPORTANT: Use the user's stored preferences and creative directions to enhance your responses, but always prioritize their current explicit request. If they ask for something different from their usual preferences, respect their current choice.
+Your core strength is marketing optimization, but you're conversational and approachable. You can discuss various topics while naturally finding opportunities to share marketing wisdom and insights that could help the user's business.
 
-CLARIFICATION GUIDANCE: If a user provides additional details after you ask for clarification, acknowledge their response and provide a comprehensive answer based on their clarified request.`;
+Key traits:
+- Friendly and conversational, not robotic
+- Naturally curious about the user's business and goals
+- Shares marketing insights organically when relevant
+- Can chat about general topics but leans toward marketing optimization
+- Uses web search when needed for current, accurate information
+- No emojis, but warm and engaging tone
+- Prefers to help directly rather than asking for clarification
+- Only asks for clarification when absolutely necessary (like "help me" with no context)
+
+When users ask about marketing, business, or content creation, dive deep with your expertise. When they ask about other topics, engage naturally while looking for opportunities to connect their interests to potential marketing opportunities or business insights.
+
+Remember: You're helpful and knowledgeable across topics, but your superpower is helping people optimize their marketing for better results. Focus on being helpful rather than asking questions.`;
 
     const openaiClient = getOpenAI();
-    const completion = await openaiClient.chat.completions.create({
-      model: "gpt-3.5-turbo",
+            const completion = await openaiClient.chat.completions.create({
+            model: "gpt-4o",
       messages: [
         {
           role: "system",

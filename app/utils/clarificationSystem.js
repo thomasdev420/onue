@@ -21,9 +21,9 @@ export const AMBIGUITY_TYPES = {
 
 // Patterns that indicate vague or ambiguous prompts
 export const VAGUE_PATTERNS = [
-  // Very broad requests
+  // Only extremely vague requests that are impossible to work with
   {
-    pattern: /^(create|make|generate|build)\s+(content|something|stuff|things?)$/i,
+    pattern: /^(create|make|generate|build)\s+(something|stuff|things?)$/i,
     type: AMBIGUITY_TYPES.BROAD_REQUEST,
     severity: 'high'
   },
@@ -32,105 +32,54 @@ export const VAGUE_PATTERNS = [
     type: AMBIGUITY_TYPES.UNCLEAR_INTENT,
     severity: 'high'
   },
+  // Only very short prompts that are clearly incomplete
   {
-    pattern: /^(content|marketing|strategy|plan)$/i,
-    type: AMBIGUITY_TYPES.VAGUE_TOPIC,
-    severity: 'medium'
-  },
-  // Missing specific details
-  {
-    pattern: /^(create|make)\s+(slides?|videos?|posts?)\s+(about|on)\s+([^.!?]+)$/i,
-    type: AMBIGUITY_TYPES.MISSING_DETAILS,
-    severity: 'medium',
-    extract: (match) => match[4] // The topic mentioned
-  },
-  // Unclear goals
-  {
-    pattern: /^(i want|i need|looking for)\s+([^.!?]+)$/i,
-    type: AMBIGUITY_TYPES.MISSING_GOAL,
-    severity: 'medium',
-    extract: (match) => match[2]
-  },
-  // Missing platform context
-  {
-    pattern: /^(social media|content|marketing)\s+(content|strategy|plan)$/i,
-    type: AMBIGUITY_TYPES.MISSING_PLATFORM,
-    severity: 'medium'
-  },
-  // Very short prompts
-  {
-    pattern: /^.{1,10}$/,
+    pattern: /^.{1,5}$/,
     type: AMBIGUITY_TYPES.MISSING_CONTEXT,
     severity: 'high'
-  },
-  // Generic requests
-  {
-    pattern: /^(ideas?|suggestions?|tips?|advice)$/i,
-    type: AMBIGUITY_TYPES.VAGUE_TOPIC,
-    severity: 'medium'
   }
 ];
 
 // Context-specific clarification questions
 export const CLARIFICATION_QUESTIONS = {
   [AMBIGUITY_TYPES.VAGUE_TOPIC]: [
-    "What specific topic or subject would you like me to help you with?",
-    "Could you tell me more about what you're trying to achieve?",
-    "What type of content are you looking to create?"
+    "What would you like help with?"
   ],
   
   [AMBIGUITY_TYPES.MISSING_CONTEXT]: [
-    "Could you provide more details about what you're working on?",
-    "What specific aspect would you like me to focus on?",
-    "Could you give me some context about your project or goal?"
+    "What are you working on?"
   ],
   
   [AMBIGUITY_TYPES.UNCLEAR_INTENT]: [
-    "What specific help do you need? I can assist with content creation, strategy, or other areas.",
-    "Could you clarify what you'd like me to help you with?",
-    "What's your main goal or challenge right now?"
+    "What do you need help with?"
   ],
   
   [AMBIGUITY_TYPES.BROAD_REQUEST]: [
-    "What type of content are you looking to create? (e.g., slides, videos, social media posts)",
-    "Could you specify the format and topic you have in mind?",
-    "What's your target audience and main message?"
+    "What type of content do you want?"
   ],
   
   [AMBIGUITY_TYPES.MISSING_DETAILS]: [
-    "What specific angle or approach would you like to take with this topic?",
-    "Who is your target audience for this content?",
-    "What's your main goal with this content?"
+    "What's your topic?"
   ],
   
   [AMBIGUITY_TYPES.MISSING_TARGET_AUDIENCE]: [
-    "Who is your target audience for this content?",
-    "What demographic or group are you trying to reach?",
-    "Who would be most interested in this content?"
+    "Who's your audience?"
   ],
   
   [AMBIGUITY_TYPES.MISSING_GOAL]: [
-    "What's your main goal with this content? (e.g., awareness, engagement, conversion)",
-    "What do you want your audience to do after seeing this content?",
-    "What outcome are you hoping to achieve?"
+    "What's your goal?"
   ],
   
   [AMBIGUITY_TYPES.MISSING_STYLE]: [
-    "What tone or style would you prefer? (e.g., professional, casual, inspirational)",
-    "Do you have any specific brand voice or style guidelines?",
-    "What feeling or impression do you want to convey?"
+    "What style do you prefer?"
   ],
   
   [AMBIGUITY_TYPES.MISSING_PLATFORM]: [
-    "Which platform(s) are you creating content for? (e.g., TikTok, Instagram, LinkedIn)",
-    "Where will this content be published or shared?",
-    "What's your primary distribution channel?"
+    "Which platform?"
   ],
   
   [AMBIGUITY_TYPES.MULTIPLE_INTERPRETATIONS]: [
-    "I want to make sure I understand correctly. Could you clarify what you mean by that?",
-    "Could you provide more specific details so I can give you the most relevant help?",
-    "What's the main focus or priority for this request?"
+    "Can you clarify?"
   ]
 };
 
@@ -194,8 +143,8 @@ export function analyzePromptClarity(prompt, context = {}) {
     }
   }
 
-  // Check prompt length and complexity
-  if (trimmedPrompt.length < 15) {
+  // Only check for extremely short prompts
+  if (trimmedPrompt.length < 5) {
     reasons.push({
       type: AMBIGUITY_TYPES.MISSING_CONTEXT,
       severity: 'high',
@@ -246,16 +195,6 @@ export function generateClarificationResponse(analysis, originalPrompt, context 
 
   const { suggestions } = analysis;
   let response = '';
-
-  // Try to answer any clear part of the prompt directly (simple heuristics)
-  const promptLower = originalPrompt.trim().toLowerCase();
-  if (promptLower.includes("your name")) {
-    response = "My name is SwiftReel.";
-  } else if (promptLower.startsWith("who are you")) {
-    response = "I'm SwiftReel, your AI assistant.";
-  } else if (promptLower.startsWith("what can you do")) {
-    response = "I can help you with content creation, strategy, and more.";
-  }
 
   // Add a conversational clarification follow-up if needed
   if (suggestions.length > 0) {

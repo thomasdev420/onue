@@ -58,8 +58,10 @@ export default function VideosEditor() {
   const [showModeModal, setShowModeModal] = useState(false);
   const router = useRouter();
 
+
+
   // Use persistence hook for videos - INDEPENDENT from slides
-  const defaultVideos = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
+  const defaultVideos = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
   const { 
     data: videos, 
     updateData: setVideos, 
@@ -248,7 +250,9 @@ export default function VideosEditor() {
       />
       <PromptModal
         isOpen={isPromptModalOpen}
-        onClose={() => setIsPromptModalOpen(false)}
+        onClose={() => {
+          setIsPromptModalOpen(false);
+        }}
         onSubmit={(generatedSlides) => {
           setVideos(generatedSlides);
           setIsPromptModalOpen(false);
@@ -256,6 +260,7 @@ export default function VideosEditor() {
         businessContext={businessContext}
         existingSlides={videos}
         mode="videos"
+
       />
                 <div style={{ 
           display: "flex", 

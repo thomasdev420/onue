@@ -211,9 +211,9 @@ const platformColors = {
     hover: 'hover:bg-red-200'
   },
   X: {
-    bg: 'bg-yellow-100',
-    border: 'border-yellow-300',
-    hover: 'hover:bg-yellow-200'
+    bg: 'bg-blue-100',
+    border: 'border-blue-300',
+    hover: 'hover:bg-blue-200'
   }
 };
 

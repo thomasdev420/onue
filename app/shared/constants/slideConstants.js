@@ -14,7 +14,7 @@ export const SLIDE_CONFIG = {
     MIN_X: 10,
     MAX_X: 90
   },
-  SLIDE_WIDTH_PERCENTAGE: 32 // Slightly smaller slides for better carousel visibility
+  SLIDE_WIDTH_PERCENTAGE: 27.2 // Reduced by 15% for smaller slides
 };
 
 export const SLIDE_TYPES = {

@@ -9,21 +9,22 @@ export default function PromptModal({
   onSubmit,
   businessContext = null,
   existingSlides = [],
-  mode = 'slides'
+  mode = 'slides',
+  initialPrompt = ''
 }) {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [slideCount, setSlideCount] = useState(3);
+  const [slideCount, setSlideCount] = useState(5);
   const [error, setError] = useState('');
   const textareaRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
-      setPrompt('');
+      setPrompt(initialPrompt || '');
       setError('');
       setIsGenerating(false);
     }
-  }, [isOpen]);
+  }, [isOpen, initialPrompt]);
 
   // Auto-expand textarea
   const adjustTextareaHeight = () => {
@@ -56,12 +57,6 @@ export default function PromptModal({
     console.log('Existing slides count:', existingSlides?.length || 0);
 
     // Let the AI figure out the intent from the user's prompt
-    // Include existing content context so AI can make informed decisions
-    let enhancedPrompt = userMessage;
-    if (existingSlides && existingSlides.length > 0) {
-      enhancedPrompt = `User has ${existingSlides.length} existing ${mode}. User request: ${userMessage}. Please understand their intent and respond appropriately.`;
-    }
-
     let finalSlideCount = slideCount;
     const slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
     if (slideCountMatch) {
@@ -72,8 +67,8 @@ export default function PromptModal({
     }
     
     try {
-      console.log('Sending request to API with:', {
-        prompt: enhancedPrompt,
+      console.log('Sending request to unified content engine with:', {
+        prompt: userMessage,
         slideCount: finalSlideCount,
         businessContext: businessContext,
         existingSlides: existingSlides?.length || 0
@@ -83,7 +78,7 @@ export default function PromptModal({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: enhancedPrompt,
+          prompt: userMessage,
           slideCount: finalSlideCount,
           businessContext: businessContext,
           userInfo: {
@@ -155,7 +150,7 @@ export default function PromptModal({
           <div style={{ fontSize: '20px', fontWeight: '600' }}>
             Generating slides...
           </div>
-        </div>''
+        </div>
       </div>
     );
   }

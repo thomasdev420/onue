@@ -286,11 +286,11 @@ function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, set
                   style={{
                     background: pageColor,
                     border: 'none',
-                    borderRadius: '50%',
+                    borderRadius: '9999px',
                     boxShadow: `0 2px 8px 0 ${pageColor}22, 0 0 0 1px ${pageColor}11`,
                     color: '#fff',
-                    width: 12,
-                    height: 12,
+                    minWidth: 36,
+                    height: 20,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -299,9 +299,15 @@ function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, set
                     borderWidth: 0,
                     marginLeft: '8px',
                     cursor: 'pointer',
+                    fontSize: 11,
+                    fontWeight: 500,
+                    padding: '0 10px',
+                    letterSpacing: '0.04em',
                   }}
                   aria-label="Switch content type"
-                />
+                >
+                  mode
+                </button>
               )}
             </div>
           )}

@@ -58,8 +58,10 @@ export default function AvatarsEditor() {
   const [showModeModal, setShowModeModal] = useState(false);
   const router = useRouter();
 
+
+
   // Use persistence hook for avatars - INDEPENDENT from slides
-  const defaultAvatars = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
+  const defaultAvatars = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
   const { 
     data: avatars, 
     updateData: setAvatars, 
@@ -247,7 +249,9 @@ export default function AvatarsEditor() {
       />
       <PromptModal
         isOpen={isPromptModalOpen}
-        onClose={() => setIsPromptModalOpen(false)}
+        onClose={() => {
+          setIsPromptModalOpen(false);
+        }}
         onSubmit={(generatedSlides) => {
           setAvatars(generatedSlides);
           setIsPromptModalOpen(false);
@@ -255,6 +259,7 @@ export default function AvatarsEditor() {
         businessContext={businessContext}
         existingSlides={avatars}
         mode="avatars"
+
       />
       <div style={{ 
         display: "flex", 

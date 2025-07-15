@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { ChevronUp, Sparkles, Loader2, X, Send, User, Bot } from 'lucide-react';
+import { ChevronUp, Loader2, Send, User, Bot } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import { useClarification } from '../../shared/hooks/useClarification.js';
 
@@ -11,6 +12,7 @@ const isDev = process.env.NODE_ENV === 'development';
 
 export default function ChatBar({ actions = [], docked = false, onMessageSubmit }) {
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   // In dev, always treat as authenticated
   const effectiveStatus = isDev ? 'authenticated' : status;
@@ -22,8 +24,6 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
 
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
-  const [generatedSlides, setGeneratedSlides] = useState(null);
   const [error, setError] = useState('');
   const [businessContext, setBusinessContext] = useState(null);
   const [businessContextFetched, setBusinessContextFetched] = useState(false);
@@ -42,6 +42,8 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     isWaitingForClarification,
     getOriginalPrompt
   } = useClarification();
+
+  const [pendingContent, setPendingContent] = useState(null); // { type: 'slides'|'videos'|'text'|'images', url: string }
 
   // Fetch business context only after user is properly authenticated
   useEffect(() => {
@@ -107,76 +109,32 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     setChatHistory(prev => [...prev, newUserMessage]);
     if (onMessageSubmit) onMessageSubmit();
 
+
+
     // If we are waiting for clarification, handle the follow-up
     if (isWaitingForClarification()) {
       try {
         const response = await submitClarification(userMessage, async (params) => {
-          // Determine if this should be a slide request or chat request
-          const isSlideRequest = getOriginalPrompt()?.toLowerCase().includes('slide') || 
-                                getOriginalPrompt()?.toLowerCase().includes('create') ||
-                                getOriginalPrompt()?.toLowerCase().includes('generate') ||
-                                getOriginalPrompt()?.toLowerCase().includes('make') ||
-                                getOriginalPrompt()?.toLowerCase().includes('content');
-
-          if (isSlideRequest) {
-            const slideResponse = await fetch('/api/generate-slides', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...params,
-                slideCount: 3,
-                businessContext: businessContext,
-                userInfo: {
-                  name: effectiveSession?.user?.name,
-                  email: effectiveSession?.user?.email
-                }
-              }),
-            });
-            
-            if (!slideResponse.ok) {
-              const errorData = await slideResponse.json();
-              throw new Error(errorData.error || 'Failed to generate slides');
-            }
-            
-            return await slideResponse.json();
-          } else {
-            const chatResponse = await fetch('/api/ai-chat', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                ...params,
-                businessContext: businessContext,
-                userInfo: {
-                  name: effectiveSession?.user?.name,
-                  email: effectiveSession?.user?.email
-                }
-              }),
-            });
-            
-            if (!chatResponse.ok) {
-              const errorData = await chatResponse.json();
-              throw new Error(errorData.error || 'Failed to get AI response');
-            }
-            
-            return await chatResponse.json();
+          // For clarification follow-ups, always use chat API
+          const chatResponse = await fetch('/api/ai-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...params,
+              businessContext: businessContext,
+              userInfo: {
+                name: effectiveSession?.user?.name,
+                email: effectiveSession?.user?.email
+              }
+            }),
+          });
+          if (!chatResponse.ok) {
+            const errorData = await chatResponse.json();
+            throw new Error(errorData.error || 'Failed to get AI response');
           }
+          return await chatResponse.json();
         });
-
-        // Handle the response based on type
-        if (response.slides) {
-          // Slide generation response
-          setGeneratedSlides(response.slides);
-          setShowAIModal(true);
-          const aiMessage = {
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-            type: 'ai',
-            content: `I've generated ${response.slides.length} slides for you! Click "Use These Slides" to apply them to your project.`,
-            timestamp: new Date(),
-            isSlideResponse: true
-          };
-          setChatHistory(prev => [...prev, aiMessage]);
-        } else if (response.response) {
-          // Chat response
+        if (response.response) {
           const aiMessage = {
             id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
             type: 'ai',
@@ -202,136 +160,157 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     }
 
     try {
-      console.log('Sending AI request:', {
-        prompt: userMessage,
-        businessContext
-      });
+      // Detect content creation intent
+      const lowerMessage = userMessage.toLowerCase();
+      const isSlideRequest = lowerMessage.includes('slide') || lowerMessage.includes('carousel') || lowerMessage.includes('presentation') || lowerMessage.includes('deck');
+      const isVideoRequest = lowerMessage.includes('video') || lowerMessage.includes('reel') || lowerMessage.includes('tiktok') || lowerMessage.includes('short');
+      const isTextRequest = lowerMessage.includes('text') || lowerMessage.includes('post') || lowerMessage.includes('caption') || lowerMessage.includes('copy') || lowerMessage.includes('content') || lowerMessage.includes('write');
+      const isImageRequest = lowerMessage.includes('image') || lowerMessage.includes('avatar') || lowerMessage.includes('picture') || lowerMessage.includes('photo') || lowerMessage.includes('visual');
 
-      // Determine if this is a slide generation request or general AI question
-      const isSlideRequest = userMessage.toLowerCase().includes('slide') || 
-                            userMessage.toLowerCase().includes('create') ||
-                            userMessage.toLowerCase().includes('generate') ||
-                            userMessage.toLowerCase().includes('make') ||
-                            userMessage.toLowerCase().includes('content') ||
-                            userMessage.toLowerCase().includes('post') ||
-                            userMessage.toLowerCase().includes('carousel') ||
-                            userMessage.toLowerCase().includes('meme') ||
-                            userMessage.toLowerCase().includes('listicle') ||
-                            userMessage.toLowerCase().includes('educational') ||
-                            userMessage.toLowerCase().includes('promotional') ||
-                            userMessage.toLowerCase().includes('inspirational');
-
-      if (isSlideRequest) {
-        // Handle slide generation
-        const response = await fetch('/api/generate-slides', {
+      if (isSlideRequest || isVideoRequest || isTextRequest || isImageRequest) {
+        // Determine which page to redirect to
+        let contentType = 'slides';
+        let apiUrl = '/api/generate-slides';
+        let redirectUrl = '/dashboard/slides';
+        if (isVideoRequest) {
+          contentType = 'videos';
+          apiUrl = '/api/generate-slides'; // Use same API for now
+          redirectUrl = '/dashboard/videos';
+        } else if (isTextRequest) {
+          contentType = 'text';
+          apiUrl = '/api/generate-slides'; // Use same API for now
+          redirectUrl = '/dashboard/text';
+        } else if (isImageRequest) {
+          contentType = 'images';
+          apiUrl = '/api/generate-slides'; // Use same API for now
+          redirectUrl = '/dashboard/images';
+        }
+        
+        // Extract slide count from user message or use default
+        let finalSlideCount = 5; // Default to 5 slides
+        const slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
+        if (slideCountMatch) {
+          const requestedCount = parseInt(slideCountMatch[1]);
+          if (requestedCount >= 1 && requestedCount <= 10) {
+            finalSlideCount = requestedCount;
+          }
+        }
+        
+        // Generate content using unified content engine
+        const response = await fetch(apiUrl, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             prompt: userMessage,
-            slideCount: 3,
+            slideCount: finalSlideCount,
             businessContext: businessContext,
             userInfo: {
               name: effectiveSession?.user?.name,
               email: effectiveSession?.user?.email
-            }
+            },
+            forceGenerate: true // Use unified content engine
           }),
         });
-
-        console.log('Response status:', response.status);
-
+        
         if (!response.ok) {
           const errorData = await response.json();
-          console.error('API Error:', errorData);
-          throw new Error(errorData.error || 'Failed to generate slides');
+          throw new Error(errorData.error || `Failed to generate ${contentType}`);
         }
-
-        const data = await response.json();
-        console.log('Received slides data:', data);
         
-        // Check if clarification is needed
-        if (needsClarification(data)) {
-          handleClarificationRequest(data, userMessage);
-          const clarificationMessage = {
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-            type: 'ai',
-            content: data.response,
-            timestamp: new Date(),
-            isClarification: true,
-            needsClarification: true
-          };
-          setChatHistory(prev => [...prev, clarificationMessage]);
-        } else {
-          setGeneratedSlides(data.slides);
-          setShowAIModal(true);
-          
-          // Add AI response to chat history
+        const data = await response.json();
+        
+        // Store the result for the content page to pick up
+        if (contentType === 'slides') {
+          localStorage.setItem('aiGeneratedSlides', JSON.stringify(data.slides));
+        } else if (contentType === 'videos') {
+          localStorage.setItem('aiGeneratedVideos', JSON.stringify(data.slides));
+        } else if (contentType === 'text') {
+          localStorage.setItem('aiGeneratedTexts', JSON.stringify(data.slides));
+        } else if (contentType === 'images') {
+          localStorage.setItem('aiGeneratedImages', JSON.stringify(data.slides));
+        }
+        
+        // Ask user if they want to view the generated content
+        const aiMessage = {
+          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          type: 'ai',
+          content: `I've created your ${contentType} based on your request. Would you like to view them?`,
+          timestamp: new Date(),
+          isContentReady: true
+        };
+        setChatHistory(prev => [...prev, aiMessage]);
+        setPendingContent({ type: contentType, url: redirectUrl });
+        setIsGenerating(false);
+        
+        return;
+      }
+
+      // For general questions, use the chat API
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt: userMessage,
+          businessContext: businessContext,
+          userInfo: {
+            name: effectiveSession?.user?.name,
+            email: effectiveSession?.user?.email
+          }
+        }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get AI response');
+      }
+      const data = await response.json();
+      if (needsClarification(data)) {
+        handleClarificationRequest(data, userMessage);
+        const clarificationMessage = {
+          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          type: 'ai',
+          content: data.response,
+          timestamp: new Date(),
+          isClarification: true,
+          needsClarification: true
+        };
+        setChatHistory(prev => [...prev, clarificationMessage]);
+      } else {
+        // HARD BLOCK: Never show slide content in chat
+        let aiContent = data.response;
+        let isSlideContent = false;
+        try {
+          // Detect if the response is an array of objects (slide content)
+          const parsed = typeof aiContent === 'string' ? JSON.parse(aiContent) : aiContent;
+          if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'object' && (parsed[0].texts || parsed[0].imageCategory)) {
+            isSlideContent = true;
+          }
+        } catch (e) {
+          // Not JSON, ignore
+        }
+        if (isSlideContent) {
           const aiMessage = {
             id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
             type: 'ai',
-            content: `I've generated ${data.slides.length} slides for you! Click "Use These Slides" to apply them to your project.`,
+            content: "I've created your slides. Would you like to view them on the slides page?",
             timestamp: new Date(),
-            isSlideResponse: true
+            isContentReady: true
           };
           setChatHistory(prev => [...prev, aiMessage]);
-        }
-      } else {
-        // Handle general AI questions
-        const response = await fetch('/api/ai-chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: userMessage,
-            businessContext: businessContext,
-            userInfo: {
-              name: effectiveSession?.user?.name,
-              email: effectiveSession?.user?.email
-            }
-          }),
-        });
-
-        console.log('AI Chat response status:', response.status);
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('AI Chat API Error:', errorData);
-          throw new Error(errorData.error || 'Failed to get AI response');
-        }
-
-        const data = await response.json();
-        console.log('Received AI response:', data);
-        
-        // Check if clarification is needed
-        if (needsClarification(data)) {
-          handleClarificationRequest(data, userMessage);
-          const clarificationMessage = {
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-            type: 'ai',
-            content: data.response,
-            timestamp: new Date(),
-            isClarification: true,
-            needsClarification: true
-          };
-          setChatHistory(prev => [...prev, clarificationMessage]);
+          setPendingContent({ type: 'slides', url: '/dashboard/slides' });
         } else {
-          // Add AI response to chat history
           const aiMessage = {
             id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
             type: 'ai',
-            content: data.response,
+            content: aiContent,
             timestamp: new Date()
           };
           setChatHistory(prev => [...prev, aiMessage]);
         }
       }
     } catch (err) {
-      console.error('Error in handleSubmit:', err);
       setError(err.message || 'Failed to process request');
-      
-      // Add error message to chat history
       const errorMessage = {
         id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
         type: 'ai',
@@ -375,14 +354,7 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     adjustTextareaHeight();
   }, [prompt]);
 
-  const handleUseSlides = () => {
-    // Navigate to slides page with generated slides
-    if (generatedSlides) {
-      // Store slides in localStorage for the slides page to pick up
-      localStorage.setItem('aiGeneratedSlides', JSON.stringify(generatedSlides));
-      window.location.href = '/dashboard/slides';
-    }
-  };
+
 
   // Show loading state while authentication is being determined
   if (effectiveStatus === 'loading') {
@@ -429,13 +401,13 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
                     </div>
                   ) : message.isClarification ? (
                     <div
-                      className="text-base whitespace-pre-line max-w-[80%] bg-yellow-50 border border-yellow-200 text-yellow-900 shadow-sm px-4 py-2 rounded-2xl"
+                      className="text-base whitespace-pre-line max-w-[80%] bg-blue-50 border border-blue-200 text-blue-900 shadow-sm px-4 py-2 rounded-2xl"
                       style={{
                         marginLeft: 0,
                         marginRight: 'auto',
                         fontWeight: 500,
-                        background: '#fffbe6',
-                        color: '#b45309',
+                        background: '#eff6ff',
+                        color: '#1e40af',
                         marginTop: 4,
                         marginBottom: 4
                       }}
@@ -461,13 +433,24 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
                     }}
                   >
                     {message.content}
-                    {message.isSlideResponse && (
-                      <button
-                        onClick={handleUseSlides}
-                        className="mt-3 w-full bg-blue-500 text-white rounded-md py-2 px-4 text-sm font-medium hover:bg-blue-600 transition-colors"
-                      >
-                        Use These Slides
-                      </button>
+                    {message.isContentReady && pendingContent && (
+                      <div className="mt-3">
+                        <button
+                          onClick={() => {
+                            console.log('View button clicked:', pendingContent);
+                            console.log('Redirecting to:', pendingContent.url);
+                            router.push(pendingContent.url);
+                            setPendingContent(null);
+                          }}
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                          style={{
+                            background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                            boxShadow: '0 2px 8px 0 rgba(147,197,253,0.35)',
+                          }}
+                        >
+                          View {pendingContent.type.charAt(0).toUpperCase() + pendingContent.type.slice(1)}
+                        </button>
+                      </div>
                     )}
                   </div>
                   )}
@@ -647,72 +630,7 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
 )}
       </div>
 
-      {/* AI Generated Slides Modal */}
-      {showAIModal && generatedSlides && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl mx-auto relative max-h-[90vh] overflow-y-auto">
-            {/* Header */}
-            <div className="px-8 py-6 border-b border-gray-100 relative">
-              <button 
-                onClick={() => setShowAIModal(false)} 
-                className="absolute top-5 right-6 text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-lg hover:bg-gray-100"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              
-              <div className="flex items-center gap-3">
-                <Sparkles size={24} color="#3B82F6" />
-                <h2 className="text-2xl font-bold text-gray-900">
-                  AI Generated Slides
-                </h2>
-              </div>
-              <p className="text-gray-600 mt-2">
-                Your slides are ready! Review them below and use them in the slides editor.
-              </p>
-            </div>
 
-            {/* Slides Preview */}
-            <div className="px-8 py-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {generatedSlides.map((slide, index) => (
-                  <div key={slide.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                    <div className="text-sm text-gray-500 mb-2">Slide {index + 1}</div>
-                    <div className="space-y-2">
-                      {slide.texts.map((text, textIndex) => (
-                        <div key={text.id} className="text-sm font-medium text-gray-800">
-                          &quot;{text.content}&quot;
-                        </div>
-                      ))}
-                    </div>
-                    {slide.image && (
-                      <div className="mt-3 text-xs text-gray-500">
-                        Image: {slide.image.title}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="px-8 py-6 border-t border-gray-100 flex gap-3 justify-end">
-              <button
-                onClick={() => setShowAIModal(false)}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleUseSlides}
-                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-              >
-                <Sparkles size={16} />
-                Use in Slides Editor
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 } 

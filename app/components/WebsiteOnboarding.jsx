@@ -161,7 +161,24 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
       }
       
       const data = await res.json();
-      setExtractedData(data);
+      // Ensure all fields are present
+      const allFields = {
+        companyName: '',
+        productType: '',
+        productInfo: '',
+        companyUrl: '',
+        companySize: '',
+        yearFounded: '',
+        headquarters: '',
+        keyProducts: '',
+        targetAudience: '',
+        socialLinks: '',
+        mission: '',
+        valueProp: '',
+        competitors: '',
+        contact: ''
+      };
+      setExtractedData({ ...allFields, ...data });
       
       // Jump to 100% when scan completes successfully
       setScanProgress(100);
@@ -214,9 +231,25 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
   const handleComplete = async (selectedFormat) => {
     try {
       // Save onboarding data
+      const allFields = {
+        companyName: '',
+        productType: '',
+        productInfo: '',
+        companyUrl: '',
+        companySize: '',
+        yearFounded: '',
+        headquarters: '',
+        keyProducts: '',
+        targetAudience: '',
+        socialLinks: '',
+        mission: '',
+        valueProp: '',
+        competitors: '',
+        contact: ''
+      };
       const onboardingData = {
         websiteUrl,
-        extractedData,
+        extractedData: { ...allFields, ...(extractedData || {}) },
         personalizationAnswers,
         selectedVideoFormat: selectedFormat,
         completedAt: new Date().toISOString()
@@ -464,44 +497,133 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
                 <div className="w-16 h-16 bg-gradient-to-br from-green-50 to-green-100 rounded-xl flex items-center justify-center text-green-600 mx-auto mb-4">
                   <Check className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">Review your information</h3>
-                <p className="text-gray-600">Please review and edit the extracted information</p>
+                <h3 className="text-xl font-semibold text-black mb-2">Review your information</h3>
+                <p className="text-black">Please review and edit the extracted information</p>
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+                  <label className="block text-sm font-medium text-black mb-2">Company Name</label>
                   <input
                     type="text"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
                     value={extractedData.companyName}
                     onChange={(e) => handleDataUpdate('companyName', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Product Type</label>
+                  <label className="block text-sm font-medium text-black mb-2">Product Type</label>
                   <input
                     type="text"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
                     value={extractedData.productType}
                     onChange={(e) => handleDataUpdate('productType', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Product Info</label>
+                  <label className="block text-sm font-medium text-black mb-2">Product Info</label>
                   <textarea
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
                     rows="3"
                     value={extractedData.productInfo}
                     onChange={(e) => handleDataUpdate('productInfo', e.target.value)}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company URL</label>
+                  <label className="block text-sm font-medium text-black mb-2">Company URL</label>
                   <input
-                    type="url"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50"
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
                     value={extractedData.companyUrl}
                     onChange={(e) => handleDataUpdate('companyUrl', e.target.value)}
+                  />
+                </div>
+                {/* Additional fields for more info */}
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Company Size</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.companySize || ''}
+                    onChange={(e) => handleDataUpdate('companySize', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Year Founded</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.yearFounded || ''}
+                    onChange={(e) => handleDataUpdate('yearFounded', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Headquarters Location</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.headquarters || ''}
+                    onChange={(e) => handleDataUpdate('headquarters', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Key Products/Services</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.keyProducts || ''}
+                    onChange={(e) => handleDataUpdate('keyProducts', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Target Audience</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.targetAudience || ''}
+                    onChange={(e) => handleDataUpdate('targetAudience', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Social Media Links</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.socialLinks || ''}
+                    onChange={(e) => handleDataUpdate('socialLinks', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Mission Statement</label>
+                  <textarea
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.mission || ''}
+                    onChange={(e) => handleDataUpdate('mission', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Unique Value Proposition</label>
+                  <textarea
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.valueProp || ''}
+                    onChange={(e) => handleDataUpdate('valueProp', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Main Competitors</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.competitors || ''}
+                    onChange={(e) => handleDataUpdate('competitors', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">Contact Email/Phone</label>
+                  <input
+                    type="text"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
+                    value={extractedData.contact || ''}
+                    onChange={(e) => handleDataUpdate('contact', e.target.value)}
                   />
                 </div>
               </div>

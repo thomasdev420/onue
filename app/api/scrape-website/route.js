@@ -21,11 +21,11 @@ async function classifyBusinessType(text) {
   try {
     const openaiClient = getOpenAI();
     const completion = await openaiClient.chat.completions.create({
-      model: "gpt-4o", // or "gpt-3.5-turbo" for lower cost
+              model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `You are a business type classifier. Given website content, respond with a short, specific label for the main business type or industry (e.g., 'IT Services', 'Law Firm', 'E-commerce', 'Restaurant', etc). Only return the label.
+          content: `You are Clow – a friendly marketing assistant. Given website content, respond with a short, specific label for the main business type or industry (e.g., 'IT Services', 'Law Firm', 'E-commerce', 'Restaurant', etc). Only return the label.
 
 Rules:
 1. Never return 'unknown', 'unclear', 'N/A', or leave the answer blank. Always make your best guess based on all available clues (domain, keywords, content, etc).
@@ -66,11 +66,11 @@ async function extractCompanyNameWithAI(title, domain, metaDescription) {
   try {
     const openaiClient = getOpenAI();
     const completion = await openaiClient.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `You are an expert at extracting clean, professional company names from website titles and metadata.
+          content: `You are Clow – a friendly marketing assistant. You are an expert at extracting clean, professional company names from website titles and metadata.
 
 Rules:
 1. Extract ONLY the company/brand name, not descriptive text
@@ -119,11 +119,11 @@ async function extractProductInfoWithAI(metaDescription, domain, title) {
   try {
     const openaiClient = getOpenAI();
     const completion = await openaiClient.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `You are an expert at creating clean, professional product descriptions from website metadata.
+          content: `You are Clow – a friendly marketing assistant. You are an expert at creating clean, professional product descriptions from website metadata.
 
 Rules:
 1. Remove all promotional content, pricing, offers, and marketing language
@@ -273,23 +273,67 @@ export async function POST(request) {
     // Prepare AI prompt
     const aiText = `Title: ${title}\nDescription: ${metaDescription}\nContent: ${bodyText}`;
     // Run all three AI calls in parallel
-    const [companyName, productInfo, productTypeRaw] = await Promise.all([
+    const [companyName, productInfo, productTypeRaw,
+      companySize, yearFounded, headquarters, keyProducts, targetAudience, socialLinks, mission, valueProp, competitors, contact
+    ] = await Promise.all([
       extractCompanyNameWithAI(title, domain, metaDescription),
       extractProductInfoWithAI(metaDescription, domain, title),
-      classifyBusinessType(aiText)
+      classifyBusinessType(aiText),
+      extractFieldWithAI('company size (e.g. 50-200 employees, 1-10, 1000+, unknown)', aiText),
+      extractFieldWithAI('year founded (e.g. 1998, unknown)', aiText),
+      extractFieldWithAI('headquarters location (city, country, or region)', aiText),
+      extractFieldWithAI('key products or services (comma-separated, short)', aiText),
+      extractFieldWithAI('target audience (e.g. small businesses, consumers, enterprise, students, etc)', aiText),
+      extractFieldWithAI('social media links (comma-separated, or blank if not found)', aiText),
+      extractFieldWithAI('mission statement (1-2 sentences, or blank if not found)', aiText),
+      extractFieldWithAI('unique value proposition (1-2 sentences, or blank if not found)', aiText),
+      extractFieldWithAI('main competitors (comma-separated, or blank if not found)', aiText),
+      extractFieldWithAI('contact email or phone (or blank if not found)', aiText)
     ]);
     const productType = productTypeRaw || 'Business';
-    
     // Return cleaned data
     return Response.json({
       companyName: companyName,
       productType,
       productInfo: productInfo,
       companyUrl: normalizedUrl,
-      // ...other fields as needed
+      companySize,
+      yearFounded,
+      headquarters,
+      keyProducts,
+      targetAudience,
+      socialLinks,
+      mission,
+      valueProp,
+      competitors,
+      contact
     });
   } catch (error) {
     console.error('Scrape error:', error);
     return Response.json({ error: 'Failed to scrape website' }, { status: 500 });
+  }
+} 
+
+async function extractFieldWithAI(fieldLabel, contextText) {
+  try {
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are Clow – a business data extraction assistant. Given website content, extract the following field: ${fieldLabel}.\n\nRules:\n- If the field is not found, return blank or 'unknown' as appropriate.\n- Be concise.\n- Use only the information in the context.\n- Return only the value, nothing else.`
+        },
+        {
+          role: "user",
+          content: contextText
+        }
+      ],
+      max_tokens: 60,
+      temperature: 0.2,
+    });
+    return completion.choices[0].message.content.trim();
+  } catch (e) {
+    return '';
   }
 } 

@@ -93,82 +93,51 @@ export const CONTEXT_EXAMPLES = {
  * @returns {string} Formatted system prompt
  */
 export function buildContextAwarePrompt(context, userPrompt) {
-  let systemPrompt = `You are Swiftreel, a helpful AI assistant for content creation.`;
+  let systemPrompt = `You are Clow – a friendly marketing assistant. Help users directly with their requests.`;
 
   // Add explicit instruction about priority
-  systemPrompt += `\n\nCRITICAL CONTEXT PRIORITY RULES:
-- The user's explicit request/prompt is ALWAYS the most important instruction
-- Questionnaire responses and personalization answers are second priority
-- Business context from website scanning is third priority  
-- User metadata (email, username) is lowest priority and should never override explicit input
-- If user asks for "dogs", create content about dogs regardless of their business type
-- If user states "I run an IT company" in questionnaire, recognize they run an IT business even if their email contains unrelated words`;
+  systemPrompt += `\n\nPriority: User's request is most important. Use context to enhance responses, not override requests.`;
 
   // Add business context (third priority)
   if (context.businessContext) {
-    systemPrompt += `\n\nBusiness Context:`;
     const bc = context.businessContext;
     
     if (bc.companyName) {
-      systemPrompt += `\n- Company: ${bc.companyName}`;
+      systemPrompt += `\nCompany: ${bc.companyName}`;
     }
     if (bc.businessType) {
-      systemPrompt += `\n- Business Type: ${bc.businessType}`;
+      systemPrompt += `\nBusiness: ${bc.businessType}`;
     }
     if (bc.productInfo) {
-      systemPrompt += `\n- Product/Service: ${bc.productInfo}`;
-    }
-    if (bc.websiteUrl) {
-      systemPrompt += `\n- Website: ${bc.websiteUrl}`;
+      systemPrompt += `\nProduct: ${bc.productInfo}`;
     }
   }
 
   // Add personalization context (second priority)
   if (context.businessContext?.personalization) {
-    systemPrompt += `\n\nUser Profile (from questionnaire):`;
     const personalization = context.businessContext.personalization;
     
-    if (personalization.interests) {
-      systemPrompt += `\n- Interests: ${personalization.interests}`;
-    }
     if (personalization.goals) {
-      systemPrompt += `\n- Main Goal: ${personalization.goals}`;
-    }
-    if (personalization.role) {
-      systemPrompt += `\n- Role: ${personalization.role}`;
-    }
-    if (personalization.experienceLevel) {
-      systemPrompt += `\n- Experience Level: ${personalization.experienceLevel}`;
-    }
-    if (personalization.timeCommitment) {
-      systemPrompt += `\n- Time Commitment: ${personalization.timeCommitment}`;
+      systemPrompt += `\nGoal: ${personalization.goals}`;
     }
     if (personalization.targetAudience) {
-      systemPrompt += `\n- Target Audience: ${personalization.targetAudience}`;
+      systemPrompt += `\nAudience: ${personalization.targetAudience}`;
     }
   }
 
   // Add brand manual information (second priority)
   if (context.businessContext?.brandManual) {
-    systemPrompt += `\n\nBrand Manual Information:`;
     const brandManual = context.businessContext.brandManual;
     
     if (brandManual.fileName) {
-      systemPrompt += `\n- Brand Manual: ${brandManual.fileName}`;
-    }
-    if (brandManual.fileUrl) {
-      systemPrompt += `\n- Brand Manual URL: ${brandManual.fileUrl}`;
-      systemPrompt += `\n\nIMPORTANT: The user has uploaded a brand manual. When creating content, follow their brand guidelines, style, colors, fonts, and tone of voice as specified in their brand manual. This should influence the visual style, color scheme, typography, and overall aesthetic of the content you generate.`;
+      systemPrompt += `\nBrand Manual: ${brandManual.fileName}`;
     }
   }
 
   // Add user metadata (lowest priority - for reference only)
   if (context.userInfo?.name) {
-    systemPrompt += `\n\nUser: ${context.userInfo.name}`;
+    systemPrompt += `\nUser: ${context.userInfo.name}`;
   }
-
-  // Final instruction emphasizing priority
-  systemPrompt += `\n\nINSTRUCTION: The user's explicit request is your primary directive. Use the context above to enhance and personalize your response, but never let it override what the user specifically asked for.`;
 
   return systemPrompt;
 }

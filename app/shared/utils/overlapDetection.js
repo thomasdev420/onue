@@ -9,7 +9,6 @@
  * @returns {boolean} True if overlapped
  */
 export function isOverlapping(a, b) {
-  // Assume each text overlay is centered at (x, y) and has width/height in %
   // Default width/height if not set
   const widthA = a.width || 30; // percent
   const heightA = a.height || 8; // percent

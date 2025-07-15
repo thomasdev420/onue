@@ -410,7 +410,7 @@ export default function UploadPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {uploadedImages.map((image) => (
                 <div key={image.id} className="relative group">
-                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+                  <div className="aspect-[4/3] rounded-lg overflow-hidden bg-gray-100">
                     <Image
                       src={image.url}
                       alt={image.name}

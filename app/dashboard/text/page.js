@@ -58,8 +58,10 @@ export default function TextEditor() {
   const [showModeModal, setShowModeModal] = useState(false);
   const router = useRouter();
 
+
+
   // Use persistence hook for texts - INDEPENDENT from slides
-  const defaultTexts = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '16:9' }];
+  const defaultTexts = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
   const { 
     data: texts, 
     updateData: setTexts, 
@@ -149,6 +151,62 @@ export default function TextEditor() {
     
     return () => clearTimeout(timer);
   }, [effectiveStatus, businessContextFetched]); // Depend on effectiveStatus
+
+  const handleFontSizeIncrease = (slideIndex) => {
+    try {
+      const currentSlide = texts[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map(text => {
+        const currentStyle = text.style || {};
+        const currentFontSize = parseInt(currentStyle.fontSize) || 16;
+        const newFontSize = Math.min(currentFontSize + 2, 48); // Max 48px
+        
+        return {
+          ...text,
+          style: {
+            ...currentStyle,
+            fontSize: `${newFontSize}px`
+          }
+        };
+      });
+
+      updateText(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error increasing font size:', error);
+      setError('Failed to increase font size. Please try again.');
+    }
+  };
+
+  const handleFontSizeDecrease = (slideIndex) => {
+    try {
+      const currentSlide = texts[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map(text => {
+        const currentStyle = text.style || {};
+        const currentFontSize = parseInt(currentStyle.fontSize) || 16;
+        const newFontSize = Math.max(currentFontSize - 2, 8); // Min 8px
+        
+        return {
+          ...text,
+          style: {
+            ...currentStyle,
+            fontSize: `${newFontSize}px`
+          }
+        };
+      });
+
+      updateText(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error decreasing font size:', error);
+      setError('Failed to decrease font size. Please try again.');
+    }
+  };
 
   // Handle mode navigation
   const handleModeChange = (newMode) => {
@@ -247,7 +305,9 @@ export default function TextEditor() {
       />
       <PromptModal
         isOpen={isPromptModalOpen}
-        onClose={() => setIsPromptModalOpen(false)}
+        onClose={() => {
+          setIsPromptModalOpen(false);
+        }}
         onSubmit={(generatedTexts) => {
           setTexts(generatedTexts);
           setIsPromptModalOpen(false);
@@ -255,6 +315,7 @@ export default function TextEditor() {
         businessContext={businessContext}
         existingSlides={texts}
         mode="texts"
+
       />
       <div style={{ 
         display: "flex", 
@@ -279,6 +340,8 @@ export default function TextEditor() {
             onRatioChange={(slideIndex) => changeRatio(slideIndex)}
             onContentModalOpen={() => setIsContentModalOpen(true)}
             onPromptModalOpen={() => setIsPromptModalOpen(true)}
+            onFontSizeIncrease={handleFontSizeIncrease}
+            onFontSizeDecrease={handleFontSizeDecrease}
             modeColor={modeColorMap[mode] || '#DC2626'}
           />
         </div>

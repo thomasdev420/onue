@@ -35,7 +35,7 @@ export default function DashboardLayout({ children }) {
 
   const currentPageColor = getPageColor();
 
-  // Check dev access and OAuth params on mount
+  // Consolidated authentication check
   useEffect(() => {
     const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
     
@@ -49,7 +49,8 @@ export default function DashboardLayout({ children }) {
       isDev,
       hasOAuth,
       status,
-      session: !!session
+      session: !!session,
+      timestamp: new Date().toISOString()
     });
     
     // Clean up OAuth params if present
@@ -58,27 +59,23 @@ export default function DashboardLayout({ children }) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
     
-    if (!devAccessGranted && !isDev && !hasOAuth) {
+    // Set dev access checked after initial check
+    setDevAccessChecked(true);
+    
+    // Only redirect if we're not in development, not authenticated, no dev access, and no recent OAuth
+    // AND only if we're not still loading the session
+    if (!isDev && status === 'unauthenticated' && !devAccessGranted && !hasOAuth && status !== 'loading') {
       console.log('❌ No auth detected - redirecting to landing page');
       router.push('/');
     }
-    setDevAccessChecked(true);
   }, [router, isDev, status, session]);
-
-  // Handle redirect for unauthenticated users (with OAuth grace period)
-  useEffect(() => {
-    // Only redirect if not in development, not authenticated, no dev access, and no recent OAuth
-    if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted") && !hasOAuthParams) {
-      router.push('/');
-    }
-  }, [isDev, status, router, hasOAuthParams]);
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
 
   // Show loading state while checking authentication and dev access
-  if (!devAccessChecked || (!isDev && status === 'loading' && !hasOAuthParams)) {
+  if (!devAccessChecked || (status === 'loading' && !hasOAuthParams)) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#FAF9F6' }}>
         <div className="flex items-center gap-3">
@@ -92,6 +89,7 @@ export default function DashboardLayout({ children }) {
   // In development, always allow access
   // In production, only redirect if not authenticated AND no dev access AND no recent OAuth
   if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted") && !hasOAuthParams) {
+    console.log('🚫 Access denied - redirecting');
     return null;
   }
 
