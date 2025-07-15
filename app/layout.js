@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "SwiftReel - Content Creation Platform",
+      title: "Flightmedia - Content Creation Platform",
   description: "Create viral, self-improving videos and posts that drive millions of views, boost traffic, and grow your brand automatically.",
 };
 

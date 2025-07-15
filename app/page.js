@@ -267,7 +267,7 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', marginBottom: '10px', marginTop: '0' }}>
           <div style={{ display: 'inline-block', padding: '2px', borderRadius: '9999px', background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)' }}>
             <span style={{ display: 'inline-block', borderRadius: '9999px', background: '#fef9f6', fontWeight: 'bold', fontSize: '15px', color: '#222', padding: '4px 16px', lineHeight: 1.2 }}>
-              Version 1.1.9
+              Version 1.2.0
             </span>
           </div>
         </div>
@@ -456,7 +456,7 @@ export default function Home() {
           className="text-4xl font-extrabold mb-4 tracking-tight text-center text-gray-800"
           style={{ fontWeight: "800" }}
         >
-          Swiftreel generates and optimizes<br />
+          Flightmedia generates and optimizes<br />
           content that learns what <span style={{ color: "#22C55E", fontWeight: "900" }}>works</span>,<br />
           so you can post <span style={{ color: "#22C55E", fontWeight: "900" }}>faster</span>,<br />
           grow <span style={{ color: "#22C55E", fontWeight: "900" }}>consistently</span> and skip the guesswork.
@@ -497,11 +497,11 @@ export default function Home() {
               <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Full creative control</li>
             </ul>
           </div>
-          {/* SwiftReel */}
+          {/* Flightmedia */}
           <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-green-300 rounded-2xl shadow-lg p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-green-400 cursor-pointer relative">
             <span className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm">Best Value</span>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl font-bold text-gray-800">SwiftReel</span>
+              <span className="text-xl font-bold text-gray-800">Flightmedia</span>
             </div>
             <p className="text-gray-700 mb-4">
               Automatically creates & publishes videos to all platforms for a simple monthly subscription.
@@ -517,9 +517,9 @@ export default function Home() {
         <div className="max-w-3xl mx-auto text-center">
           <h3 className="text-lg font-bold text-gray-800 mb-2">What can it do?</h3>
           <p className="text-md text-gray-700 font-medium">
-            <span className="font-bold text-gray-900">Swiftreel automatically creates self-improving content that drives users to your website.</span>
+            <span className="font-bold text-gray-900">Flightmedia automatically creates self-improving content that drives users to your website.</span>
             <br />
-            The differentiating factor between SwiftReel and competitors is that SwiftReel takes the approach of using faceless content to automate videos. While other services require you to upload all of your video & image assets in order to create &quot;AI ads&quot;, SwiftReel believes in organic content with TikTok distribution as a means of getting leads/inbound.
+            The differentiating factor between Flightmedia and competitors is that Flightmedia takes the approach of using faceless content to automate videos. While other services require you to upload all of your video & image assets in order to create &quot;AI ads&quot;, Flightmedia believes in organic content with TikTok distribution as a means of getting leads/inbound.
           </p>
         </div>
       </section>
@@ -764,7 +764,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="absolute bottom-2 left-0 w-full flex flex-col items-center gap-2 text-gray-500 text-sm">
         <div className="flex items-center gap-4">
-          <span>© 2025 SwiftReel. All rights reserved.</span>
+          <span>© 2025 Flightmedia. All rights reserved.</span>
           <a
             href="/privacy-policy"
             className="px-3 py-1 rounded-full bg-white border border-gray-300 text-gray-500 font-semibold hover:bg-blue-50 hover:text-blue-800 transition"

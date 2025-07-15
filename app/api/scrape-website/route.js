@@ -25,7 +25,7 @@ async function classifyBusinessType(text) {
       messages: [
         {
           role: "system",
-          content: `You are Clow – a friendly marketing assistant. Given website content, respond with a short, specific label for the main business type or industry (e.g., 'IT Services', 'Law Firm', 'E-commerce', 'Restaurant', etc). Only return the label.
+          content: `You are Mr Flightmedia – a friendly marketing assistant. Given website content, respond with a short, specific label for the main business type or industry (e.g., 'IT Services', 'Law Firm', 'E-commerce', 'Restaurant', etc). Only return the label.
 
 Rules:
 1. Never return 'unknown', 'unclear', 'N/A', or leave the answer blank. Always make your best guess based on all available clues (domain, keywords, content, etc).
@@ -70,7 +70,7 @@ async function extractCompanyNameWithAI(title, domain, metaDescription) {
       messages: [
         {
           role: "system",
-          content: `You are Clow – a friendly marketing assistant. You are an expert at extracting clean, professional company names from website titles and metadata.
+          content: `You are Mr Flightmedia – a friendly marketing assistant. You are an expert at extracting clean, professional company names from website titles and metadata.
 
 Rules:
 1. Extract ONLY the company/brand name, not descriptive text
@@ -123,7 +123,7 @@ async function extractProductInfoWithAI(metaDescription, domain, title) {
       messages: [
         {
           role: "system",
-          content: `You are Clow – a friendly marketing assistant. You are an expert at creating clean, professional product descriptions from website metadata.
+          content: `You are Mr Flightmedia – a friendly marketing assistant. You are an expert at creating clean, professional product descriptions from website metadata.
 
 Rules:
 1. Remove all promotional content, pricing, offers, and marketing language
@@ -322,7 +322,7 @@ async function extractFieldWithAI(fieldLabel, contextText) {
       messages: [
         {
           role: "system",
-          content: `You are Clow – a business data extraction assistant. Given website content, extract the following field: ${fieldLabel}.\n\nRules:\n- If the field is not found, return blank or 'unknown' as appropriate.\n- Be concise.\n- Use only the information in the context.\n- Return only the value, nothing else.`
+          content: `You are Mr Flightmedia – a business data extraction assistant. Given website content, extract the following field: ${fieldLabel}.\n\nRules:\n- If the field is not found, return blank or 'unknown' as appropriate.\n- Be concise.\n- Use only the information in the context.\n- Return only the value, nothing else.`
         },
         {
           role: "user",

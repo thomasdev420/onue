@@ -13,7 +13,7 @@ export default function Support() {
   const faqs = [
     {
       question: "Is this just another AI slop generator?",
-      answer: "Absolutely not. Most AI tools churn out generic, lifeless content because they rely solely on automation. Swiftreel is different. We blend advanced AI with content optimization tools and your unique voice, so what you get isn’t just fast, it’s authentically you. Engaging. Real. Memorable."
+      answer: "Absolutely not. Most AI tools churn out generic, lifeless content because they rely solely on automation. Flightmedia is different. We blend advanced AI with content optimization tools and your unique voice, so what you get isn’t just fast, it’s authentically you. Engaging. Real. Memorable."
     },
     {
       question: "Can I customize the generated content?",
@@ -21,7 +21,7 @@ export default function Support() {
     },
     {
       question: "How do you get such good results?",
-      answer: "At Swiftreel, every piece of content is uniquely crafted using the information you provide. We run it through a proven system that tests and refines it hundreds of times to ensure it’s as effective and engaging as possible. Then, we use AI to fine-tune the final version and schedule it for posting at the optimal time — so your content always performs at its best."
+      answer: "At Flightmedia, every piece of content is uniquely crafted using the information you provide. We run it through a proven system that tests and refines it hundreds of times to ensure it’s as effective and engaging as possible. Then, we use AI to fine-tune the final version and schedule it for posting at the optimal time — so your content always performs at its best."
     },
     {
       question: "How does the AI content generation work?",

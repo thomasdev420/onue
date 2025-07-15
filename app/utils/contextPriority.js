@@ -93,7 +93,7 @@ export const CONTEXT_EXAMPLES = {
  * @returns {string} Formatted system prompt
  */
 export function buildContextAwarePrompt(context, userPrompt) {
-  let systemPrompt = `You are Clow – a friendly marketing assistant. Help users directly with their requests.`;
+  let systemPrompt = `You are Mr Flightmedia – a friendly marketing assistant. Help users directly with their requests.`;
 
   // Add explicit instruction about priority
   systemPrompt += `\n\nPriority: User's request is most important. Use context to enhance responses, not override requests.`;

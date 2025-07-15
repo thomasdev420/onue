@@ -3,8 +3,8 @@ import React from 'react';
 export default function PrivacyPolicy() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 text-gray-800">
-      <h1 className="text-3xl font-bold mb-6">swiftreel Privacy Policy</h1>
-      <p className="mb-4">At swiftreel (<a href="https://onue-7plg.vercel.app/" className="text-blue-600 underline">https://swiftreel.app</a>), we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data when you use our web application.</p>
+      <h1 className="text-3xl font-bold mb-6">Flightmedia Privacy Policy</h1>
+      <p className="mb-4">At Flightmedia (<a href="https://flightmedia.app" className="text-blue-600 underline">https://flightmedia.app</a>), we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data when you use our service.</p>
       <h2 className="text-xl font-semibold mt-8 mb-2">1. Information We Collect</h2>
       <ul className="list-disc ml-6 mb-4">
         <li>Email address</li>
@@ -27,17 +27,17 @@ export default function PrivacyPolicy() {
       </ul>
       <h2 className="text-xl font-semibold mt-8 mb-2">4. Google Authentication and YouTube API</h2>
       <ul className="list-disc ml-6 mb-4">
-        <li>swiftreel uses Google Authentication and YouTube API Services to provide its functionality. By using our service, you agree to the following:</li>
+        <li>Flightmedia uses Google Authentication and YouTube API Services to provide its functionality. By using our service, you agree to the following:</li>
         <li>You agree to be bound by the YouTube Terms of Service.</li>
         <li>Our API Client uses YouTube API Services to upload videos to YouTube on your behalf.</li>
-        <li>By signing into swiftreel with Google, you are subject to Google&apos;s Privacy Policy.</li>
+        <li>By signing into Flightmedia with Google, you are subject to Google's Privacy Policy.</li>
       </ul>
       <h3 className="text-lg font-semibold mt-6 mb-2">Authorised Data Access and Usage</h3>
-      <p className="mb-4">swiftreel accesses and uses authorised data solely for the purpose of uploading videos to YouTube on your behalf. We store authentication access and refresh tokens for authentication purposes until the access token expires, which typically occurs after 1 hour. We do not store any personal data beyond what is necessary for the service to function.</p>
+      <p className="mb-4">Flightmedia accesses and uses authorised data solely for the purpose of uploading videos to YouTube on your behalf. We store authentication access and refresh tokens for authentication purposes until they are no longer needed.</p>
       <h3 className="text-lg font-semibold mt-6 mb-2">Data Deletion and Revoking Access</h3>
-      <p className="mb-4">You can revoke swiftreel&apos;s access to your data at any time through the Google security settings page. If you request to remove your authentication, we will promptly delete all associated tokens and data.</p>
+      <p className="mb-4">You can revoke Flightmedia's access to your data at any time through the Google security settings page. If you request to remove your authentication, we will promptly delete all associated tokens and data.</p>
       <h3 className="text-lg font-semibold mt-6 mb-2">Video Upload Process</h3>
-      <p className="mb-2">When uploading videos to YouTube, swiftreel will ask for your permission to set the following metadata properties:</p>
+      <p className="mb-2">When uploading videos to YouTube, Flightmedia will ask for your permission to set the following metadata properties:</p>
       <ul className="list-disc ml-6 mb-4">
         <li>Title</li>
         <li>Description</li>
