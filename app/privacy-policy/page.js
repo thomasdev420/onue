@@ -30,12 +30,12 @@ export default function PrivacyPolicy() {
         <li>Flightmedia uses Google Authentication and YouTube API Services to provide its functionality. By using our service, you agree to the following:</li>
         <li>You agree to be bound by the YouTube Terms of Service.</li>
         <li>Our API Client uses YouTube API Services to upload videos to YouTube on your behalf.</li>
-        <li>By signing into Flightmedia with Google, you are subject to Google's Privacy Policy.</li>
+        <li>By signing into Flightmedia with Google, you are subject to Google&apos;s Privacy Policy.</li>
       </ul>
       <h3 className="text-lg font-semibold mt-6 mb-2">Authorised Data Access and Usage</h3>
       <p className="mb-4">Flightmedia accesses and uses authorised data solely for the purpose of uploading videos to YouTube on your behalf. We store authentication access and refresh tokens for authentication purposes until they are no longer needed.</p>
       <h3 className="text-lg font-semibold mt-6 mb-2">Data Deletion and Revoking Access</h3>
-      <p className="mb-4">You can revoke Flightmedia's access to your data at any time through the Google security settings page. If you request to remove your authentication, we will promptly delete all associated tokens and data.</p>
+      <p className="mb-4">You can revoke Flightmedia&apos;s access to your data at any time through the Google security settings page. If you request to remove your authentication, we will promptly delete all associated tokens and data.</p>
       <h3 className="text-lg font-semibold mt-6 mb-2">Video Upload Process</h3>
       <p className="mb-2">When uploading videos to YouTube, Flightmedia will ask for your permission to set the following metadata properties:</p>
       <ul className="list-disc ml-6 mb-4">
