@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Trash2, Image as ImageIcon, MessageSquare, Calendar } from 'lucide-react';
+import { Trash2, Image as ImageIcon, MessageSquare, Calendar, Download } from 'lucide-react';
 import ActionButton from './ActionButton';
 
 export default function SlideControls({
@@ -13,7 +13,8 @@ export default function SlideControls({
   onContentModalOpen,
   onAddText,
   onPromptModalOpen,
-  onScheduleClick
+  onScheduleClick,
+  onOpenDownloadModal
 }) {
   const isActive = slideIndex === activeSlideIndex;
 
@@ -91,6 +92,17 @@ export default function SlideControls({
           onScheduleClick();
         }}
         icon={<Calendar size={16} color="#374151" />}
+      />
+
+      {/* Download Button */}
+      <ActionButton
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpenDownloadModal(slideIndex);
+        }}
+        icon={<Download size={16} color="#10B981" />}
+        hoverBgColor="#ECFDF5"
+        hoverBorderColor="#6EE7B7"
       />
     </div>
   );

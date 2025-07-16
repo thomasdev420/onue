@@ -72,7 +72,7 @@ export const UNIFIED_CATEGORIES = {
     name: 'Nature',
     icon: '🌿',
     color: 'bg-emerald-50 border-emerald-200',
-    keywords: ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green']
+    keywords: ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green', 'trees', 'tree']
   },
   health: {
     name: 'Health',

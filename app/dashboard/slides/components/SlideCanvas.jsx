@@ -21,6 +21,7 @@ export default function SlideCanvas({
   onFontSizeIncrease,
   onFontSizeDecrease,
   onDeleteText,
+  onOpenDownloadModal,
   modeColor
 }) {
   const {
@@ -141,6 +142,8 @@ export default function SlideCanvas({
           <div 
             key={slide.id} 
             className="slide-item" 
+            data-slide-index={index}
+            data-slide-data={JSON.stringify(slide)}
             onClick={() => onSlideSelect(index)} 
             style={{
               width: `${slideWidth}%`,
@@ -280,6 +283,7 @@ export default function SlideCanvas({
               onContentModalOpen={onContentModalOpen}
               onAddText={handleAddText}
               onPromptModalOpen={onPromptModalOpen}
+              onOpenDownloadModal={onOpenDownloadModal}
             />
           </div>
         )) : (

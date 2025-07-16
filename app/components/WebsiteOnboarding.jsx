@@ -109,6 +109,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
   const [show, setShow] = useState(open);
   const [uploadedFiles, setUploadedFiles] = useState({});
   const [uploadingFiles, setUploadingFiles] = useState({});
+  const [scanLogs, setScanLogs] = useState([]);
 
   useEffect(() => {
     setShow(open);
@@ -120,8 +121,14 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
       setPersonalizationStep(0);
       setErrors({});
       setScanProgress(0);
+      setScanLogs([]);
     }
   }, [open]);
+
+  const addScanLog = (message, type = 'info') => {
+    const timestamp = new Date().toLocaleTimeString();
+    setScanLogs(prev => [...prev, { message, type, timestamp }]);
+  };
 
   const validateUrl = (url) => {
     const validation = validateWebsiteUrl(url);
@@ -131,6 +138,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
   const simulateWebsiteScan = async (url) => {
     setIsLoading(true);
     setCurrentStep(ONBOARDING_STEPS.SCANNING);
+    setScanLogs([]);
     
     // Start with realistic progress simulation
     let currentProgress = 0;
@@ -140,6 +148,15 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
         setScanProgress(Math.min(currentProgress, 85));
       }
     }, 200); // Update every 200ms for smooth animation
+
+    // Add initial scan logs
+    addScanLog('🔍 Starting website scan...', 'info');
+    addScanLog(`📡 Connecting to: ${url}`, 'info');
+    
+    setTimeout(() => addScanLog('✅ Connection established', 'success'), 500);
+    setTimeout(() => addScanLog('📄 Fetching HTML content...', 'info'), 1000);
+    setTimeout(() => addScanLog('🔍 Parsing page structure...', 'info'), 1500);
+    setTimeout(() => addScanLog('📊 Extracting metadata...', 'info'), 2000);
 
     // Real scraping API call (pages/api)
     try {
@@ -154,6 +171,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
       
       if (!res.ok) {
         const err = await res.json();
+        addScanLog(`❌ Scan failed: ${err.error || 'Unknown error'}`, 'error');
         setErrors({ scan: err.error || 'Failed to scan website.' });
         setCurrentStep(ONBOARDING_STEPS.URL_INPUT);
         setIsLoading(false);
@@ -161,21 +179,30 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
       }
       
       const data = await res.json();
+      
+      // Add success logs with extracted data
+      addScanLog('✅ HTML content fetched successfully', 'success');
+      addScanLog(`📝 Title: ${data.title || 'Not found'}`, 'data');
+      addScanLog(`📄 Description: ${data.description || 'Not found'}`, 'data');
+      addScanLog(`🏢 Company: ${data.companyName || 'Not found'}`, 'data');
+      addScanLog(`📦 Product Type: ${data.productType || 'Not found'}`, 'data');
+      addScanLog(`📍 Headquarters: ${data.headquarters || 'Not found'}`, 'data');
+      addScanLog(`🎯 Target Audience: ${data.targetAudience || 'Not found'}`, 'data');
+      addScanLog(`💼 Key Products: ${data.keyProducts || 'Not found'}`, 'data');
+      addScanLog(`💡 Value Prop: ${data.valueProp || 'Not found'}`, 'data');
+      addScanLog(`📞 Contact: ${data.contact || 'Not found'}`, 'data');
+      addScanLog('🎉 Scan completed successfully!', 'success');
+      
       // Ensure all fields are present
       const allFields = {
         companyName: '',
         productType: '',
         productInfo: '',
         companyUrl: '',
-        companySize: '',
-        yearFounded: '',
         headquarters: '',
         keyProducts: '',
         targetAudience: '',
-        socialLinks: '',
-        mission: '',
         valueProp: '',
-        competitors: '',
         contact: ''
       };
       setExtractedData({ ...allFields, ...data });
@@ -184,13 +211,14 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
       setScanProgress(100);
       
       // Brief pause to show completion
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
       setCurrentStep(ONBOARDING_STEPS.CONFIRMATION);
     } catch (e) {
       // Clear the progress interval on error
       clearInterval(progressInterval);
       
+      addScanLog(`❌ Network error: ${e.message}`, 'error');
       setErrors({ scan: 'Failed to scan website.' });
       setCurrentStep(ONBOARDING_STEPS.URL_INPUT);
     }
@@ -412,7 +440,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-auto relative max-h-[90vh] flex flex-col" style={{overflowY: 'auto'}}>
         {/* Header */}
-        <div className="px-8 py-6 border-b border-gray-100 relative">
+        <div className="px-8 py-6 relative">
           <button 
             onClick={handleClose} 
             className="absolute top-5 right-6 text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-lg hover:bg-gray-100"
@@ -467,26 +495,60 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
 
           {/* Scanning Step */}
           {currentStep === ONBOARDING_STEPS.SCANNING && (
-            <div className="space-y-6 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-50 to-green-100 rounded-xl flex items-center justify-center text-green-600 mx-auto mb-4">
-                <Loader2 className="w-8 h-8 animate-spin" />
+            <div className="space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-50 to-green-100 rounded-xl flex items-center justify-center text-green-600 mx-auto mb-4">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Scanning your website</h3>
+                <div className="w-full bg-gray-200 rounded-full h-3 mb-4">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${scanProgress}%` }}
+                  />
+                </div>
+                <p className="text-gray-600 mb-6">
+                  {scanProgress < 15 && 'Initializing scan...'}
+                  {scanProgress >= 15 && scanProgress < 30 && 'Connecting to website...'}
+                  {scanProgress >= 30 && scanProgress < 50 && 'Fetching product information...'}
+                  {scanProgress >= 50 && scanProgress < 70 && 'Extracting key details...'}
+                  {scanProgress >= 70 && scanProgress < 85 && 'Analyzing content...'}
+                  {scanProgress >= 85 && scanProgress < 100 && 'Finalizing scan...'}
+                  {scanProgress >= 100 && 'Scan complete!'}
+                </p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Scanning your website</h3>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div 
-                  className="bg-gradient-to-r from-green-400 to-green-600 h-3 rounded-full transition-all duration-500"
-                  style={{ width: `${scanProgress}%` }}
-                />
+              
+              {/* Real-time Console Display */}
+              <div className="bg-gray-900 rounded-xl p-4 max-h-64 overflow-y-auto">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex gap-1">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  </div>
+                  <span className="text-gray-400 text-sm font-mono">Scan Console</span>
+                </div>
+                <div className="space-y-1">
+                  {scanLogs.map((log, index) => (
+                    <div key={index} className="flex items-start gap-2 text-sm font-mono">
+                      <span className="text-gray-500 min-w-[60px]">{log.timestamp}</span>
+                      <span className={`${
+                        log.type === 'error' ? 'text-red-400' :
+                        log.type === 'success' ? 'text-green-400' :
+                        log.type === 'data' ? 'text-blue-400' :
+                        'text-gray-300'
+                      }`}>
+                        {log.message}
+                      </span>
+                    </div>
+                  ))}
+                  {scanLogs.length === 0 && (
+                    <div className="text-gray-500 text-sm font-mono">
+                      Waiting for scan to begin...
+                    </div>
+                  )}
+                </div>
               </div>
-              <p className="text-gray-600">
-                {scanProgress < 15 && 'Initializing scan...'}
-                {scanProgress >= 15 && scanProgress < 30 && 'Connecting to website...'}
-                {scanProgress >= 30 && scanProgress < 50 && 'Fetching product information...'}
-                {scanProgress >= 50 && scanProgress < 70 && 'Extracting key details...'}
-                {scanProgress >= 70 && scanProgress < 85 && 'Analyzing content...'}
-                {scanProgress >= 85 && scanProgress < 100 && 'Finalizing scan...'}
-                {scanProgress >= 100 && 'Scan complete!'}
-              </p>
             </div>
           )}
 
@@ -537,25 +599,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
                     onChange={(e) => handleDataUpdate('companyUrl', e.target.value)}
                   />
                 </div>
-                {/* Additional fields for more info */}
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Company Size</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
-                    value={extractedData.companySize || ''}
-                    onChange={(e) => handleDataUpdate('companySize', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Year Founded</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
-                    value={extractedData.yearFounded || ''}
-                    onChange={(e) => handleDataUpdate('yearFounded', e.target.value)}
-                  />
-                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Headquarters Location</label>
                   <input
@@ -583,23 +627,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
                     onChange={(e) => handleDataUpdate('targetAudience', e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Social Media Links</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
-                    value={extractedData.socialLinks || ''}
-                    onChange={(e) => handleDataUpdate('socialLinks', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Mission Statement</label>
-                  <textarea
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
-                    value={extractedData.mission || ''}
-                    onChange={(e) => handleDataUpdate('mission', e.target.value)}
-                  />
-                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Unique Value Proposition</label>
                   <textarea
@@ -608,15 +636,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
                     onChange={(e) => handleDataUpdate('valueProp', e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-black mb-2">Main Competitors</label>
-                  <input
-                    type="text"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-50 text-black placeholder-black"
-                    value={extractedData.competitors || ''}
-                    onChange={(e) => handleDataUpdate('competitors', e.target.value)}
-                  />
-                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-black mb-2">Contact Email/Phone</label>
                   <input
@@ -814,7 +834,7 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
         </div>
 
         {/* Sticky Bottom Navigation Buttons */}
-        <div className="px-8 py-6 border-t border-gray-100 bg-white sticky bottom-0 left-0 right-0 z-10 flex flex-col gap-2">
+        <div className="px-8 py-6 bg-white sticky bottom-0 left-0 right-0 z-10 flex flex-col gap-2">
           {/* Progress dots for personalization step */}
           {currentStep === ONBOARDING_STEPS.PERSONALIZATION && (
             <div className="flex gap-2 mb-2 justify-center">
@@ -832,14 +852,16 @@ export default function WebsiteOnboarding({ open, onClose, onComplete }) {
 
           {/* Navigation Buttons for each step */}
           {currentStep === ONBOARDING_STEPS.URL_INPUT && (
-            <button
-              className={`w-full flex items-center justify-center gap-3 px-8 py-4 rounded-xl font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 ${!websiteUrl.trim() ? 'opacity-60 cursor-not-allowed' : ''}`}
-              onClick={handleUrlSubmit}
-              disabled={!websiteUrl.trim()}
-            >
-              <ChevronRight className="w-5 h-5" />
-              Start Scanning
-            </button>
+            <div className="flex justify-center">
+              <button
+                className={`flex items-center justify-center gap-3 px-12 py-4 rounded-xl font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 ${!websiteUrl.trim() ? 'opacity-60 cursor-not-allowed' : ''}`}
+                onClick={handleUrlSubmit}
+                disabled={!websiteUrl.trim()}
+              >
+                <ChevronRight className="w-5 h-5" />
+                Start Scanning
+              </button>
+            </div>
           )}
 
           {currentStep === ONBOARDING_STEPS.CONFIRMATION && (

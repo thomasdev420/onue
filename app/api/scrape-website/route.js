@@ -274,39 +274,34 @@ export async function POST(request) {
     const aiText = `Title: ${title}\nDescription: ${metaDescription}\nContent: ${bodyText}`;
     // Run all three AI calls in parallel
     const [companyName, productInfo, productTypeRaw,
-      companySize, yearFounded, headquarters, keyProducts, targetAudience, socialLinks, mission, valueProp, competitors, contact
+      headquarters, keyProducts, targetAudience, valueProp, contact
     ] = await Promise.all([
       extractCompanyNameWithAI(title, domain, metaDescription),
       extractProductInfoWithAI(metaDescription, domain, title),
       classifyBusinessType(aiText),
-      extractFieldWithAI('company size (e.g. 50-200 employees, 1-10, 1000+, unknown)', aiText),
-      extractFieldWithAI('year founded (e.g. 1998, unknown)', aiText),
       extractFieldWithAI('headquarters location (city, country, or region)', aiText),
       extractFieldWithAI('key products or services (comma-separated, short)', aiText),
       extractFieldWithAI('target audience (e.g. small businesses, consumers, enterprise, students, etc)', aiText),
-      extractFieldWithAI('social media links (comma-separated, or blank if not found)', aiText),
-      extractFieldWithAI('mission statement (1-2 sentences, or blank if not found)', aiText),
       extractFieldWithAI('unique value proposition (1-2 sentences, or blank if not found)', aiText),
-      extractFieldWithAI('main competitors (comma-separated, or blank if not found)', aiText),
       extractFieldWithAI('contact email or phone (or blank if not found)', aiText)
     ]);
     const productType = productTypeRaw || 'Business';
-    // Return cleaned data
+    // Return cleaned data with additional metadata
     return Response.json({
       companyName: companyName,
       productType,
       productInfo: productInfo,
       companyUrl: normalizedUrl,
-      companySize,
-      yearFounded,
       headquarters,
       keyProducts,
       targetAudience,
-      socialLinks,
-      mission,
       valueProp,
-      competitors,
-      contact
+      contact,
+      // Additional metadata for console display
+      title: title,
+      description: metaDescription,
+      domain: domain,
+      scanTimestamp: new Date().toISOString()
     });
   } catch (error) {
     console.error('Scrape error:', error);

@@ -9,12 +9,14 @@ import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 import SlideCanvas from './components/SlideCanvas';
 import ContentModal from './components/ContentModal';
 import PromptModal from './components/PromptModal';
+import DownloadModal from './components/DownloadModal';
 import { useSlideManagement } from './hooks/useSlideManagement';
 import { useSlideNavigation } from './hooks/useSlideNavigation';
 import { validateSlide } from '../../utils/validation';
 import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
 import ModeToggle from '../components/ModeToggle';
 import { useRouter, usePathname } from 'next/navigation';
+import { downloadSlide, downloadAllSlides } from '../../utils/slideDownload';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -38,6 +40,8 @@ export default function SlidesEditor() {
   const [businessContextFetched, setBusinessContextFetched] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(null);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
+  const [downloadSlideIndex, setDownloadSlideIndex] = useState(0);
   const pathname = usePathname();
   const [mode, setMode] = useState('slides');
   
@@ -634,6 +638,149 @@ export default function SlidesEditor() {
     }
   };
 
+  const handleDownloadSlide = async (slideIndex, format = 'png', quality = 0.95) => {
+    try {
+      const slide = slides[slideIndex];
+      if (!slide) {
+        setError('Slide not found. Please try again.');
+        return;
+      }
+
+      if (!slide.image) {
+        setError('Please select an image for this slide before downloading.');
+        return;
+      }
+
+      console.log('Downloading slide:', slideIndex);
+
+      // Find the actual slide element in the DOM
+      const slideElements = document.querySelectorAll('.slide-item');
+      let targetSlideElement = null;
+      let slideCount = 0;
+      
+      for (let i = 0; i < slideElements.length; i++) {
+        const element = slideElements[i];
+        // Skip the "add slide" button
+        if (element.querySelector('button') && element.querySelector('button').textContent === '+') {
+          continue;
+        }
+        if (slideCount === slideIndex) {
+          targetSlideElement = element;
+          break;
+        }
+        slideCount++;
+      }
+      
+      if (!targetSlideElement) {
+        setError('Slide element not found. Please try again.');
+        return;
+      }
+
+      // Download the slide exactly as it appears
+      const slideTitle = `slide-${slideIndex + 1}`;
+      const result = await downloadSlide(targetSlideElement, slideTitle, format, quality);
+      
+      if (result.success) {
+        console.log('Download successful:', result.filename);
+      }
+      
+      // Show success message
+      setError(null);
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg';
+      successMessage.innerHTML = `
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-sm font-medium">Slide ${slideIndex + 1} downloaded successfully!</span>
+          <button onclick="this.parentElement.parentElement.remove()" class="text-green-500 hover:text-green-700 ml-2">×</button>
+        </div>
+      `;
+      document.body.appendChild(successMessage);
+      setTimeout(() => successMessage.remove(), 3000);
+      
+    } catch (error) {
+      console.error('Error downloading slide:', error);
+      setError('Download failed. Please ensure the slide has an image and try again.');
+    }
+  };
+
+  const handleOpenDownloadModal = (slideIndex) => {
+    setDownloadSlideIndex(slideIndex);
+    setIsDownloadModalOpen(true);
+  };
+
+  const handleCloseDownloadModal = () => {
+    setIsDownloadModalOpen(false);
+  };
+
+  const handleDownloadAllSlides = async (format = 'png', quality = 0.95) => {
+    try {
+      if (!slides || slides.length === 0) {
+        setError('No slides to download.');
+        return;
+      }
+
+      // Find all slide elements in the DOM
+      const slideElements = document.querySelectorAll('.slide-item');
+      const validSlideElements = [];
+      let slideCount = 0;
+      
+      // Filter out the "add slide" button and get only actual slides with images
+      for (let i = 0; i < slideElements.length; i++) {
+        const slideElement = slideElements[i];
+        
+        // Skip the "add slide" button
+        if (slideElement.querySelector('button') && slideElement.querySelector('button').textContent === '+') {
+          continue;
+        }
+        
+        if (slideCount < slides.length) {
+          const slide = slides[slideCount];
+          if (slide && slide.image && slideElement.offsetWidth > 0 && slideElement.offsetHeight > 0) {
+            validSlideElements.push(slideElement);
+          }
+          slideCount++;
+        }
+      }
+
+      if (validSlideElements.length === 0) {
+        setError('No slides with images found to download.');
+        return;
+      }
+
+      console.log('Downloading all slides:', validSlideElements.length);
+
+      const projectName = 'my-slides';
+      const result = await downloadAllSlides(validSlideElements, projectName);
+      
+      if (result.success) {
+        console.log('All slides downloaded successfully');
+      }
+      
+      // Show success message
+      setError(null);
+      const successMessage = document.createElement('div');
+      successMessage.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded shadow-lg';
+      successMessage.innerHTML = `
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+          </svg>
+          <span class="text-sm font-medium">All slides downloaded successfully!</span>
+          <button onclick="this.parentElement.parentElement.remove()" class="text-green-700 hover:text-green-900 ml-2">×</button>
+        </div>
+      `;
+      document.body.appendChild(successMessage);
+      setTimeout(() => successMessage.remove(), 3000);
+      
+    } catch (error) {
+      console.error('Error downloading slides:', error);
+      setError('Download failed. Please ensure all slides have images and try again.');
+    }
+  };
+
   const handleDateSelected = (date) => {
     setScheduledDate(date);
     setIsScheduleModalOpen(false);
@@ -732,6 +879,8 @@ export default function SlidesEditor() {
       )}
       <SaveStatusIndicator saveStatus={saveStatus} />
 
+
+
       {error && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
           <div className="flex items-center gap-2">
@@ -767,6 +916,15 @@ export default function SlidesEditor() {
         mode="slides"
       />
 
+              <DownloadModal
+          isOpen={isDownloadModalOpen}
+          onClose={handleCloseDownloadModal}
+          onDownloadSingle={handleDownloadSlide}
+          onDownloadAll={handleDownloadAllSlides}
+          slideIndex={downloadSlideIndex}
+          totalSlides={slides.length}
+        />
+
       <div style={{ 
         display: "flex", 
         height: "90vh", 
@@ -795,6 +953,7 @@ export default function SlidesEditor() {
             onFontSizeIncrease={handleFontSizeIncrease}
             onFontSizeDecrease={handleFontSizeDecrease}
             onDeleteText={handleDeleteText}
+            onOpenDownloadModal={handleOpenDownloadModal}
           />
         </div>
       </div>

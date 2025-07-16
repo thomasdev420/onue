@@ -2,7 +2,16 @@
  * Service for scanning websites and extracting product information
  */
 
+import fetch from 'node-fetch';
+import * as cheerio from 'cheerio';
+import OpenAI from 'openai';
 import { safeNewUrl } from '../utils/safeNewUrl';
+
+// Initialize OpenAI client only if API key is available
+let openai = null;
+if (process.env.OPENAI_API_KEY) {
+  openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
 
 /**
  * Extract basic information from a website URL
@@ -11,59 +20,237 @@ import { safeNewUrl } from '../utils/safeNewUrl';
  */
 export async function scanWebsite(url) {
   try {
-    // Validate URL first
     if (!url || typeof url !== 'string') {
       throw new Error('Invalid URL provided');
     }
-    
-    // In a real implementation, this would:
-    // 1. Fetch the website HTML
-    // 2. Parse meta tags, title, description
-    // 3. Extract structured data (JSON-LD, microdata)
-    // 4. Analyze content for product information
-    // 5. Use AI to categorize and extract key details
-    
-    // For now, we'll simulate the process with mock data
-    // based on common patterns
-    
-    let domain, path;
+
     const urlObj = safeNewUrl(url);
     if (!urlObj) {
       throw new Error('Invalid URL format');
     }
-    domain = urlObj.hostname;
-    path = urlObj.pathname;
-    
-    // Simulate different types of websites
-    let extractedData = {
-      companyName: extractCompanyName(domain), // This will be overridden by real scraping
-      productType: determineProductType(path, domain),
-      productInfo: generateProductInfo(domain, path),
-      companyUrl: url,
-      logo: null,
-      images: [],
-      metaDescription: '',
-      keywords: []
-    };
 
-    // Simulate processing time
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const html = await fetchWebsiteHtml(urlObj.href);
+    const metadata = extractMetadata(html, urlObj);
+
+    // Check if OpenAI is available
+    if (!openai) {
+      console.warn('OpenAI API key not configured, using fallback extraction');
+      return {
+        success: true,
+        data: {
+          companyName: extractCompanyName(urlObj.hostname),
+          productType: determineProductType(urlObj.pathname, urlObj.hostname),
+          productInfo: generateProductInfo(urlObj.hostname, urlObj.pathname),
+          companyUrl: urlObj.href,
+          logo: `https://logo.clearbit.com/${urlObj.hostname}`,
+          images: metadata.images || [],
+          metaDescription: metadata.description || '',
+          keywords: []
+        }
+      };
+    }
+
+    const aiResponse = await queryAIModel({
+      url: urlObj.href,
+      domain: urlObj.hostname,
+      path: urlObj.pathname,
+      metadata
+    });
 
     return {
       success: true,
-      data: extractedData
+      data: {
+        companyName: aiResponse.companyName,
+        productType: aiResponse.productType,
+        productInfo: aiResponse.productInfo,
+        companyUrl: urlObj.href,
+        logo: aiResponse.logo || `https://logo.clearbit.com/${urlObj.hostname}`,
+        images: aiResponse.images || [],
+        metaDescription: metadata.description || '',
+        keywords: aiResponse.keywords || []
+      }
     };
   } catch (error) {
-    console.error('Error scanning website:', error);
-    return {
-      success: false,
-      error: error.message || 'Failed to scan website'
+    console.error('AI Scan Error:', error);
+    return { 
+      success: false, 
+      error: error.message || 'Failed to scan website' 
     };
   }
 }
 
 /**
- * Extract company name from domain
+ * Fetch HTML content from a website
+ * @param {string} url - The URL to fetch
+ * @returns {Promise<string>} HTML content
+ */
+async function fetchWebsiteHtml(url) {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; FlightmediaBot/1.0; +https://flightmedia.com)',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
+        'Accept-Encoding': 'gzip, deflate',
+        'Connection': 'keep-alive',
+      },
+      timeout: 10000 // 10 second timeout
+    });
+    
+    if (!res.ok) {
+      throw new Error(`Failed to fetch HTML: ${res.status} ${res.statusText}`);
+    }
+    
+    return await res.text();
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw new Error(`Failed to fetch website: ${error.message}`);
+  }
+}
+
+/**
+ * Extract metadata from HTML content
+ * @param {string} html - HTML content
+ * @param {URL} urlObj - URL object
+ * @returns {Object} Extracted metadata
+ */
+function extractMetadata(html, urlObj) {
+  try {
+    const $ = cheerio.load(html);
+    
+    const getMeta = (name) => {
+      return $(`meta[name="${name}"]`).attr('content') ||
+             $(`meta[property="og:${name}"]`).attr('content') ||
+             $(`meta[property="twitter:${name}"]`).attr('content');
+    };
+
+    // Extract images from various sources
+    const images = [];
+    
+    // From meta tags
+    const ogImage = getMeta('image');
+    if (ogImage) images.push(ogImage);
+    
+    // From img tags (first 5)
+    $('img').slice(0, 5).each((i, el) => {
+      const src = $(el).attr('src');
+      if (src && !src.startsWith('data:')) {
+        images.push(src);
+      }
+    });
+
+    // Parse JSON-LD if available
+    let jsonLd = null;
+    try {
+      const jsonLdScript = $('script[type="application/ld+json"]').first().html();
+      if (jsonLdScript) {
+        jsonLd = JSON.parse(jsonLdScript);
+      }
+    } catch (e) {
+      console.warn('Failed to parse JSON-LD:', e);
+    }
+
+    return {
+      title: $('title').text().trim(),
+      description: getMeta('description'),
+      ogImage: ogImage,
+      twitterCard: getMeta('twitter:card'),
+      jsonLd: jsonLd,
+      domain: urlObj.hostname,
+      images: images,
+      h1: $('h1').first().text().trim(),
+      h2: $('h2').first().text().trim()
+    };
+  } catch (error) {
+    console.error('Metadata extraction error:', error);
+    return {
+      title: '',
+      description: '',
+      domain: urlObj.hostname,
+      images: []
+    };
+  }
+}
+
+/**
+ * Query AI model for website analysis
+ * @param {Object} context - Context information
+ * @returns {Promise<Object>} AI analysis results
+ */
+async function queryAIModel(context) {
+  try {
+    // Check if OpenAI is available
+    if (!openai) {
+      throw new Error('OpenAI client not initialized');
+    }
+
+    const prompt = `
+You are a web intelligence engine. Given metadata and basic web structure, return a JSON object describing:
+
+- companyName (extract from domain, title, or JSON-LD)
+- productType (SaaS Platform, E-commerce Store, Agency, Content Platform, Tool, Business, etc.)
+- productInfo (detailed description with summary, features, and tagline)
+- keywords (relevant business keywords)
+- logo (if image URL found in metadata, otherwise null)
+- images (array of relevant image URLs from metadata)
+
+Here is the context:
+URL: ${context.url}
+Domain: ${context.domain}
+Path: ${context.path}
+Title: ${context.metadata.title || 'N/A'}
+Description: ${context.metadata.description || 'N/A'}
+H1: ${context.metadata.h1 || 'N/A'}
+H2: ${context.metadata.h2 || 'N/A'}
+OG Image: ${context.metadata.ogImage || 'N/A'}
+JSON-LD: ${context.metadata.jsonLd ? JSON.stringify(context.metadata.jsonLd) : 'N/A'}
+Available Images: ${context.metadata.images ? context.metadata.images.join(', ') : 'N/A'}
+
+Respond with just a JSON object. No prose or explanation. Ensure all fields are properly formatted strings or arrays.
+`;
+
+    const chatResponse = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        { 
+          role: 'system', 
+          content: 'You are a professional product and brand intelligence AI. Always respond with valid JSON only.' 
+        },
+        { role: 'user', content: prompt }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const raw = chatResponse.choices[0].message.content;
+    
+    // Clean the response in case it has markdown formatting
+    const cleanedRaw = raw.replace(/```json\n?|\n?```/g, '').trim();
+    
+    try {
+      return JSON.parse(cleanedRaw);
+    } catch (e) {
+      console.error('Failed to parse GPT output:', cleanedRaw);
+      console.error('Parse error:', e);
+      
+      // Fallback to basic extraction
+      return {
+        companyName: extractCompanyName(context.domain),
+        productType: determineProductType(context.path, context.domain),
+        productInfo: generateProductInfo(context.domain, context.path),
+        keywords: [],
+        logo: null,
+        images: context.metadata.images || []
+      };
+    }
+  } catch (error) {
+    console.error('AI query error:', error);
+    throw new Error(`AI analysis failed: ${error.message}`);
+  }
+}
+
+/**
+ * Extract company name from domain (fallback method)
  * @param {string} domain - Domain name
  * @returns {string} Company name
  */
@@ -95,7 +282,7 @@ function extractCompanyName(domain) {
 }
 
 /**
- * Determine product type based on URL path and domain
+ * Determine product type based on URL path and domain (fallback method)
  * @param {string} path - URL path
  * @param {string} domain - Domain name
  * @returns {string} Product type
@@ -137,7 +324,7 @@ function determineProductType(path, domain) {
 }
 
 /**
- * Generate product information based on domain and path
+ * Generate product information based on domain and path (fallback method)
  * @param {string} domain - Domain name
  * @param {string} path - URL path
  * @returns {string} Product description
@@ -205,10 +392,10 @@ export function validateWebsiteUrl(url) {
  */
 export function getScanningSteps() {
   return [
-    { progress: 20, message: 'Fetching product information...' },
-    { progress: 40, message: 'Generating product page...' },
-    { progress: 60, message: 'Extracting key details...' },
-    { progress: 80, message: 'Analyzing content...' },
+    { progress: 20, message: 'Fetching website content...' },
+    { progress: 40, message: 'Extracting metadata...' },
+    { progress: 60, message: 'Analyzing with AI...' },
+    { progress: 80, message: 'Processing results...' },
     { progress: 100, message: 'Scan complete!' }
   ];
-} 
+}
