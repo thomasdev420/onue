@@ -4,6 +4,8 @@ import OpenAI from 'openai';
 import { buildContextAwarePrompt } from '../utils/contextPriority.js';
 import { retrieveUserMemory, buildMemoryContext, extractMemoryInsights, storeMemoryInsights } from './aiMemoryService.js';
 import { UNIFIED_CATEGORIES, getCategoryKeywords } from '../shared/constants/imageCategories.js';
+import { getModelConfig } from '../utils/modelSelection.js';
+import { getIntelligenceMode } from './userSettingsService.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -68,6 +70,16 @@ export class UnifiedContentEngine {
    * @returns {Promise<Array>} Complete slides with text and images
    */
   async generateCompleteSlides({ prompt, slideCount = 5, businessContext, userInfo, existingSlides = [] }) {
+    // Get user's intelligence mode setting
+    let intelligenceMode = 'normal'; // Default fallback
+    if (userInfo?.email) {
+      try {
+        intelligenceMode = await getIntelligenceMode(userInfo.email);
+        apiLogger.debug(`Using intelligence mode: ${intelligenceMode} for user: ${userInfo.email}`);
+      } catch (error) {
+        apiLogger.warn(`Failed to get intelligence mode for user ${userInfo.email}, using default:`, error.message);
+      }
+    }
     try {
       apiLogger.debug(`Generating ${slideCount} complete slides for prompt: "${prompt}"`);
       
@@ -214,16 +226,26 @@ user prompt: "make 6 slides about things people learn too late in life"
   "ratio": "9:16"
 }]`;
 
-      // Generate content using OpenAI
+      // Generate content using OpenAI with model selection based on intelligence mode
       const openaiClient = getOpenAI();
+      const modelConfig = getModelConfig(intelligenceMode);
+      apiLogger.debug(`Using model config for ${intelligenceMode} mode:`, {
+        model: modelConfig.model,
+        temperature: modelConfig.temperature,
+        max_tokens: modelConfig.max_tokens
+      });
+      
       const completion = await openaiClient.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: modelConfig.model,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: prompt }
         ],
-        max_tokens: 4000,
-        temperature: 0.7,
+        max_tokens: modelConfig.max_tokens,
+        temperature: modelConfig.temperature,
+        top_p: modelConfig.top_p,
+        frequency_penalty: modelConfig.frequency_penalty,
+        presence_penalty: modelConfig.presence_penalty,
       });
 
       let slides = [];

@@ -7,6 +7,9 @@ import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X } fro
 import ErrorAlert from '../../components/ErrorAlert';
 import Image from 'next/image';
 import MemoryManager from '../components/MemoryManager';
+import IntelligenceModeToggle from '../../components/IntelligenceModeToggle';
+import AutomationModeToggle from '../../components/AutomationModeToggle';
+import { useUserSettings } from '../../shared/hooks/useUserSettings';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -14,6 +17,19 @@ export default function SettingsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
+  const [isSettingUp, setIsSettingUp] = useState(false);
+  
+  // User settings hook
+  const {
+    intelligenceMode,
+    automationMode,
+    updateIntelligenceMode,
+    updateAutomationMode,
+    isLoading: isLoadingSettings,
+    error: settingsError,
+    saveStatus: settingsSaveStatus,
+    clearError: clearSettingsError
+  } = useUserSettings();
 
   const fetchUserImages = useCallback(async () => {
     try {
@@ -123,6 +139,34 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSetupDatabase = async () => {
+    try {
+      setIsSettingUp(true);
+      setError(null);
+      
+      const response = await fetch('/api/setup/user-settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to setup database');
+      }
+
+      setSuccessMessage('Database setup completed successfully!');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Setup error:', error);
+      setError(`Database setup failed: ${error.message}`);
+    } finally {
+      setIsSettingUp(false);
+    }
+  };
+
   const socialPlatforms = [
     { name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
     { name: 'Facebook', icon: Facebook, color: 'bg-gradient-to-r from-blue-500 to-blue-600' },
@@ -143,6 +187,14 @@ export default function SettingsPage() {
         />
       )}
 
+      {settingsError && (
+        <ErrorAlert 
+          error={settingsError} 
+          onDismiss={clearSettingsError}
+          className="mb-6"
+        />
+      )}
+
       {successMessage && (
         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
           <div className="flex items-center gap-2">
@@ -157,6 +209,34 @@ export default function SettingsPage() {
           </div>
         </div>
       )}
+
+      {/* AI Settings Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">AI Settings</h2>
+          <button
+            onClick={handleSetupDatabase}
+            disabled={isSettingUp}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSettingUp ? 'Setting up...' : 'Setup Database'}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <IntelligenceModeToggle
+            currentMode={intelligenceMode}
+            onModeChange={updateIntelligenceMode}
+            isLoading={isLoadingSettings}
+            saveStatus={settingsSaveStatus}
+          />
+          <AutomationModeToggle
+            currentMode={automationMode}
+            onModeChange={updateAutomationMode}
+            isLoading={isLoadingSettings}
+            saveStatus={settingsSaveStatus}
+          />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Image Management */}

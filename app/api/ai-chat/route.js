@@ -13,6 +13,8 @@ import {
   extractClarifiedInformation,
   buildEnhancedPrompt
 } from '../../utils/clarificationSystem.js';
+import { getModelConfig } from '../../utils/modelSelection.js';
+import { getIntelligenceMode } from '../../services/userSettingsService.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -68,12 +70,23 @@ export async function POST(req) {
       }
     }
 
-    // Get user email for memory system
+    // Get user email for memory system and settings
     let userEmail = null;
     if (userInfo?.email) {
       userEmail = userInfo.email;
     } else if (process.env.NODE_ENV === 'development') {
       userEmail = 'dev@local.com';
+    }
+
+    // Get user's intelligence mode setting
+    let intelligenceMode = 'normal'; // Default fallback
+    if (userEmail) {
+      try {
+        intelligenceMode = await getIntelligenceMode(userEmail);
+        console.log(`Using intelligence mode: ${intelligenceMode} for user: ${userEmail}`);
+      } catch (error) {
+        console.warn(`Failed to get intelligence mode for user ${userEmail}, using default:`, error.message);
+      }
     }
 
     // Handle clarification logic - only for extremely vague requests
@@ -139,8 +152,17 @@ export async function POST(req) {
     systemPrompt += `\n\nYou are Mr Flightmedia – a friendly, knowledgeable marketing assistant. You're here to help users optimize their marketing and grow their business, but you're also happy to chat naturally about other topics while gently steering conversations toward marketing success.`;
 
     const openaiClient = getOpenAI();
-            const completion = await openaiClient.chat.completions.create({
-            model: "gpt-4o",
+    
+    // Get model configuration based on user's intelligence mode
+    const modelConfig = getModelConfig(intelligenceMode);
+    console.log(`Using model config for ${intelligenceMode} mode:`, {
+      model: modelConfig.model,
+      temperature: modelConfig.temperature,
+      max_tokens: modelConfig.max_tokens
+    });
+    
+    const completion = await openaiClient.chat.completions.create({
+      model: modelConfig.model,
       messages: [
         {
           role: "system",
@@ -151,8 +173,11 @@ export async function POST(req) {
           content: finalPrompt
         }
       ],
-      max_tokens: 300,
-      temperature: 0.7,
+      max_tokens: modelConfig.max_tokens,
+      temperature: modelConfig.temperature,
+      top_p: modelConfig.top_p,
+      frequency_penalty: modelConfig.frequency_penalty,
+      presence_penalty: modelConfig.presence_penalty,
     });
 
     const response = completion.choices[0]?.message?.content;
