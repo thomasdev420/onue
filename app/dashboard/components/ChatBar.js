@@ -230,17 +230,23 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
           localStorage.setItem('aiGeneratedImages', JSON.stringify(data.slides));
         }
         
-        // Ask user if they want to view the generated content
+        // Show success message and redirect to content page
         const aiMessage = {
           id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
           type: 'ai',
-          content: `I've created your ${contentType} based on your request. Would you like to view them?`,
+          content: `I've created your ${contentType} based on your request. Redirecting you to view them...`,
           timestamp: new Date(),
           isContentReady: true
         };
         setChatHistory(prev => [...prev, aiMessage]);
         setPendingContent({ type: contentType, url: redirectUrl });
         setIsGenerating(false);
+        
+        // Automatically redirect after a short delay
+        setTimeout(() => {
+          router.push(redirectUrl);
+          setPendingContent(null);
+        }, 1500);
         
         return;
       }
@@ -277,37 +283,14 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
         };
         setChatHistory(prev => [...prev, clarificationMessage]);
       } else {
-        // HARD BLOCK: Never show slide content in chat
-        let aiContent = data.response;
-        let isSlideContent = false;
-        try {
-          // Detect if the response is an array of objects (slide content)
-          const parsed = typeof aiContent === 'string' ? JSON.parse(aiContent) : aiContent;
-          if (Array.isArray(parsed) && parsed.length > 0 && typeof parsed[0] === 'object' && (parsed[0].texts || parsed[0].imageCategory)) {
-            isSlideContent = true;
-          }
-        } catch (e) {
-          // Not JSON, ignore
-        }
-        if (isSlideContent) {
-          const aiMessage = {
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-            type: 'ai',
-            content: "I've created your slides. Would you like to view them on the slides page?",
-            timestamp: new Date(),
-            isContentReady: true
-          };
-          setChatHistory(prev => [...prev, aiMessage]);
-          setPendingContent({ type: 'slides', url: '/dashboard/slides' });
-        } else {
-          const aiMessage = {
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-            type: 'ai',
-            content: aiContent,
-            timestamp: new Date()
-          };
-          setChatHistory(prev => [...prev, aiMessage]);
-        }
+        // For general chat responses, display the content normally
+        const aiMessage = {
+          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+          type: 'ai',
+          content: data.response,
+          timestamp: new Date()
+        };
+        setChatHistory(prev => [...prev, aiMessage]);
       }
     } catch (err) {
       setError(err.message || 'Failed to process request');

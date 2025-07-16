@@ -114,7 +114,7 @@ export const UNIFIED_CATEGORIES = {
     name: 'Sports',
     icon: '🏃',
     color: 'bg-orange-50 border-orange-200',
-    keywords: ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete']
+    keywords: ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete', 'sport']
   },
   family: {
     name: 'Family',
@@ -162,7 +162,7 @@ export const UNIFIED_CATEGORIES = {
     name: 'Running',
     icon: '🏃',
     color: 'bg-orange-50 border-orange-200',
-    keywords: ['running', 'athletic', 'fitness', 'competition', 'training', 'athlete']
+    keywords: ['running', 'athletic', 'fitness', 'competition', 'training', 'athlete', 'run']
   }
 };
 

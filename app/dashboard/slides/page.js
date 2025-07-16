@@ -57,7 +57,26 @@ export default function SlidesEditor() {
   const router = useRouter();
 
   // Use persistence hook for slides
-  const defaultSlides = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
+  const defaultSlides = [{
+    id: `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+    image: null,
+    texts: [{
+      id: `text-${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      content: "Click to add your content",
+      position: { x: 50, y: 50 },
+      style: {
+        fontSize: '18px',
+        color: 'white',
+        fontWeight: 'normal',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+        textAlign: 'center',
+        fontFamily: "'Inter', sans-serif"
+      }
+    }],
+    ratio: '9:16',
+    imageCategory: 'business'
+  }];
+  
   const { 
     data: slidesData, 
     updateData: setSlides, 
@@ -67,7 +86,7 @@ export default function SlidesEditor() {
   } = usePersistence('slides', defaultSlides);
   
   // Ensure slides is always an array and patch missing ratio
-  const slides = (Array.isArray(slidesData) ? slidesData : defaultSlides).map(slide => ({
+  const slides = (Array.isArray(slidesData) && slidesData.length > 0 ? slidesData : defaultSlides).map(slide => ({
     ...slide,
     ratio: ['16:9', '4:3', '1:1', '9:16'].includes(slide.ratio) ? slide.ratio : '9:16'
   }));
@@ -208,9 +227,12 @@ export default function SlidesEditor() {
                 }))
               }));
               
-              // Auto-select images based on imageCategory
+              // Auto-select images based on imageCategory with unique image tracking
               console.log('Processing slides with images. Library images count:', libraryImages.length);
               console.log('Sample library images:', libraryImages.slice(0, 3));
+              
+              // Track used images to ensure uniqueness
+              const usedImageIds = new Set();
               
               const slidesWithImages = positionedSlides.map((slide, index) => {
                 let selectedImage = null;
@@ -251,18 +273,27 @@ export default function SlidesEditor() {
                   const matchingImages = (libraryImages || []).filter(img => 
                     img && img.title && keywords.some(keyword => 
                       img.title.toLowerCase().includes(keyword.toLowerCase())
-                    )
+                    ) && !usedImageIds.has(img.id) // Exclude already used images
                   );
                   
-                  // Select a random matching image, or fallback to any image
-                  selectedImage = matchingImages.length > 0 
-                    ? matchingImages[Math.floor(Math.random() * matchingImages.length)]
-                    : (libraryImages && libraryImages.length > 0) ? libraryImages[Math.floor(Math.random() * libraryImages.length)] : null;
+                  // Select a random matching image, or fallback to any unused image
+                  if (matchingImages.length > 0) {
+                    selectedImage = matchingImages[Math.floor(Math.random() * matchingImages.length)];
+                  } else {
+                    // Fallback to any unused image from library
+                    const unusedImages = (libraryImages || []).filter(img => !usedImageIds.has(img.id));
+                    if (unusedImages.length > 0) {
+                      selectedImage = unusedImages[Math.floor(Math.random() * unusedImages.length)];
+                    }
+                  }
                 }
                 
-                // If no image was selected and we have library images, pick a random one
+                // If no image was selected and we have unused library images, pick a random one
                 if (!selectedImage && libraryImages && libraryImages.length > 0) {
-                  selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
+                  const unusedImages = libraryImages.filter(img => !usedImageIds.has(img.id));
+                  if (unusedImages.length > 0) {
+                    selectedImage = unusedImages[Math.floor(Math.random() * unusedImages.length)];
+                  }
                 }
                 
                 // If still no image, create a placeholder image object
@@ -288,6 +319,12 @@ export default function SlidesEditor() {
                   
                   selectedImage = defaultImages[index % defaultImages.length];
                   console.log(`Using default image for slide ${index + 1}:`, selectedImage.title);
+                }
+                
+                // Mark this image as used
+                if (selectedImage && selectedImage.id) {
+                  usedImageIds.add(selectedImage.id);
+                  console.log(`Selected unique image for slide ${index + 1}:`, selectedImage.title, '(ID:', selectedImage.id, ')');
                 }
                 
                 return {
@@ -638,8 +675,8 @@ export default function SlidesEditor() {
     }
   };
 
-  // Add a guard to prevent rendering with invalid slide data
-  if (isLoadingSlides || !slides || slides.length === 0) {
+  // Add a guard to prevent rendering while loading
+  if (isLoadingSlides) {
     return (
       <div className="p-8">
         <h1 className="text-2xl font-bold text-gray-800 mb-8">Slides Editor</h1>

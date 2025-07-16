@@ -105,7 +105,7 @@ export default function SlideCanvas({
     }
 
     const newText = {
-      id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
+      id: `text-${activeSlide.id}-${activeSlide.texts.length}`,
       content: 'New Text',
       position: { x: 50, y: 50 }, // Center at 50% for both x and y
       style: {
@@ -183,7 +183,7 @@ export default function SlideCanvas({
                     const isDragging = draggingInfo.isDragging && draggingInfo.textIndex === i;
                     return (
                       <TextOverlay
-                        key={textItem.id || i}
+                        key={textItem.id || `text-${slide.id}-${i}`}
                         textItem={textItem}
                         textIndex={i}
                         slideIndex={index}

@@ -10,7 +10,12 @@ export function useSlideManagement({ slides, setSlides, activeSlideIndex, setAct
   }, [setSlides]);
 
   const addSlide = useCallback(() => {
-    const newSlide = { id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' };
+    const newSlide = { 
+      id: `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}`, 
+      image: null, 
+      texts: [], 
+      ratio: '9:16' 
+    };
     setSlides([...slides, newSlide]);
     setActiveSlideIndex(slides.length);
   }, [slides, setSlides, setActiveSlideIndex]);

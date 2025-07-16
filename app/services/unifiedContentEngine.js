@@ -80,8 +80,6 @@ export class UnifiedContentEngine {
       const detectedCategories = this.detectCategoriesFromPrompt(prompt);
       const allowedCategories = detectedCategories.length > 0 ? detectedCategories : ['business'];
       
-      apiLogger.debug(`Using categories: ${allowedCategories.join(', ')}`);
-      
       // Build context-aware prompt
       const context = { businessContext, userInfo };
       let systemPrompt = buildContextAwarePrompt(context, prompt);
@@ -106,60 +104,55 @@ export class UnifiedContentEngine {
       }
       
       // Enhanced system prompt for unified generation
-      systemPrompt += `\n\nYou are a friendly marketing assistant. Create EXACTLY ${slideCount} engaging slides with complete content and image selection.
+      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides. Create EXACTLY ${slideCount} high-quality slides with valuable, informative content.
 
+CRITICAL CONTENT REQUIREMENTS:
+1. Each slide MUST contain 70-175 characters of valuable, educational content
+2. Include specific facts, statistics, actionable tips, or insightful observations
+3. Make each slide self-contained with enough information to be valuable
+4. Use clear, engaging language that educates and informs
+5. Focus on providing real value, not generic statements
+6. Each slide should teach something specific or provide actionable insights
 
-IMAGE SELECTION SECTION:
+CONTENT EXAMPLES:
+✅ GOOD: "The average person spends 2.5 hours daily on social media, equivalent to 38 days per year"
+✅ GOOD: "Compound interest can turn $10,000 into $100,000 in 25 years at 9% return"
+✅ GOOD: "Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers"
+❌ BAD: "Social media is important for business"
+❌ BAD: "Investing is good for your future"
+❌ BAD: "Reading books helps you grow"
 
-You must select the most appropriate UNIFIED_CATEGORIES for each slide session based on the user's prompt.
-
+IMAGE SELECTION:
+1. Select only the most appropriate unified categories based on the user prompt, only select one category. So users do not get a mix of diffrent image categories.
 Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}
 
-Image Selection Rules:
-1. Choose ONE UNIFIED_CATEGORIES that closest matches the user's prompt.
-2. select as many images from the UNIFIED_CATEGORIES as user requests eg make 5 slides, select 5 images.
-3. NEVER use the same image twice for the same generation.
+SLIDE STRUCTURE:
+1. Each slide should focus on ONE specific point or insight
+2. No '#', ':' or '-' in the content EVER
+3. The first slide should introduce the topic (e.g., "5 hidden strengths INTJ didn't realize they had")
 
-CRITICAL TEXT REQUIREMENTS:
-1. Each slide MUST contain 70-175 characters of detailed, informative text
-2. Include specific details, facts, statistics, examples, or actionable insights
-3. Make each slide self-contained with enough information to be valuable
-4. Use engaging, descriptive language that educates and informs
+ABSOLUTE RULES:
+1. CRITICAL: You MUST return EXACTLY ${slideCount} slides. No more, no less.
+2. NEVER use the same image twice in the same slide generation.
+2. YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.
+3. Each slide object must have: texts array, imageCategory, and ratio field.
+4. Texts array must contain objects with id, content and position fields.
+5. Each text object MUST have a unique id field (e.g., "text-1-1", "text-2-1", etc.).
+6. Ratio must be "9:16" for all slides.
 
-Basic Slide Instructions:
-1. Each slide should have only one main idea or topic
-2. Never combine multiple points or topics on a single slide
-3. Each slide must be a separate object in the JSON array
-4. No '#', ':' or '-' in the content EVER
-
-SLIDE NUMBERING REQUIREMENTS:
-- The first slide should explain what the content will be for the rest of the slides (e.g., "11 Things people learn too late in life")
-
-ABSOLUTE RULES SECTION:
-CRITICAL: You MUST return EXACTLY ${slideCount} slides. No more, no less. Count carefully.
-YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.
-Each slide object must have: texts array, imageCategory, and ratio field.
-Texts array must contain objects with id, content and position fields.
-Each text object MUST have a unique id field (e.g., "text-1-1", "text-2-1", etc.).
-Ratio must be "9:16" for all slides.
-
-LOOK AT THE EXAMPLE FORMAT BELOW CAREFULLY, EXAMPLE FORMAT:
-
+EXAMPLE FORMAT:
+You should return the following format:
 user prompt: "make 6 slides about things people learn too late in life"
 
-slide 1:
 [{
   "texts": [{
     "id": "text-1-1",
-    "content": "1. your body is not invisible",
+    "content": "11 things people learn too late in life",
     "position": {"x": 50, "y": 40}
   }],
   "imageCategory": "lifestyle",
   "ratio": "9:16"
-}]
-
-slide 2:
-[{
+}, {
   "texts": [{
     "id": "text-2-1",
     "content": "1. your body is not invisible",
@@ -171,13 +164,10 @@ slide 2:
   }],
   "imageCategory": "lifestyle",
   "ratio": "9:16"
-}]
-
-slide 3:
-[{
+}, {
   "texts": [{   
     "id": "text-3-1",
-    "content": "2. displine beats motivation",
+    "content": "2. discipline beats motivation",
     "position": {"x": 50, "y": 35}
   }, {
     "id": "text-3-2",
@@ -186,13 +176,10 @@ slide 3:
   }],
   "imageCategory": "lifestyle",
   "ratio": "9:16"
-}]
-
-slide 4:
-[{
+}, {
   "texts": [{
     "id": "text-4-1",
-    "content": "3. comparison steals peogress",
+    "content": "3. comparison steals progress",
     "position": {"x": 50, "y": 35}
   }, {
     "id": "text-4-2",
@@ -201,25 +188,19 @@ slide 4:
   }],
   "imageCategory": "lifestyle",
   "ratio": "9:16"
-}]
-
-slide 5:
-[{
+}, {
   "texts": [{
     "id": "text-5-1",
-    "content": "4. conssitnacy > intensity",
+    "content": "4. consistency over intensity",
     "position": {"x": 50, "y": 35}
   }, {
     "id": "text-5-2",
-    "content": "making small progress consistently is better than the occasional all our effort",
+    "content": "making small progress consistently is better than the occasional all out effort",
     "position": {"x": 50, "y": 50}
   }],
   "imageCategory": "lifestyle",
   "ratio": "9:16"
-}]
-
-slide 6:
-[{
+}, {
   "texts": [{
     "id": "text-6-1",
     "content": "5. your habits shape your future",
@@ -255,26 +236,28 @@ slide 6:
         slides = this.parseFallbackResponse(completion.choices[0].message.content, slideCount, allowedCategories);
       }
 
-      // Validate and enhance slides
-      slides = slides.map((slide, idx) => ({
-        id: slide.id || `slide-${Date.now()}-${idx}`,
-        texts: (slide.texts || []).map((text, textIdx) => ({
-          ...text,
-          id: text.id || `text-${Date.now()}-${idx}-${textIdx}`
-        })),
-        imageCategory: slide.imageCategory || 'business',
-        ratio: slide.ratio || '9:16'
-      }));
+      // Validate and enhance slides with proper unique IDs
+      slides = slides.map((slide, idx) => {
+        const slideId = slide.id || `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${idx}`;
+        return {
+          id: slideId,
+          texts: (slide.texts || []).map((text, textIdx) => ({
+            ...text,
+            id: text.id || `text-${slideId}-${textIdx}`
+          })),
+          imageCategory: slide.imageCategory || 'business',
+          ratio: slide.ratio || '9:16'
+        };
+      });
 
       // Ensure we have the exact number of slides requested
       apiLogger.debug(`AI generated ${slides.length} slides, requested ${slideCount}`);
       if (slides.length !== slideCount) {
         apiLogger.warn(`Generated ${slides.length} slides, expected ${slideCount}. Adjusting...`);
         if (slides.length < slideCount) {
-          // Add more slides
-          const additionalSlides = this.generateAdditionalSlides(slides, slideCount - slides.length, prompt, allowedCategories);
-          slides = [...slides, ...additionalSlides];
-          apiLogger.debug(`Added ${additionalSlides.length} additional slides`);
+          // Instead of generating placeholder slides, just use what we have
+          // This prevents the creation of generic "Additional content" slides
+          apiLogger.debug(`Using ${slides.length} slides instead of requested ${slideCount} to avoid placeholder content`);
         } else {
           // Trim to requested number
           slides = slides.slice(0, slideCount);
@@ -282,10 +265,12 @@ slide 6:
         }
       }
 
-      // Apply smart text positioning and add images
-      const completeSlides = await Promise.all(
-        slides.map((slide, index) => this.enhanceSlideWithImage(slide, index, prompt, allowedCategories))
-      );
+      // Apply smart text positioning and add images - process sequentially to prevent race conditions
+      const completeSlides = [];
+      for (let i = 0; i < slides.length; i++) {
+        const enhancedSlide = await this.enhanceSlideWithImage(slides[i], i, prompt, allowedCategories);
+        completeSlides.push(enhancedSlide);
+      }
 
       // Store memory insights
       if (userInfo?.email && prompt) {
@@ -368,12 +353,6 @@ slide 6:
         imageCategory = allowedCategories[0];
       }
       
-      const cacheKey = `${imageCategory}-${slideIndex}`;
-      
-      if (this.cache.has(cacheKey)) {
-        return this.cache.get(cacheKey);
-      }
-
       // Get images for the category
       const keywords = getCategoryKeywords(imageCategory) || getCategoryKeywords('business');
       const images = await this.queryImagesByKeywords(keywords);
@@ -383,33 +362,46 @@ slide 6:
         return null;
       }
 
-      // Filter out already used images
+      // Filter out already used images FIRST - this is critical to prevent duplicates
       const availableImages = images.filter(img => !this.usedImages.has(img.id));
       
       if (availableImages.length === 0) {
-        // If all images are used, reset the used images set and start fresh
-        apiLogger.warn(`All images in category "${imageCategory}" have been used. Resetting selection.`);
-        this.usedImages.clear();
-        
-        // Get fresh available images after reset
-        const freshAvailableImages = images.filter(img => !this.usedImages.has(img.id));
-        if (freshAvailableImages.length > 0) {
-          const selectedImage = freshAvailableImages[Math.floor(Math.random() * freshAvailableImages.length)];
-          this.usedImages.add(selectedImage.id);
-          this.cache.set(cacheKey, selectedImage);
-          return selectedImage;
+        // Only reset if we've used more than 80% of available images to prevent premature resets
+        const usedPercentage = this.usedImages.size / images.length;
+        if (usedPercentage > 0.8) {
+          apiLogger.warn(`Used ${usedPercentage * 100}% of images in category "${imageCategory}". Resetting selection.`);
+          this.usedImages.clear();
+          
+          // Get fresh available images after reset
+          const freshAvailableImages = images.filter(img => !this.usedImages.has(img.id));
+          if (freshAvailableImages.length > 0) {
+            const selectedImage = freshAvailableImages[Math.floor(Math.random() * freshAvailableImages.length)];
+            this.usedImages.add(selectedImage.id);
+            apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
+            return selectedImage;
+          }
         }
         
-        // If still no available images, return the first image
-        return images[0];
+        // If we can't reset or still no available images, pick a random image from all images
+        // But still avoid duplicates by checking if it's already used
+        const unusedImages = images.filter(img => !this.usedImages.has(img.id));
+        if (unusedImages.length > 0) {
+          const randomImage = unusedImages[Math.floor(Math.random() * unusedImages.length)];
+          this.usedImages.add(randomImage.id);
+          apiLogger.debug(`Selected image ${randomImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
+          return randomImage;
+        } else {
+          // If all images are used, we have no choice but to reuse one
+          const randomImage = images[Math.floor(Math.random() * images.length)];
+          apiLogger.warn(`All images in category "${imageCategory}" have been used. Reusing image ${randomImage.id} for slide ${slideIndex}`);
+          return randomImage;
+        }
       }
 
       // Select a random image from available options
       const selectedImage = availableImages[Math.floor(Math.random() * availableImages.length)];
       this.usedImages.add(selectedImage.id);
-      this.cache.set(cacheKey, selectedImage);
       
-      apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory}`);
       return selectedImage;
 
     } catch (error) {
@@ -483,28 +475,36 @@ slide 6:
     const defaultCategory = allowedCategories[0] || 'business';
     
     if (splitSlides.length > 1) {
-      return splitSlides.slice(0, slideCount).map((text, index) => ({
-        texts: [{ 
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`,
-          content: text, 
-          position: { x: 50, y: 60 } 
-        }],
-        imageCategory: defaultCategory
-      }));
+      return splitSlides.slice(0, slideCount).map((text, index) => {
+        const slideId = `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`;
+        return {
+          id: slideId,
+          texts: [{ 
+            id: `text-${slideId}-0`,
+            content: text, 
+            position: { x: 50, y: 60 } 
+          }],
+          imageCategory: defaultCategory
+        };
+      });
     } else {
       // If we can't split, create the requested number of slides from the content
       const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 10);
       
       if (sentences.length >= slideCount) {
         // Use sentences if we have enough
-        return sentences.slice(0, slideCount).map((sentence, index) => ({
-          texts: [{ 
-            id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`,
-            content: sentence.trim(), 
-            position: { x: 50, y: 60 } 
-          }],
-          imageCategory: defaultCategory
-        }));
+        return sentences.slice(0, slideCount).map((sentence, index) => {
+          const slideId = `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`;
+          return {
+            id: slideId,
+            texts: [{ 
+              id: `text-${slideId}-0`,
+              content: sentence.trim(), 
+              position: { x: 50, y: 60 } 
+            }],
+            imageCategory: defaultCategory
+          };
+        });
       } else {
         // Fallback to word splitting
         const words = content.split(' ');
@@ -515,10 +515,12 @@ slide 6:
           const start = i * wordsPerSlide;
           const end = Math.min(start + wordsPerSlide, words.length);
           const slideText = words.slice(start, end).join(' ');
+          const slideId = `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${i}`;
           
           slides.push({
+            id: slideId,
             texts: [{ 
-              id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}-${i}`,
+              id: `text-${slideId}-0`,
               content: slideText, 
               position: { x: 50, y: 60 } 
             }],
@@ -530,30 +532,7 @@ slide 6:
     }
   }
 
-  /**
-   * Generate additional slides if needed
-   * @param {Array} existingSlides - Existing slides
-   * @param {number} additionalCount - Number of additional slides needed
-   * @param {string} prompt - Original prompt
-   * @param {Array} allowedCategories - Categories allowed for this generation
-   * @returns {Array} Additional slides
-   */
-  generateAdditionalSlides(existingSlides, additionalCount, prompt, allowedCategories = ['business']) {
-    const defaultCategory = allowedCategories[0] || 'business';
-    const additionalSlides = [];
-    for (let i = 0; i < additionalCount; i++) {
-      const slideNumber = existingSlides.length + i + 1;
-      additionalSlides.push({
-        texts: [{ 
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}-${i}`,
-          content: `${slideNumber} Additional content based on "${prompt}" - This slide provides more insights and information related to the main topic`, 
-          position: { x: 50, y: 60 } 
-        }],
-        imageCategory: defaultCategory
-      });
-    }
-    return additionalSlides;
-  }
+
 
   /**
    * Clear cache (useful for testing or memory management)
