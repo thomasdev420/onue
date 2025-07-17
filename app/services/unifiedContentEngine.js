@@ -822,23 +822,30 @@ What category would best represent the theme or concept of this content?`;
   async selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt, intelligenceMode = 'normal') {
     try {
       // Limit the number of images to analyze to avoid excessive API calls
-      const maxImagesToAnalyze = 10;
+      const maxImagesToAnalyze = intelligenceMode === 'max' ? 15 : 8;
       const imagesToAnalyze = availableImages.slice(0, maxImagesToAnalyze);
       
       apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex} (${intelligenceMode} mode)`);
       
-      // First, try keyword-based selection for quick results
-      const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
-      
-      // If we have a good keyword match (score > 0), use it
-      const keywordScore = this.calculateKeywordScore(keywordBasedImage, specificKeywords);
-      if (keywordScore > 0) {
-        apiLogger.debug(`✅ Using keyword-based selection for slide ${slideIndex}: "${keywordBasedImage.title}" (score: ${keywordScore})`);
-        return keywordBasedImage;
+      // For normal mode, always use visual analysis for better image selection
+      // For max mode, try keyword-based selection first, then fall back to visual analysis
+      if (intelligenceMode === 'max') {
+        // First, try keyword-based selection for quick results
+        const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
+        
+        // If we have a good keyword match (score > 0), use it
+        const keywordScore = this.calculateKeywordScore(keywordBasedImage, specificKeywords);
+        if (keywordScore > 0) {
+          apiLogger.debug(`✅ Using keyword-based selection for slide ${slideIndex}: "${keywordBasedImage.title}" (score: ${keywordScore})`);
+          return keywordBasedImage;
+        }
+        
+        // If no good keyword matches, use visual analysis
+        apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
+      } else {
+        // Normal mode: Always use visual analysis for better image selection
+        apiLogger.info(`🎯 Using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
       }
-      
-      // If no good keyword matches, use visual analysis
-      apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
       
       // Analyze images with visual AI
       const imageUrls = imagesToAnalyze.map(img => img.image_url);

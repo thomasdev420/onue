@@ -109,9 +109,11 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5
         </div>
 
                   {/* Credit Display */}
-          <div className="px-4 mb-4">
-            <SidebarCreditDisplay isCollapsed={isCollapsed} />
-          </div>
+          {!isCollapsed && (
+            <div className="px-4 mb-4">
+              <SidebarCreditDisplay isCollapsed={isCollapsed} />
+            </div>
+          )}
 
           {/* Footer */}
           <div className="p-4">
