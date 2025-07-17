@@ -46,7 +46,7 @@ export class UnifiedContentEngine {
    * @param {Object} businessContext - Business context for better analysis
    * @returns {Promise<Array>} Array of detected categories
    */
-  async detectCategoriesFromPrompt(prompt, businessContext = {}) {
+  async detectCategoriesFromPrompt(prompt, businessContext = {}, intelligenceMode = 'normal') {
     try {
       const openaiClient = getOpenAI();
       
@@ -96,14 +96,25 @@ Response: {"categories": ["luxury", "travel"]}`;
 
 Select the most appropriate image categories:`;
 
+      // Get model configuration based on intelligence mode
+      const modelConfig = getModelConfig(intelligenceMode, prompt, businessContext, 'category');
+      apiLogger.debug(`Using model config for category detection (${intelligenceMode} mode):`, {
+        model: modelConfig.model,
+        temperature: modelConfig.temperature,
+        max_tokens: modelConfig.max_tokens
+      });
+      
       const completion = await openaiClient.chat.completions.create({
-        model: 'gpt-4o',
+        model: modelConfig.model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 200,
+        max_tokens: modelConfig.max_tokens,
+        temperature: modelConfig.temperature,
+        top_p: modelConfig.top_p,
+        frequency_penalty: modelConfig.frequency_penalty,
+        presence_penalty: modelConfig.presence_penalty,
         response_format: { type: 'json_object' }
       });
 
@@ -159,7 +170,7 @@ Select the most appropriate image categories:`;
    * @param {Object} businessContext - Business context for better analysis
    * @returns {Promise<Object>} Object with categories and specific keywords
    */
-  async detectSpecificKeywordsFromPrompt(prompt, businessContext = {}) {
+  async detectSpecificKeywordsFromPrompt(prompt, businessContext = {}, intelligenceMode = 'normal') {
     try {
       const openaiClient = getOpenAI();
       
@@ -228,14 +239,25 @@ Response: {
 
 Extract the most appropriate category and specific keywords:`;
 
+      // Get model configuration based on intelligence mode
+      const modelConfig = getModelConfig(intelligenceMode, prompt, businessContext, 'keyword');
+      apiLogger.debug(`Using model config for keyword detection (${intelligenceMode} mode):`, {
+        model: modelConfig.model,
+        temperature: modelConfig.temperature,
+        max_tokens: modelConfig.max_tokens
+      });
+      
       const completion = await openaiClient.chat.completions.create({
-        model: 'gpt-4o',
+        model: modelConfig.model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 300,
+        max_tokens: modelConfig.max_tokens,
+        temperature: modelConfig.temperature,
+        top_p: modelConfig.top_p,
+        frequency_penalty: modelConfig.frequency_penalty,
+        presence_penalty: modelConfig.presence_penalty,
         response_format: { type: 'json_object' }
       });
 
@@ -249,7 +271,7 @@ Extract the most appropriate category and specific keywords:`;
         parsedResponse = JSON.parse(response);
       } catch (parseError) {
         apiLogger.warn('Failed to parse AI keyword response, falling back to category detection:', parseError.message);
-        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext);
+        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext, intelligenceMode);
         return {
           category: categories[0] || 'business',
           specificKeywords: []
@@ -259,7 +281,7 @@ Extract the most appropriate category and specific keywords:`;
       // Validate the response structure
       if (!parsedResponse.category || !UNIFIED_CATEGORIES.hasOwnProperty(parsedResponse.category)) {
         apiLogger.warn('Invalid category in AI response, falling back to category detection');
-        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext);
+        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext, intelligenceMode);
         return {
           category: categories[0] || 'business',
           specificKeywords: parsedResponse.specificKeywords || []
@@ -280,7 +302,7 @@ Extract the most appropriate category and specific keywords:`;
 
     } catch (error) {
       apiLogger.error('Error in AI specific keyword detection, falling back to category detection:', error.message);
-      const categories = await this.detectCategoriesFromPrompt(prompt, businessContext);
+      const categories = await this.detectCategoriesFromPrompt(prompt, businessContext, intelligenceMode);
       return {
         category: categories[0] || 'business',
         specificKeywords: []
@@ -318,7 +340,7 @@ Extract the most appropriate category and specific keywords:`;
    * @param {Object} businessContext - Business context
    * @returns {Promise<string>} Fallback category
    */
-  async getIntelligentFallbackCategory(prompt, specificKeywords, businessContext = {}) {
+  async getIntelligentFallbackCategory(prompt, specificKeywords, businessContext = {}, intelligenceMode = 'normal') {
     try {
       apiLogger.debug(`Using AI for intelligent fallback analysis...`);
       
@@ -371,14 +393,25 @@ Specific keywords that didn't find matches: ${specificKeywords.join(', ')}
 
 What category would best represent the theme or concept of this content?`;
 
+      // Get model configuration based on intelligence mode
+      const modelConfig = getModelConfig(intelligenceMode, prompt, businessContext, 'category');
+      apiLogger.debug(`Using model config for intelligent fallback (${intelligenceMode} mode):`, {
+        model: modelConfig.model,
+        temperature: modelConfig.temperature,
+        max_tokens: modelConfig.max_tokens
+      });
+      
       const completion = await openaiClient.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: modelConfig.model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 50,
+        max_tokens: modelConfig.max_tokens,
+        temperature: modelConfig.temperature,
+        top_p: modelConfig.top_p,
+        frequency_penalty: modelConfig.frequency_penalty,
+        presence_penalty: modelConfig.presence_penalty,
       });
 
       const response = completion.choices[0]?.message?.content?.trim().toLowerCase();
@@ -448,8 +481,8 @@ What category would best represent the theme or concept of this content?`;
       this.categoryCache.clear(); // Also clear category cache to get fresh images
       
       // Detect categories and specific keywords from user prompt using AI
-      apiLogger.debug(`Starting AI-powered category and keyword detection for prompt: "${prompt}"`);
-      const keywordAnalysis = await this.detectSpecificKeywordsFromPrompt(prompt, businessContext);
+      apiLogger.debug(`Starting AI-powered category and keyword detection for prompt: "${prompt}" (${intelligenceMode} mode)`);
+      const keywordAnalysis = await this.detectSpecificKeywordsFromPrompt(prompt, businessContext, intelligenceMode);
       const allowedCategories = [keywordAnalysis.category];
       const specificKeywords = keywordAnalysis.specificKeywords;
       apiLogger.debug(`AI detection complete. Category: ${keywordAnalysis.category}, Specific keywords: ${specificKeywords.join(', ')}`);
@@ -483,7 +516,7 @@ What category would best represent the theme or concept of this content?`;
 
       // Generate content using OpenAI with model selection based on intelligence mode
       const openaiClient = getOpenAI();
-      const modelConfig = getModelConfig(intelligenceMode);
+      const modelConfig = getModelConfig(intelligenceMode, prompt, { businessContext, userInfo }, 'content');
       apiLogger.debug(`Using model config for ${intelligenceMode} mode:`, {
         model: modelConfig.model,
         temperature: modelConfig.temperature,
@@ -545,7 +578,7 @@ What category would best represent the theme or concept of this content?`;
       // Apply smart text positioning and add images - process sequentially to prevent race conditions
       const completeSlides = [];
       for (let i = 0; i < slides.length; i++) {
-        const enhancedSlide = await this.enhanceSlideWithImage(slides[i], i, prompt, allowedCategories, specificKeywords, businessContext);
+        const enhancedSlide = await this.enhanceSlideWithImage(slides[i], i, prompt, allowedCategories, specificKeywords, businessContext, intelligenceMode);
         completeSlides.push(enhancedSlide);
       }
 
@@ -585,7 +618,7 @@ What category would best represent the theme or concept of this content?`;
    * @param {Object} businessContext - Business context for intelligent fallback
    * @returns {Promise<Object>} Enhanced slide with image
    */
-  async enhanceSlideWithImage(slide, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}) {
+  async enhanceSlideWithImage(slide, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
     try {
       // Enforce category restrictions
       let imageCategory = slide.imageCategory || 'business';
@@ -601,7 +634,8 @@ What category would best represent the theme or concept of this content?`;
         prompt,
         allowedCategories,
         specificKeywords,
-        businessContext
+        businessContext,
+        intelligenceMode
       );
 
       return {
@@ -636,7 +670,7 @@ What category would best represent the theme or concept of this content?`;
    * @param {Object} businessContext - Business context for intelligent fallback
    * @returns {Promise<Object|null>} Selected image
    */
-  async selectImageForSlide(imageCategory, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}) {
+  async selectImageForSlide(imageCategory, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
     try {
       // Enforce category restrictions
       if (!allowedCategories.includes(imageCategory)) {
@@ -655,7 +689,7 @@ What category would best represent the theme or concept of this content?`;
       if ((!images || images.length === 0) && specificKeywords.length > 0) {
         apiLogger.info(`🎯 No images found for specific keywords: ${specificKeywords.join(', ')}. Using intelligent fallback...`);
         
-        const fallbackCategory = await this.getIntelligentFallbackCategory(prompt, specificKeywords, businessContext);
+        const fallbackCategory = await this.getIntelligentFallbackCategory(prompt, specificKeywords, businessContext, intelligenceMode);
         apiLogger.info(`🧠 Intelligent fallback selected category: ${fallbackCategory} for prompt: "${prompt}"`);
         
         // Get images from the fallback category
@@ -710,7 +744,7 @@ What category would best represent the theme or concept of this content?`;
       }
 
       // Select the best matching image from available options using visual analysis
-      const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt);
+      const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt, intelligenceMode);
       this.usedImages.add(selectedImage.id);
       
       return selectedImage;
@@ -785,13 +819,13 @@ What category would best represent the theme or concept of this content?`;
    * @param {string} prompt - Original user prompt for visual analysis
    * @returns {Promise<Object>} Best matching image
    */
-  async selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt) {
+  async selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt, intelligenceMode = 'normal') {
     try {
       // Limit the number of images to analyze to avoid excessive API calls
       const maxImagesToAnalyze = 10;
       const imagesToAnalyze = availableImages.slice(0, maxImagesToAnalyze);
       
-      apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex}`);
+      apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex} (${intelligenceMode} mode)`);
       
       // First, try keyword-based selection for quick results
       const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
@@ -804,11 +838,11 @@ What category would best represent the theme or concept of this content?`;
       }
       
       // If no good keyword matches, use visual analysis
-      apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex}`);
+      apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
       
       // Analyze images with visual AI
       const imageUrls = imagesToAnalyze.map(img => img.image_url);
-      const visualAnalyses = await visualAnalysisService.analyzeImageBatch(imageUrls, prompt);
+      const visualAnalyses = await visualAnalysisService.analyzeImageBatch(imageUrls, prompt, intelligenceMode);
       
       if (visualAnalyses.length === 0) {
         apiLogger.warn(`❌ Visual analysis failed, falling back to random selection for slide ${slideIndex}`);

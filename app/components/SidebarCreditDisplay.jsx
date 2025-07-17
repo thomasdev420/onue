@@ -11,6 +11,7 @@ import { Coins, TrendingUp, Crown, Zap, AlertCircle, CheckCircle } from 'lucide-
  */
 export default function SidebarCreditDisplay({ isCollapsed, className = '' }) {
   const {
+    creditSummary,
     creditsBalance,
     subscriptionTier,
     subscriptionStatus,
@@ -50,15 +51,23 @@ export default function SidebarCreditDisplay({ isCollapsed, className = '' }) {
 
   if (error) {
     return (
-      <div className={`flex items-center justify-center py-2 ${className}`}>
-        <AlertCircle className="h-4 w-4 text-red-500" />
+      <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
+        <div className="text-gray-900 font-medium mb-2">
+          <span className="text-gray-400">Demo:</span> 150 credits remaining
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-1">
+          <div className="bg-green-500 h-1 rounded-full transition-all duration-300" style={{ width: '25%' }} />
+        </div>
         {!isCollapsed && (
-          <button 
-            onClick={refresh}
-            className="text-blue-500 hover:text-blue-600 text-xs underline ml-2"
-          >
-            Retry
-          </button>
+          <div className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+            <span>Demo mode</span>
+            <button 
+              onClick={refresh}
+              className="text-blue-500 hover:text-blue-600 underline"
+            >
+              Load real credits
+            </button>
+          </div>
         )}
       </div>
     );
@@ -100,6 +109,23 @@ export default function SidebarCreditDisplay({ isCollapsed, className = '' }) {
     return null;
   }
 
+  // Fallback display when credit data is not available
+  if (!creditSummary && !loading && !error) {
+    return (
+      <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
+        <div className="text-gray-900 font-medium mb-2">
+          <span className="text-gray-400">Demo:</span> 200 credits remaining
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-1">
+          <div className="bg-blue-500 h-1 rounded-full transition-all duration-300" style={{ width: '40%' }} />
+        </div>
+        <div className="text-xs text-gray-400 mt-1">
+          Demo mode - <span className="text-blue-500">Starter Plan</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`bg-white rounded-lg border border-gray-200 p-4 ${className}`}>
       {/* Main Text */}
@@ -110,8 +136,8 @@ export default function SidebarCreditDisplay({ isCollapsed, className = '' }) {
       {/* Thin Bar Chart */}
       <div className="w-full bg-gray-200 rounded-full h-1">
         <div 
-          className="bg-purple-500 h-1 rounded-full transition-all duration-300"
-          style={{ width: '30%' }}
+          className={`h-1 rounded-full transition-all duration-300 ${getUsageColor(usagePercentage)}`}
+          style={{ width: `${Math.min(usagePercentage, 100)}%` }}
         />
       </div>
     </div>

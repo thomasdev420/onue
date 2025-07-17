@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { apiLogger } from '../utils/logger.js';
+import { getModelConfig } from '../utils/modelSelection.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -29,10 +30,11 @@ export class VisualAnalysisService {
    * Analyze image content using GPT-4 Vision
    * @param {string} imageUrl - URL of the image to analyze
    * @param {string} prompt - User's original prompt for context
+   * @param {string} intelligenceMode - Intelligence mode ('normal' or 'max')
    * @returns {Promise<Object>} Analysis result with content description and relevance score
    */
-  async analyzeImageContent(imageUrl, prompt = '') {
-    const cacheKey = `${imageUrl}-${prompt}`;
+  async analyzeImageContent(imageUrl, prompt = '', intelligenceMode = 'normal') {
+    const cacheKey = `${imageUrl}-${prompt}-${intelligenceMode}`;
     
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey);
@@ -40,6 +42,14 @@ export class VisualAnalysisService {
 
     try {
       const openaiClient = getOpenAI();
+      
+      // Get model configuration based on intelligence mode
+      const modelConfig = getModelConfig(intelligenceMode, prompt, {}, 'visual');
+      apiLogger.debug(`Using model config for visual analysis (${intelligenceMode} mode):`, {
+        model: modelConfig.model,
+        temperature: modelConfig.temperature,
+        max_tokens: modelConfig.max_tokens
+      });
       
       const systemPrompt = `You are an expert at analyzing images for content creation. Your task is to:
 
@@ -80,7 +90,7 @@ User's request: "${prompt}"
 Please provide a detailed analysis of the visual content and relevance to the user's request.`;
 
       const completion = await openaiClient.chat.completions.create({
-        model: 'gpt-4o',
+        model: modelConfig.model,
         messages: [
           { role: 'system', content: systemPrompt },
           { 
@@ -91,8 +101,11 @@ Please provide a detailed analysis of the visual content and relevance to the us
             ]
           }
         ],
-        max_tokens: 500,
-        temperature: 0.3,
+        max_tokens: modelConfig.max_tokens,
+        temperature: modelConfig.temperature,
+        top_p: modelConfig.top_p,
+        frequency_penalty: modelConfig.frequency_penalty,
+        presence_penalty: modelConfig.presence_penalty,
         response_format: { type: 'json_object' }
       });
 
@@ -116,7 +129,7 @@ Please provide a detailed analysis of the visual content and relevance to the us
       }
 
       this.cache.set(cacheKey, analysis);
-      apiLogger.debug(`Visual analysis completed for ${imageUrl}: ${analysis.relevanceScore}/100`);
+      apiLogger.debug(`Visual analysis completed for ${imageUrl} (${intelligenceMode} mode): ${analysis.relevanceScore}/100`);
       
       return analysis;
 
@@ -130,13 +143,14 @@ Please provide a detailed analysis of the visual content and relevance to the us
    * Batch analyze multiple images for comparison
    * @param {Array} imageUrls - Array of image URLs to analyze
    * @param {string} prompt - User's original prompt
+   * @param {string} intelligenceMode - Intelligence mode ('normal' or 'max')
    * @returns {Promise<Array>} Array of analysis results sorted by relevance
    */
-  async analyzeImageBatch(imageUrls, prompt) {
+  async analyzeImageBatch(imageUrls, prompt, intelligenceMode = 'normal') {
     try {
       const analyses = await Promise.all(
         imageUrls.map(async (imageUrl) => {
-          const analysis = await this.analyzeImageContent(imageUrl, prompt);
+          const analysis = await this.analyzeImageContent(imageUrl, prompt, intelligenceMode);
           return {
             imageUrl,
             ...analysis
@@ -147,7 +161,7 @@ Please provide a detailed analysis of the visual content and relevance to the us
       // Sort by relevance score (highest first)
       analyses.sort((a, b) => b.relevanceScore - a.relevanceScore);
       
-      apiLogger.info(`Batch analysis completed for ${imageUrls.length} images`);
+      apiLogger.info(`Batch analysis completed for ${imageUrls.length} images (${intelligenceMode} mode)`);
       return analyses;
 
     } catch (error) {
@@ -161,11 +175,12 @@ Please provide a detailed analysis of the visual content and relevance to the us
    * @param {string} imageUrl - Image URL to check
    * @param {string} prompt - User's prompt
    * @param {number} threshold - Minimum relevance score (default: 70)
+   * @param {string} intelligenceMode - Intelligence mode ('normal' or 'max')
    * @returns {Promise<boolean>} Whether image is relevant
    */
-  async isImageRelevant(imageUrl, prompt, threshold = 70) {
+  async isImageRelevant(imageUrl, prompt, threshold = 70, intelligenceMode = 'normal') {
     try {
-      const analysis = await this.analyzeImageContent(imageUrl, prompt);
+      const analysis = await this.analyzeImageContent(imageUrl, prompt, intelligenceMode);
       return analysis.relevanceScore >= threshold;
     } catch (error) {
       apiLogger.error('Error checking image relevance:', error);
@@ -176,11 +191,12 @@ Please provide a detailed analysis of the visual content and relevance to the us
   /**
    * Get detailed visual elements from image
    * @param {string} imageUrl - Image URL
+   * @param {string} intelligenceMode - Intelligence mode ('normal' or 'max')
    * @returns {Promise<Array>} Array of visual elements
    */
-  async getVisualElements(imageUrl) {
+  async getVisualElements(imageUrl, intelligenceMode = 'normal') {
     try {
-      const analysis = await this.analyzeImageContent(imageUrl);
+      const analysis = await this.analyzeImageContent(imageUrl, '', intelligenceMode);
       return analysis.visualElements || [];
     } catch (error) {
       apiLogger.error('Error getting visual elements:', error);

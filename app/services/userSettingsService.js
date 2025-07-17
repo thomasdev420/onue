@@ -104,12 +104,12 @@ export async function updateUserSettings(userId, settings) {
 /**
  * Update intelligence mode specifically
  * @param {string} userId - User's email
- * @param {string} mode - Intelligence mode ('normal' or 'max')
+ * @param {string} mode - Intelligence mode ('normal', 'max', or 'auto')
  * @returns {Promise<Object>} Updated settings object
  */
 export async function updateIntelligenceMode(userId, mode) {
-  if (!['normal', 'max'].includes(mode)) {
-    throw new Error('Intelligence mode must be "normal" or "max"');
+  if (!['normal', 'max', 'auto'].includes(mode)) {
+    throw new Error('Intelligence mode must be "normal", "max", or "auto"');
   }
 
   return await updateUserSettings(userId, { intelligence_mode: mode });
@@ -132,7 +132,7 @@ export async function updateAutomationMode(userId, mode) {
 /**
  * Get intelligence mode for a user
  * @param {string} userId - User's email
- * @returns {Promise<string>} Intelligence mode ('normal' or 'max')
+ * @returns {Promise<string>} Intelligence mode ('normal', 'max', or 'auto')
  */
 export async function getIntelligenceMode(userId) {
   try {

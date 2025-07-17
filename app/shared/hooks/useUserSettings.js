@@ -51,7 +51,7 @@ export function useUserSettings() {
       return;
     }
 
-    if (!['normal', 'max'].includes(mode)) {
+    if (!['normal', 'max', 'auto'].includes(mode)) {
       setError('Invalid intelligence mode');
       return;
     }

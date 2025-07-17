@@ -5,13 +5,21 @@
 
 /**
  * Get the appropriate GPT model based on intelligence mode
- * @param {string} intelligenceMode - 'normal' or 'max'
+ * @param {string} intelligenceMode - 'normal', 'max', or 'auto'
+ * @param {string} prompt - User prompt (required for auto mode)
+ * @param {Object} context - Additional context (required for auto mode)
+ * @param {string} service - Service type (required for auto mode)
  * @returns {string} The model name to use
  */
-export function getModelForIntelligenceMode(intelligenceMode) {
+export function getModelForIntelligenceMode(intelligenceMode, prompt = '', context = {}, service = 'content') {
   switch (intelligenceMode) {
     case 'max':
       return 'gpt-4o'; // GPT-4o for maximum intelligence
+    case 'auto':
+      // Import auto mode selection dynamically to avoid circular dependencies
+      const { selectOptimalMode } = require('./autoModeSelection');
+      const optimalMode = selectOptimalMode(prompt, context, service);
+      return optimalMode === 'max' ? 'gpt-4o' : 'gpt-4o-mini';
     case 'normal':
     default:
       return 'gpt-4o-mini'; // GPT-4o Mini for balanced approach
@@ -20,10 +28,13 @@ export function getModelForIntelligenceMode(intelligenceMode) {
 
 /**
  * Get model configuration including parameters based on intelligence mode
- * @param {string} intelligenceMode - 'normal' or 'max'
+ * @param {string} intelligenceMode - 'normal', 'max', or 'auto'
+ * @param {string} prompt - User prompt (required for auto mode)
+ * @param {Object} context - Additional context (required for auto mode)
+ * @param {string} service - Service type (required for auto mode)
  * @returns {Object} Model configuration object
  */
-export function getModelConfig(intelligenceMode) {
+export function getModelConfig(intelligenceMode, prompt = '', context = {}, service = 'content') {
   const baseConfig = {
     temperature: 0.7,
     max_tokens: 4000,
@@ -41,6 +52,23 @@ export function getModelConfig(intelligenceMode) {
         max_tokens: 6000, // More tokens for complex responses
         top_p: 0.9
       };
+    case 'auto':
+      // Import auto mode selection dynamically to avoid circular dependencies
+      const { selectOptimalMode } = require('./autoModeSelection');
+      const optimalMode = selectOptimalMode(prompt, context, service);
+      return optimalMode === 'max' ? {
+        ...baseConfig,
+        model: 'gpt-4o',
+        temperature: 0.8,
+        max_tokens: 6000,
+        top_p: 0.9
+      } : {
+        ...baseConfig,
+        model: 'gpt-4o-mini',
+        temperature: 0.7,
+        max_tokens: 4000,
+        top_p: 1
+      };
     case 'normal':
     default:
       return {
@@ -55,7 +83,7 @@ export function getModelConfig(intelligenceMode) {
 
 /**
  * Get credit information for different models
- * @param {string} intelligenceMode - 'normal' or 'max'
+ * @param {string} intelligenceMode - 'normal', 'max', or 'auto'
  * @returns {Object} Credit information
  */
 export function getModelCreditInfo(intelligenceMode) {
@@ -65,6 +93,12 @@ export function getModelCreditInfo(intelligenceMode) {
         model: 'gpt-4o',
         creditsPerRequest: 3,
         description: 'Premium model with highest quality output'
+      };
+    case 'auto':
+      return {
+        model: 'gpt-4o-mini',
+        creditsPerRequest: '1-3',
+        description: 'Smart mode that automatically optimizes cost and quality'
       };
     case 'normal':
     default:
@@ -82,5 +116,5 @@ export function getModelCreditInfo(intelligenceMode) {
  * @returns {boolean} Whether the mode is valid
  */
 export function isValidIntelligenceMode(intelligenceMode) {
-  return ['normal', 'max'].includes(intelligenceMode);
+  return ['normal', 'max', 'auto'].includes(intelligenceMode);
 } 

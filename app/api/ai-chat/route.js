@@ -154,7 +154,7 @@ export async function POST(req) {
     const openaiClient = getOpenAI();
     
     // Get model configuration based on user's intelligence mode
-    const modelConfig = getModelConfig(intelligenceMode);
+    const modelConfig = getModelConfig(intelligenceMode, finalPrompt, { businessContext, userInfo }, 'chat');
     console.log(`Using model config for ${intelligenceMode} mode:`, {
       model: modelConfig.model,
       temperature: modelConfig.temperature,

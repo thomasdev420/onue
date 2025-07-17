@@ -13,9 +13,20 @@ export default function IntelligenceModeToggle({
 }) {
   const modes = [
     {
+      id: 'auto',
+      label: 'Auto',
+      description: 'Smart mode that automatically chooses the best model for each task.',
+      icon: Zap,
+      color: 'bg-green-500',
+      borderColor: 'border-green-200',
+      textColor: 'text-green-700',
+      model: 'either model',
+      credits: '1-3 credits per request'
+    },
+    {
       id: 'normal',
       label: 'Normal',
-      description: 'A balance of price and intelligence',
+      description: 'Faster generation with good quality. Perfect for quick content creation.',
       icon: Brain,
       color: 'bg-blue-500',
       borderColor: 'border-blue-200',
@@ -26,7 +37,7 @@ export default function IntelligenceModeToggle({
     {
       id: 'max',
       label: 'MAX',
-      description: 'Fully optimized for the best content but will cost more',
+      description: 'Slower but higher quality. Best for premium content and complex analysis.',
       icon: Zap,
       color: 'bg-purple-500',
       borderColor: 'border-purple-200',
