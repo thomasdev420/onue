@@ -476,7 +476,7 @@ export default function SettingsPage() {
 
           {/* Usage Breakdown */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">This Month's Usage</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">This Month&apos;s Usage</h3>
             {Object.keys(creditSummary?.usage_by_action || {}).length > 0 ? (
               <div className="space-y-3">
                 {Object.entries(creditSummary?.usage_by_action || {}).slice(0, 5).map(([action, credits]) => {

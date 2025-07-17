@@ -498,5 +498,5 @@ export const creditService = {
   addCreditsToUser,
   getCreditUsageAnalytics,
   hasFeatureAccess,
-  getActionCreditCost
+  getActionCreditCost,
 }; 
