@@ -26,6 +26,8 @@ const STOCK_PHOTO_CATEGORIES = Object.fromEntries(
   Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => [key, value.keywords])
 );
 
+
+
 /**
  * Unified Content Engine - Single service for generating complete slide content
  * Combines text generation and image selection into one streamlined process
@@ -38,11 +40,260 @@ export class UnifiedContentEngine {
   }
 
   /**
-   * Detect categories mentioned in user prompt
+   * AI-powered category detection using ChatGPT 4o
+   * Analyzes user prompt and intelligently selects the most suitable categories
+   * @param {string} prompt - User prompt
+   * @param {Object} businessContext - Business context for better analysis
+   * @returns {Promise<Array>} Array of detected categories
+   */
+  async detectCategoriesFromPrompt(prompt, businessContext = {}) {
+    try {
+      const openaiClient = getOpenAI();
+      
+      // Build context for better category analysis
+      let contextInfo = '';
+      if (businessContext?.companyName) {
+        contextInfo += `Company: ${businessContext.companyName}\n`;
+      }
+      if (businessContext?.businessType) {
+        contextInfo += `Business Type: ${businessContext.businessType}\n`;
+      }
+      if (businessContext?.productInfo) {
+        contextInfo += `Product: ${businessContext.productInfo}\n`;
+      }
+      
+      const systemPrompt = `You are an expert at analyzing content and selecting the most appropriate image categories for visual content creation.
+
+Available image categories:
+${Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => 
+  `- ${key}: ${value.name} (${value.keywords.join(', ')})`
+).join('\n')}
+
+TASK: Analyze the user's prompt and select the 1-3 most appropriate image categories that would best represent the visual style and theme of the content they want to create.
+
+ANALYSIS GUIDELINES:
+
+1. Consider the business context if provided
+2. Never use the same image twice in the same slide generation.
+3. Select only the most appropriate unified categories based on the user prompt, only select one category. So users do not get a mix of diffrent image categories.
+Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}
+
+RESPONSE FORMAT: Return ONLY a JSON object with a "categories" array containing category keys.
+Example: {"categories": ["business", "technology"]}
+
+EXAMPLE:
+User prompt: "Create slides about startup funding and investment strategies"
+Business context: Technology startup
+Response: {"categories": ["technology", "finance", "entrepreneurship"]}
+
+User prompt: "Make motivational content about fitness and health"
+Response: {"categories": ["health", "motivation", "lifestyle"]}
+
+User prompt: "Design slides about luxury travel destinations"
+Response: {"categories": ["luxury", "travel"]}`;
+
+      const userPrompt = `${contextInfo ? `Context:\n${contextInfo}\n` : ''}User prompt: "${prompt}"
+
+Select the most appropriate image categories:`;
+
+      const completion = await openaiClient.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 200,
+        response_format: { type: 'json_object' }
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        throw new Error('No response from AI category analysis');
+      }
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(response);
+      } catch (parseError) {
+        apiLogger.warn('Failed to parse AI category response, falling back to keyword detection:', parseError.message);
+        return this.detectCategoriesFromPromptFallback(prompt);
+      }
+
+      // Extract categories from the response
+      let detectedCategories = [];
+      if (Array.isArray(parsedResponse.categories)) {
+        detectedCategories = parsedResponse.categories;
+      } else if (Array.isArray(parsedResponse)) {
+        detectedCategories = parsedResponse;
+      } else {
+        // Try to find categories in the response object
+        detectedCategories = Object.values(parsedResponse).filter(val => 
+          Array.isArray(val) && val.every(cat => typeof cat === 'string')
+        ).flat();
+      }
+
+      // Validate that all detected categories exist in our unified categories
+      const validCategories = detectedCategories.filter(category => 
+        UNIFIED_CATEGORIES.hasOwnProperty(category)
+      );
+
+      if (validCategories.length === 0) {
+        apiLogger.warn('No valid categories detected by AI, falling back to keyword detection');
+        return this.detectCategoriesFromPromptFallback(prompt);
+      }
+
+      apiLogger.debug(`AI detected categories: ${validCategories.join(', ')}`);
+      return validCategories;
+
+    } catch (error) {
+      apiLogger.error('Error in AI category detection, falling back to keyword detection:', error.message);
+      return this.detectCategoriesFromPromptFallback(prompt);
+    }
+  }
+
+  /**
+   * Enhanced AI-powered specific keyword detection for precise image selection
+   * Analyzes user prompt and extracts specific keywords for targeted image selection
+   * @param {string} prompt - User prompt
+   * @param {Object} businessContext - Business context for better analysis
+   * @returns {Promise<Object>} Object with categories and specific keywords
+   */
+  async detectSpecificKeywordsFromPrompt(prompt, businessContext = {}) {
+    try {
+      const openaiClient = getOpenAI();
+      
+      // Build context for better keyword analysis
+      let contextInfo = '';
+      if (businessContext?.companyName) {
+        contextInfo += `Company: ${businessContext.companyName}\n`;
+      }
+      if (businessContext?.businessType) {
+        contextInfo += `Business Type: ${businessContext.businessType}\n`;
+      }
+      if (businessContext?.productInfo) {
+        contextInfo += `Product: ${businessContext.productInfo}\n`;
+      }
+      
+      const systemPrompt = `You are an expert at analyzing content and extracting specific keywords for precise image selection.
+
+TASK: Analyze the user's prompt and extract:
+1. The most appropriate image category (from the available categories)
+2. Specific keywords that should be present in the selected images for maximum relevance
+
+AVAILABLE IMAGE CATEGORIES:
+${Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => 
+  `- ${key}: ${value.name} (${value.keywords.join(', ')})`
+).join('\n')}
+
+ANALYSIS GUIDELINES:
+1. Select the most specific and relevant category
+2. Extract 3-5 specific keywords that should appear in image titles or descriptions
+3. Focus on visual elements, objects, scenes, or concepts mentioned in the prompt
+4. Consider the business context for more targeted keyword selection
+5. Keywords should be specific enough to find relevant images but not so specific that no images match
+
+RESPONSE FORMAT: Return ONLY a JSON object with:
+{
+  "category": "selected_category_key",
+  "specificKeywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+}
+
+EXAMPLES:
+User prompt: "Create slides about startup funding and investment strategies"
+Response: {
+  "category": "finance",
+  "specificKeywords": ["investment", "funding", "startup", "money", "business"]
+}
+
+User prompt: "Make motivational content about fitness and health"
+Response: {
+  "category": "health",
+  "specificKeywords": ["fitness", "workout", "healthy", "exercise", "wellness"]
+}
+
+User prompt: "Design slides about luxury travel destinations"
+Response: {
+  "category": "luxury",
+  "specificKeywords": ["luxury", "travel", "destination", "premium", "exclusive"]
+}
+
+User prompt: "Create content about team collaboration in modern offices"
+Response: {
+  "category": "business",
+  "specificKeywords": ["team", "collaboration", "office", "meeting", "workplace"]
+}`;
+
+      const userPrompt = `${contextInfo ? `Context:\n${contextInfo}\n` : ''}User prompt: "${prompt}"
+
+Extract the most appropriate category and specific keywords:`;
+
+      const completion = await openaiClient.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 300,
+        response_format: { type: 'json_object' }
+      });
+
+      const response = completion.choices[0]?.message?.content;
+      if (!response) {
+        throw new Error('No response from AI keyword analysis');
+      }
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(response);
+      } catch (parseError) {
+        apiLogger.warn('Failed to parse AI keyword response, falling back to category detection:', parseError.message);
+        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext);
+        return {
+          category: categories[0] || 'business',
+          specificKeywords: []
+        };
+      }
+
+      // Validate the response structure
+      if (!parsedResponse.category || !UNIFIED_CATEGORIES.hasOwnProperty(parsedResponse.category)) {
+        apiLogger.warn('Invalid category in AI response, falling back to category detection');
+        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext);
+        return {
+          category: categories[0] || 'business',
+          specificKeywords: parsedResponse.specificKeywords || []
+        };
+      }
+
+      // Validate and clean specific keywords
+      const specificKeywords = Array.isArray(parsedResponse.specificKeywords) 
+        ? parsedResponse.specificKeywords.filter(keyword => typeof keyword === 'string' && keyword.trim().length > 0)
+        : [];
+
+      apiLogger.debug(`AI detected category: ${parsedResponse.category}, specific keywords: ${specificKeywords.join(', ')}`);
+      
+      return {
+        category: parsedResponse.category,
+        specificKeywords: specificKeywords
+      };
+
+    } catch (error) {
+      apiLogger.error('Error in AI specific keyword detection, falling back to category detection:', error.message);
+      const categories = await this.detectCategoriesFromPrompt(prompt, businessContext);
+      return {
+        category: categories[0] || 'business',
+        specificKeywords: []
+      };
+    }
+  }
+
+  /**
+   * Fallback method using the original keyword-based detection
    * @param {string} prompt - User prompt
    * @returns {Array} Array of detected categories
    */
-  detectCategoriesFromPrompt(prompt) {
+  detectCategoriesFromPromptFallback(prompt) {
     const lowerPrompt = prompt.toLowerCase();
     const detectedCategories = [];
     
@@ -55,8 +306,112 @@ export class UnifiedContentEngine {
       }
     }
     
-    apiLogger.debug(`Detected categories from prompt: ${detectedCategories.join(', ')}`);
+    apiLogger.debug(`Fallback detected categories: ${detectedCategories.join(', ')}`);
     return detectedCategories;
+  }
+
+  /**
+   * Intelligent semantic fallback for image selection
+   * Uses AI to determine the most relevant image category when specific keywords don't match
+   * @param {string} prompt - Original user prompt
+   * @param {Array} specificKeywords - Keywords that didn't find matches
+   * @param {Object} businessContext - Business context
+   * @returns {Promise<string>} Fallback category
+   */
+  async getIntelligentFallbackCategory(prompt, specificKeywords, businessContext = {}) {
+    try {
+      apiLogger.debug(`Using AI for intelligent fallback analysis...`);
+      
+      const openaiClient = getOpenAI();
+      
+      // Build context for better reasoning
+      let contextInfo = '';
+      if (businessContext?.companyName) {
+        contextInfo += `Company: ${businessContext.companyName}\n`;
+      }
+      if (businessContext?.businessType) {
+        contextInfo += `Business Type: ${businessContext.businessType}\n`;
+      }
+      
+      const systemPrompt = `You are an expert at analyzing content and determining the most appropriate image categories for visual content creation.
+
+TASK: The user requested images for specific keywords that don't exist in our image database. Your job is to analyze the context and determine what category of images would best represent the theme, mood, or concept of their request.
+
+AVAILABLE IMAGE CATEGORIES:
+${Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => 
+  `- ${key}: ${value.name} (${value.keywords.join(', ')})`
+).join('\n')}
+
+ANALYSIS GUIDELINES:
+1. Use your vast contextual knowledge about people, places, concepts, and cultural references
+2. Think about what the user is trying to convey or represent visually
+3. Consider the broader theme, mood, or concept behind their request
+4. Select the category that would best visually represent their content
+5. Consider emotional resonance, cultural associations, and visual symbolism
+6. Be dynamic and creative in your reasoning - don't rely on rigid rules
+
+EXAMPLES OF INTELLIGENT REASONING:
+- "iman gadzhi" → luxury (wealth, entrepreneurship, luxury lifestyle, success)
+- "elon musk" → technology (innovation, space, electric cars, future)
+- "kylie jenner" → luxury (fashion, wealth, lifestyle, influence)
+- "cristiano ronaldo" → sports (athleticism, success, fitness, competition)
+- "tesla" → technology (electric cars, innovation, sustainability, future)
+- "meditation" → lifestyle (wellness, peace, mindfulness, personal growth)
+- "startup funding" → finance (investment, money, business growth, opportunity)
+- "sustainable living" → nature (environment, green living, eco-friendly)
+- "urban nightlife" → urban (city, night, entertainment, metropolitan)
+- "family bonding" → family (relationships, love, togetherness, connection)
+
+RESPONSE FORMAT: Return ONLY the category key (e.g., "luxury", "technology", "business").
+
+AVAILABLE CATEGORIES: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}`;
+
+      const userPrompt = `${contextInfo ? `Context:\n${contextInfo}\n` : ''}User prompt: "${prompt}"
+Specific keywords that didn't find matches: ${specificKeywords.join(', ')}
+
+What category would best represent the theme or concept of this content?`;
+
+      const completion = await openaiClient.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 50,
+      });
+
+      const response = completion.choices[0]?.message?.content?.trim().toLowerCase();
+      if (!response) {
+        throw new Error('No response from AI fallback analysis');
+      }
+
+      // Clean the response and validate it's a valid category
+      const cleanResponse = response.replace(/[^a-z_]/g, '');
+      
+      // Check if the response is a valid category
+      if (UNIFIED_CATEGORIES.hasOwnProperty(cleanResponse)) {
+        apiLogger.debug(`AI fallback selected category: ${cleanResponse} for keywords: ${specificKeywords.join(', ')}`);
+        return cleanResponse;
+      }
+
+      // If the response isn't a valid category, try to find the closest match
+      const validCategories = Object.keys(UNIFIED_CATEGORIES);
+      for (const category of validCategories) {
+        if (cleanResponse.includes(category) || category.includes(cleanResponse)) {
+          apiLogger.debug(`AI fallback matched category: ${category} for response: ${cleanResponse}`);
+          return category;
+        }
+      }
+
+      // If still no match, return business as default
+      apiLogger.warn(`Could not determine fallback category from AI response: "${response}". Using business as default.`);
+      return 'business';
+
+    } catch (error) {
+      apiLogger.error('Error in intelligent fallback category detection:', error.message);
+      return 'business'; // Default fallback
+    }
   }
 
   /**
@@ -88,9 +443,12 @@ export class UnifiedContentEngine {
       this.cache.clear();
       this.categoryCache.clear(); // Also clear category cache to get fresh images
       
-      // Detect categories from user prompt
-      const detectedCategories = this.detectCategoriesFromPrompt(prompt);
-      const allowedCategories = detectedCategories.length > 0 ? detectedCategories : ['business'];
+      // Detect categories and specific keywords from user prompt using AI
+      apiLogger.debug(`Starting AI-powered category and keyword detection for prompt: "${prompt}"`);
+      const keywordAnalysis = await this.detectSpecificKeywordsFromPrompt(prompt, businessContext);
+      const allowedCategories = [keywordAnalysis.category];
+      const specificKeywords = keywordAnalysis.specificKeywords;
+      apiLogger.debug(`AI detection complete. Category: ${keywordAnalysis.category}, Specific keywords: ${specificKeywords.join(', ')}`);
       
       // Build context-aware prompt
       const context = { businessContext, userInfo };
@@ -116,115 +474,8 @@ export class UnifiedContentEngine {
       }
       
       // Enhanced system prompt for unified generation
-      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides. Create EXACTLY ${slideCount} high-quality slides with valuable, informative content.
-
-CRITICAL CONTENT REQUIREMENTS:
-1. Each slide MUST contain 70-175 characters of valuable, educational content
-2. Include specific facts, statistics, actionable tips, or insightful observations
-3. Make each slide self-contained with enough information to be valuable
-4. Use clear, engaging language that educates and informs
-5. Focus on providing real value, not generic statements
-6. Each slide should teach something specific or provide actionable insights
-
-CONTENT EXAMPLES:
-✅ GOOD: "The average person spends 2.5 hours daily on social media, equivalent to 38 days per year"
-✅ GOOD: "Compound interest can turn $10,000 into $100,000 in 25 years at 9% return"
-✅ GOOD: "Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers"
-❌ BAD: "Social media is important for business"
-❌ BAD: "Investing is good for your future"
-❌ BAD: "Reading books helps you grow"
-
-IMAGE SELECTION:
-1. Select only the most appropriate unified categories based on the user prompt, only select one category. So users do not get a mix of diffrent image categories.
-Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}
-
-SLIDE STRUCTURE:
-1. Each slide should focus on ONE specific point or insight
-2. No '#', ':' or '-' in the content EVER
-3. The first slide should introduce the topic (e.g., "5 hidden strengths INTJ didn't realize they had")
-
-ABSOLUTE RULES:
-1. CRITICAL: You MUST return EXACTLY ${slideCount} slides. No more, no less.
-2. NEVER use the same image twice in the same slide generation.
-2. YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.
-3. Each slide object must have: texts array, imageCategory, and ratio field.
-4. Texts array must contain objects with id, content and position fields.
-5. Each text object MUST have a unique id field (e.g., "text-1-1", "text-2-1", etc.).
-6. Ratio must be "9:16" for all slides.
-
-EXAMPLE FORMAT:
-You should return the following format:
-user prompt: "make 6 slides about things people learn too late in life"
-
-[{
-  "texts": [{
-    "id": "text-1-1",
-    "content": "11 things people learn too late in life",
-    "position": {"x": 50, "y": 40}
-  }],
-  "imageCategory": "lifestyle",
-  "ratio": "9:16"
-}, {
-  "texts": [{
-    "id": "text-2-1",
-    "content": "1. your body is not invisible",
-    "position": {"x": 50, "y": 35}
-  }, {
-    "id": "text-2-2",
-    "content": "the choices you make in your 20s and 30s will affect the quality of life in your 50s and beyond",
-    "position": {"x": 50, "y": 50}
-  }],
-  "imageCategory": "lifestyle",
-  "ratio": "9:16"
-}, {
-  "texts": [{   
-    "id": "text-3-1",
-    "content": "2. discipline beats motivation",
-    "position": {"x": 50, "y": 35}
-  }, {
-    "id": "text-3-2",
-    "content": "motivation is temporary but showing up even when you don't feel like it is what makes real progress",
-    "position": {"x": 50, "y": 50}
-  }],
-  "imageCategory": "lifestyle",
-  "ratio": "9:16"
-}, {
-  "texts": [{
-    "id": "text-4-1",
-    "content": "3. comparison steals progress",
-    "position": {"x": 50, "y": 35}
-  }, {
-    "id": "text-4-2",
-    "content": "the only person you should be competing against is the person you were yesterday",
-    "position": {"x": 50, "y": 50}
-  }],
-  "imageCategory": "lifestyle",
-  "ratio": "9:16"
-}, {
-  "texts": [{
-    "id": "text-5-1",
-    "content": "4. consistency over intensity",
-    "position": {"x": 50, "y": 35}
-  }, {
-    "id": "text-5-2",
-    "content": "making small progress consistently is better than the occasional all out effort",
-    "position": {"x": 50, "y": 50}
-  }],
-  "imageCategory": "lifestyle",
-  "ratio": "9:16"
-}, {
-  "texts": [{
-    "id": "text-6-1",
-    "content": "5. your habits shape your future",
-    "position": {"x": 50, "y": 35}
-  }, {
-    "id": "text-6-2",
-    "content": "small daily habits compound both negatively and positively",
-    "position": {"x": 50, "y": 50}
-  }],
-  "imageCategory": "lifestyle",
-  "ratio": "9:16"
-}]`;
+      const valuableSlides = slideCount - 1;
+      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides. Create EXACTLY ${slideCount} slides: the first slide is always an introduction, and the remaining ${valuableSlides} slides each contain valuable, informative content.\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each valuable slide (slides 2 to ${slideCount}) MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each valuable slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each valuable slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: \"The average person spends 2.5 hours daily on social media, equivalent to 38 days per year\"\n✅ GOOD: \"Compound interest can turn $10,000 into $100,000 in 25 years at 9% return\"\n✅ GOOD: \"Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers\"\n❌ BAD: \"Social media is important for business\"\n❌ BAD: \"Investing is good for your future\"\n❌ BAD: \"Reading books helps you grow\"\n\nIMAGE SELECTION:\n1. Use the AI-detected categories: ${allowedCategories.join(', ')}\n2. Select the most appropriate category from these options for each slide\n3. Maintain visual consistency by using related categories when multiple are available\n4. Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}\n\nSLIDE STRUCTURE:\n1. The first slide should introduce the topic and state the correct number of valuable slides (e.g., \"4 secrets of luxury life\" if there are 5 slides total)\n2. Each valuable slide (slides 2 to ${slideCount}) should focus on ONE specific point or insight\n3. No '#', ':' or '-' in the content EVER\n\nABSOLUTE RULES:\n1. CRITICAL: You MUST return EXACTLY ${slideCount} slides. No more, no less.\n2. NEVER use the same image twice in the same slide generation.\n2. YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.\n3. Each slide object must have: texts array, imageCategory, and ratio field.\n4. Texts array must contain objects with id, content and position fields.\n5. Each text object MUST have a unique id field (e.g., \"text-1-1\", \"text-2-1\", etc.).\n6. Ratio must be \"9:16\" for all slides.\n\nEXAMPLE FORMAT:\nYou should return the following format:\nuser prompt: \"make 5 slides about luxury life\"\n\n[{\n  \"texts\": [{\n    \"id\": \"text-1-1\",\n    \"content\": \"4 secrets of luxury life\",\n    \"position\": {\"x\": 50, \"y\": 40}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-2-1\",\n    \"content\": \"Secret 1: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-3-1\",\n    \"content\": \"Secret 2: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-4-1\",\n    \"content\": \"Secret 3: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-5-1\",\n    \"content\": \"Secret 4: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}]`;
 
       // Generate content using OpenAI with model selection based on intelligence mode
       const openaiClient = getOpenAI();
@@ -290,7 +541,7 @@ user prompt: "make 6 slides about things people learn too late in life"
       // Apply smart text positioning and add images - process sequentially to prevent race conditions
       const completeSlides = [];
       for (let i = 0; i < slides.length; i++) {
-        const enhancedSlide = await this.enhanceSlideWithImage(slides[i], i, prompt, allowedCategories);
+        const enhancedSlide = await this.enhanceSlideWithImage(slides[i], i, prompt, allowedCategories, specificKeywords, businessContext);
         completeSlides.push(enhancedSlide);
       }
 
@@ -318,9 +569,11 @@ user prompt: "make 6 slides about things people learn too late in life"
    * @param {number} slideIndex - Slide index
    * @param {string} prompt - Original prompt
    * @param {Array} allowedCategories - Categories allowed for this generation
+   * @param {Array} specificKeywords - Specific keywords for precise image selection
+   * @param {Object} businessContext - Business context for intelligent fallback
    * @returns {Promise<Object>} Enhanced slide with image
    */
-  async enhanceSlideWithImage(slide, slideIndex, prompt, allowedCategories = ['business']) {
+  async enhanceSlideWithImage(slide, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}) {
     try {
       // Enforce category restrictions
       let imageCategory = slide.imageCategory || 'business';
@@ -329,12 +582,14 @@ user prompt: "make 6 slides about things people learn too late in life"
         imageCategory = allowedCategories[0];
       }
       
-      // Select appropriate image based on content and category
+      // Select appropriate image based on content, category, and specific keywords
       const selectedImage = await this.selectImageForSlide(
         imageCategory,
         slideIndex,
         prompt,
-        allowedCategories
+        allowedCategories,
+        specificKeywords,
+        businessContext
       );
 
       return {
@@ -360,14 +615,16 @@ user prompt: "make 6 slides about things people learn too late in life"
   }
 
   /**
-   * Select image for a specific slide
+   * Select image for a specific slide with enhanced keyword-based selection and intelligent fallback
    * @param {string} imageCategory - Image category
    * @param {number} slideIndex - Slide index
    * @param {string} prompt - Original prompt
    * @param {Array} allowedCategories - Categories allowed for this generation
+   * @param {Array} specificKeywords - Specific keywords to match for precise selection
+   * @param {Object} businessContext - Business context for intelligent fallback
    * @returns {Promise<Object|null>} Selected image
    */
-  async selectImageForSlide(imageCategory, slideIndex, prompt, allowedCategories = ['business']) {
+  async selectImageForSlide(imageCategory, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}) {
     try {
       // Enforce category restrictions
       if (!allowedCategories.includes(imageCategory)) {
@@ -376,10 +633,30 @@ user prompt: "make 6 slides about things people learn too late in life"
       }
       
       // Get images for the category
-      const keywords = getCategoryKeywords(imageCategory) || getCategoryKeywords('business');
-      const images = await this.queryImagesByKeywords(keywords);
+      const categoryKeywords = getCategoryKeywords(imageCategory) || getCategoryKeywords('business');
       
-      if (!images || images.length === 0) {
+      // Combine category keywords with specific keywords for more precise selection
+      const allKeywords = [...new Set([...categoryKeywords, ...specificKeywords])];
+      let images = await this.queryImagesByKeywords(allKeywords);
+      
+      // If no images found and we have specific keywords, try intelligent fallback
+      if ((!images || images.length === 0) && specificKeywords.length > 0) {
+        apiLogger.info(`🎯 No images found for specific keywords: ${specificKeywords.join(', ')}. Using intelligent fallback...`);
+        
+        const fallbackCategory = await this.getIntelligentFallbackCategory(prompt, specificKeywords, businessContext);
+        apiLogger.info(`🧠 Intelligent fallback selected category: ${fallbackCategory} for prompt: "${prompt}"`);
+        
+        // Get images from the fallback category
+        const fallbackKeywords = getCategoryKeywords(fallbackCategory) || getCategoryKeywords('business');
+        images = await this.queryImagesByKeywords(fallbackKeywords);
+        
+        if (images && images.length > 0) {
+          apiLogger.info(`✅ Found ${images.length} images using intelligent fallback category: ${fallbackCategory}`);
+        } else {
+          apiLogger.warn(`❌ No images found even with intelligent fallback category: ${fallbackCategory}`);
+          return null;
+        }
+      } else if (!images || images.length === 0) {
         apiLogger.warn(`No images found for category: ${imageCategory}`);
         return null;
       }
@@ -397,7 +674,7 @@ user prompt: "make 6 slides about things people learn too late in life"
           // Get fresh available images after reset
           const freshAvailableImages = images.filter(img => !this.usedImages.has(img.id));
           if (freshAvailableImages.length > 0) {
-            const selectedImage = freshAvailableImages[Math.floor(Math.random() * freshAvailableImages.length)];
+            const selectedImage = this.selectBestMatchingImage(freshAvailableImages, specificKeywords, slideIndex);
             this.usedImages.add(selectedImage.id);
             apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
             return selectedImage;
@@ -408,10 +685,10 @@ user prompt: "make 6 slides about things people learn too late in life"
         // But still avoid duplicates by checking if it's already used
         const unusedImages = images.filter(img => !this.usedImages.has(img.id));
         if (unusedImages.length > 0) {
-          const randomImage = unusedImages[Math.floor(Math.random() * unusedImages.length)];
-          this.usedImages.add(randomImage.id);
-          apiLogger.debug(`Selected image ${randomImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
-          return randomImage;
+          const selectedImage = this.selectBestMatchingImage(unusedImages, specificKeywords, slideIndex);
+          this.usedImages.add(selectedImage.id);
+          apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
+          return selectedImage;
         } else {
           // If all images are used, we have no choice but to reuse one
           const randomImage = images[Math.floor(Math.random() * images.length)];
@@ -420,8 +697,8 @@ user prompt: "make 6 slides about things people learn too late in life"
         }
       }
 
-      // Select a random image from available options
-      const selectedImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+      // Select the best matching image from available options
+      const selectedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
       this.usedImages.add(selectedImage.id);
       
       return selectedImage;
@@ -430,6 +707,62 @@ user prompt: "make 6 slides about things people learn too late in life"
       apiLogger.error('Error selecting image for slide:', error);
       return null;
     }
+  }
+
+  /**
+   * Select the best matching image based on specific keywords
+   * @param {Array} availableImages - Array of available images
+   * @param {Array} specificKeywords - Specific keywords to match
+   * @param {number} slideIndex - Slide index for logging
+   * @returns {Object} Best matching image
+   */
+  selectBestMatchingImage(availableImages, specificKeywords, slideIndex) {
+    if (!specificKeywords || specificKeywords.length === 0) {
+      // If no specific keywords, return random image
+      return availableImages[Math.floor(Math.random() * availableImages.length)];
+    }
+
+    // Score each image based on keyword matches
+    const scoredImages = availableImages.map(image => {
+      let score = 0;
+      const imageTitle = (image.title || '').toLowerCase();
+      
+      // Check for exact keyword matches
+      specificKeywords.forEach(keyword => {
+        const lowerKeyword = keyword.toLowerCase();
+        if (imageTitle.includes(lowerKeyword)) {
+          score += 2; // Higher score for exact matches
+        }
+      });
+      
+      // Check for partial matches (word boundaries)
+      specificKeywords.forEach(keyword => {
+        const lowerKeyword = keyword.toLowerCase();
+        const words = imageTitle.split(/\s+/);
+        words.forEach(word => {
+          if (word.includes(lowerKeyword) || lowerKeyword.includes(word)) {
+            score += 1; // Lower score for partial matches
+          }
+        });
+      });
+      
+      return { image, score };
+    });
+
+    // Sort by score (highest first) and select the best match
+    scoredImages.sort((a, b) => b.score - a.score);
+    
+    // If we have a clear winner (score > 0), use it
+    if (scoredImages[0].score > 0) {
+      const bestMatch = scoredImages[0];
+      apiLogger.debug(`Selected best matching image for slide ${slideIndex}: "${bestMatch.image.title}" (score: ${bestMatch.score})`);
+      return bestMatch.image;
+    }
+    
+    // If no good matches, return random image
+    const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
+    apiLogger.debug(`No keyword matches found for slide ${slideIndex}, using random image: "${randomImage.title}"`);
+    return randomImage;
   }
 
   /**
@@ -564,6 +897,7 @@ user prompt: "make 6 slides about things people learn too late in life"
     this.categoryCache.clear();
     this.usedImages.clear();
   }
+
 }
 
 // Export singleton instance

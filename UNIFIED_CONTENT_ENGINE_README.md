@@ -2,127 +2,116 @@
 
 ## Overview
 
-The Unified Content Engine is a single, streamlined service that combines text generation and image selection into one cohesive process. This eliminates the fragmented approach where text and images were handled separately across multiple files.
+The Unified Content Engine is a comprehensive service that generates complete slide content including text and images in one streamlined process. It combines AI-powered content generation with intelligent image selection to create engaging, visually consistent slides.
 
-## Key Benefits
+## Key Features
 
-1. **Simplified Architecture**: One service handles both text and image generation
-2. **Better Consistency**: Text and images are selected together for optimal matching
-3. **Reduced Complexity**: No more separate image selection services or fragmented logic
-4. **Improved Performance**: Single API call generates complete slides with images
-5. **Easier Maintenance**: All content generation logic in one place
+### 🎯 **Intelligent Image Selection**
+- **Specific Keyword Matching**: Extracts precise keywords from user prompts for targeted image selection
+- **AI-Powered Semantic Fallback**: When specific keywords don't match, uses GPT-4o-mini's contextual knowledge to find the most relevant image category
+- **Dynamic Reasoning**: Leverages AI's vast knowledge about people, places, concepts, and cultural references
+- **Context-Aware Selection**: Considers business context and user preferences for better image relevance
 
-## Architecture
+### 🧠 **AI-Powered Category Detection**
+- Analyzes user prompts to determine the most appropriate image categories
+- Extracts 3-5 specific keywords for precise image matching
+- Uses GPT-4o-mini for intelligent reasoning about content themes
 
-### Core Components
+### 📊 **Smart Image Scoring**
+- Scores images based on exact and partial keyword matches
+- Prevents duplicate image usage across slides
+- Graceful fallback when preferred images aren't available
 
-- **`app/services/unifiedContentEngine.js`**: Main service that handles all content generation
-- **`app/api/generate-slides/route.js`**: Simplified API that uses the unified engine
-- **Frontend Components**: Updated to work with the unified system
+## How It Works
 
-### How It Works
+### 1. **Keyword Extraction**
+The system analyzes the user's prompt to extract:
+- Primary image category (e.g., "luxury", "technology", "business")
+- Specific keywords (e.g., "iman gadzhi" → ["iman", "gadzhi", "entrepreneur", "luxury", "wealth"])
 
-1. **User Request**: User submits a prompt through any interface (ChatBar, PromptModal, etc.)
-2. **Unified Processing**: The unified content engine:
-   - Generates slide text content using AI
-   - Selects appropriate image categories for each slide
-   - Fetches and selects the best images from the database
-   - Applies consistent styling and positioning
-3. **Complete Output**: Returns fully-formed slides with text and images ready to use
+### 2. **Image Selection Process**
+1. **Primary Search**: Look for images matching specific keywords + category keywords
+2. **AI-Powered Fallback**: If no matches found, use GPT-4o-mini's contextual knowledge:
+   - Analyze the prompt using AI's vast knowledge about people, places, and concepts
+   - Determine the most semantically relevant image category
+   - Consider cultural associations, visual symbolism, and emotional resonance
+3. **Best Match Selection**: Score and select the most relevant available image
+
+### 3. **AI-Powered Fallback Examples**
+- **"iman gadzhi"** → No specific images → AI reasoning → "luxury" (wealth, entrepreneurship, success)
+- **"elon musk"** → No specific images → AI reasoning → "technology" (innovation, space, future)
+- **"kylie jenner"** → No specific images → AI reasoning → "luxury" (fashion, wealth, influence)
+- **"meditation"** → No specific images → AI reasoning → "lifestyle" (wellness, peace, mindfulness)
+
+## AI-Powered Intelligence
+
+The system leverages GPT-4o-mini's vast contextual knowledge for dynamic reasoning:
+
+### Dynamic Entity Recognition
+- **People**: Entrepreneurs, celebrities, athletes, influencers, business leaders
+- **Companies**: Tech companies, luxury brands, startups, corporations
+- **Concepts**: Abstract ideas, cultural phenomena, trends, movements
+- **Places**: Cities, countries, landmarks, cultural locations
+
+### Intelligent Reasoning Examples
+- **"iman gadzhi"** → AI recognizes wealth, entrepreneurship, luxury lifestyle → selects "luxury"
+- **"elon musk"** → AI recognizes innovation, technology, space exploration → selects "technology"
+- **"kylie jenner"** → AI recognizes fashion, wealth, social media influence → selects "luxury"
+- **"meditation"** → AI recognizes wellness, mindfulness, personal growth → selects "lifestyle"
+- **"sustainable living"** → AI recognizes environmental consciousness → selects "nature"
 
 ## API Usage
 
-### Generate Complete Slides
-
 ```javascript
-const slides = await unifiedContentEngine.generateCompleteSlides({
-  prompt: "Create 5 slides about entrepreneurship",
+const unifiedEngine = new UnifiedContentEngine();
+
+const slides = await unifiedEngine.generateCompleteSlides({
+  prompt: "Create 5 slides about iman gadzhi life",
   slideCount: 5,
-  businessContext: { companyName: "My Business" },
-  userInfo: { email: "user@example.com" },
-  existingSlides: [] // Optional: for adding to existing content
+  businessContext: {
+    companyName: "Your Business",
+    businessType: "Technology"
+  },
+  userInfo: {
+    name: "John Doe",
+    email: "john@example.com"
+  }
 });
 ```
-
-### Response Format
-
-Each slide includes:
-- `id`: Unique identifier
-- `texts`: Array of text elements with content and positioning
-- `image`: Selected image object with URL and metadata
-- `imageCategory`: Category used for image selection
-- `ratio`: Aspect ratio (default: '9:16')
-
-## Image Selection
-
-The unified engine intelligently selects images based on:
-
-1. **Content Analysis**: AI analyzes slide content to determine appropriate image categories
-2. **Category Matching**: Maps content to predefined image categories (business, technology, success, etc.)
-3. **AI Selection**: Uses AI to choose the best image from available options
-4. **Variety Management**: Ensures no duplicate images within a generation
-5. **Fallback Handling**: Graceful degradation if images aren't available
-
-## Text Generation
-
-The engine generates high-quality text content with:
-
-- **Rich Content**: 70-175 characters of detailed, informative text
-- **Proper Numbering**: Each slide includes its number in the title
-- **Consistent Styling**: White text with shadow for readability
-- **Smart Positioning**: Text positioned for optimal visual impact
-
-## Migration from Old System
-
-### Removed Components
-
-- `app/services/imageSelectionService.js` - Integrated into unified engine
-- Complex image selection logic in frontend components
-- Separate text positioning and styling logic
-
-### Updated Components
-
-- `app/api/generate-slides/route.js` - Now uses unified engine
-- `app/dashboard/slides/components/PromptModal.jsx` - Simplified request format
-- `app/dashboard/components/ChatBar.js` - Uses unified system
-- `app/dashboard/slides/page.js` - Removed complex image selection logic
 
 ## Configuration
 
 ### Environment Variables
-
-- `OPENAI_API_KEY`: Required for AI content generation
-- Database connection for image storage
+- `OPENAI_API_KEY`: Required for AI-powered features
+- `SUPABASE_URL`: Database connection for image storage
+- `SUPABASE_ANON_KEY`: Database authentication
 
 ### Image Categories
-
-Available categories for image selection:
+Available categories are defined in `app/shared/constants/imageCategories.js`:
 - business, technology, success, motivation, growth
 - creativity, social_media, entrepreneurship, marketing
 - lifestyle, luxury, nature, health, education
 - finance, travel, food, fashion, sports
-- family, abstract, industrial, urban, rural, science, romantic
-
-## Error Handling
-
-The unified engine includes comprehensive error handling:
-
-- **AI Failures**: Fallback to simpler content generation
-- **Image Selection**: Graceful degradation with placeholder images
-- **Parsing Errors**: Robust JSON parsing with fallback methods
-- **Database Issues**: Cached results and fallback options
+- family, abstract, industrial, urban, rural
+- science, romantic, running
 
 ## Performance Optimizations
 
-- **Caching**: Image categories and selections are cached
-- **Batch Processing**: Multiple slides generated in single AI call
-- **Lazy Loading**: OpenAI client initialized only when needed
-- **Memory Management**: Used image tracking prevents duplicates
+- **Caching**: Image queries are cached to reduce database calls
+- **AI-Powered Reasoning**: Dynamic fallback using GPT-4o-mini's contextual knowledge
+- **Sequential Processing**: Prevents race conditions in image selection
+- **Memory Management**: Tracks used images to prevent duplicates
+
+## Error Handling
+
+- Graceful fallback when specific keywords don't match
+- AI reasoning when static mapping isn't available
+- Default to "business" category if all else fails
+- Comprehensive logging for debugging
 
 ## Future Enhancements
 
-- **Custom Image Categories**: User-defined categories
-- **Style Preferences**: Personalized content generation
-- **Batch Operations**: Generate multiple slide sets
-- **Advanced Analytics**: Track content performance
-- **Template System**: Predefined slide templates 
+- **Image Quality Scoring**: Rank images by visual quality and relevance
+- **User Preference Learning**: Remember user's image style preferences
+- **Dynamic Category Expansion**: Auto-generate new categories based on usage
+- **Multi-Modal Selection**: Consider image content analysis for better matching 

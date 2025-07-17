@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Image from "next/image";
 import { X, ChevronDown, Grid, List } from 'lucide-react';
-import { UNIFIED_CATEGORIES, CATEGORIES, CATEGORY_KEYWORDS } from '../../../shared/constants/imageCategories.js';
+import { UNIFIED_CATEGORIES, CATEGORIES, CATEGORY_KEYWORDS, STYLES } from '../../../shared/constants/imageCategories.js';
 
 export default function ContentModal({
   isOpen,
@@ -19,6 +19,7 @@ export default function ContentModal({
   // All hooks must be called before any early return
   const [viewMode, setViewMode] = useState(contentType === 'stock' ? 'categorized' : 'grid');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedStyle, setSelectedStyle] = useState(null);
 
   React.useEffect(() => {
     if (contentType === 'stock') setViewMode('categorized');
@@ -26,7 +27,7 @@ export default function ContentModal({
     setSelectedCategory(null);
   }, [contentType, isOpen]);
 
-  // Organize images by category
+  // Organize images by category, filtered by style if selected
   const categorizedImages = useMemo(() => {
     if (contentType !== 'stock' || !libraryImages) return {};
     const categorized = {};
@@ -34,6 +35,7 @@ export default function ContentModal({
       categorized[category] = [];
     });
     libraryImages.forEach(image => {
+      if (selectedStyle && image.style !== selectedStyle) return;
       let matched = false;
       for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
         if (image.title && keywords.some(keyword => 
@@ -48,29 +50,62 @@ export default function ContentModal({
       }
     });
     return categorized;
-  }, [libraryImages, contentType]);
+  }, [libraryImages, contentType, selectedStyle]);
 
-  // Get images for selected category or all images
+  // Get images for selected category or all images, filtered by style if selected
   const imagesToShow = useMemo(() => {
+    let images = [];
     if (contentType === 'user') {
-      return userImages || [];
-    }
-    if (contentType === 'stock') {
+      images = userImages || [];
+    } else if (contentType === 'stock') {
       if (selectedCategory && categorizedImages[selectedCategory]) {
-        return categorizedImages[selectedCategory];
+        images = categorizedImages[selectedCategory];
+      } else {
+        images = libraryImages || [];
       }
-      return libraryImages || [];
     }
-    return [];
-  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages]);
+    if (selectedStyle) {
+      images = images.filter(img => img.style === selectedStyle);
+    }
+    return images;
+  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages, selectedStyle]);
 
   // Only after all hooks, do early return
   if (!isOpen) return null;
+
+  const renderStyleFilter = () => (
+    <div className="flex gap-2 mb-4 px-4 mt-6">
+      {Object.entries(STYLES).map(([styleKey, style]) => (
+        <button
+          key={styleKey}
+          onClick={() => setSelectedStyle(selectedStyle === styleKey ? null : styleKey)}
+          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors
+            ${selectedStyle === styleKey
+              ? 'bg-blue-500 text-white border-blue-500 shadow'
+              : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'}
+          `}
+        >
+          <span>{style.icon}</span>
+          <span>{style.name}</span>
+        </button>
+      ))}
+      {selectedStyle && (
+        <button
+          onClick={() => setSelectedStyle(null)}
+          className="ml-2 px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
+        >
+          Clear Style
+        </button>
+      )}
+    </div>
+  );
 
   const renderCategorizedView = () => {
     const hasAnyImages = Object.values(categorizedImages).some(arr => arr.length > 0);
     return (
       <div className="space-y-6">
+        {/* Style Filter */}
+        {renderStyleFilter()}
         {/* Category Grid */}
         <div className="grid grid-cols-4 gap-4 p-4">
           {Object.entries(CATEGORIES).map(([categoryKey, category]) => {
@@ -166,31 +201,72 @@ export default function ContentModal({
             )}
           </div>
         )}
+        
+        {/* All Images (when no category is selected) */}
+        {!selectedCategory && imagesToShow.length > 0 && (
+          <div className="px-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                All Stock Photos
+              </h3>
+            </div>
+            <div className="grid grid-cols-4 gap-4 p-4">
+              {imagesToShow.map((image) => (
+                <div 
+                  key={image.id} 
+                  className="cursor-pointer relative aspect-[4/3] group" 
+                  onClick={() => {
+                    onImageSelect(image);
+                    onClose();
+                  }}
+                >
+                  <Image
+                    src={image.image_url || image.url}
+                    alt={image.title || 'Stock image'}
+                    fill
+                    className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 25vw"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* No images fallback when no category selected */}
+        {!selectedCategory && imagesToShow.length === 0 && hasAnyImages && (
+          <div className="text-center text-gray-500 py-8">
+            No images match the selected style filter.
+          </div>
+        )}
       </div>
     );
   };
 
   const renderGridView = () => {
     return (
-      <div className="grid grid-cols-4 gap-4 p-4 w-full">
-        {imagesToShow.map((image) => (
-          <div 
-            key={image.id} 
-            className="cursor-pointer relative aspect-[4/3] group" 
-            onClick={() => {
-              onImageSelect(image);
-              onClose();
-            }}
-          >
-            <Image
-              src={image.image_url || image.url}
-              alt={image.title || 'User image'}
-              fill
-              className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
-              sizes="(max-width: 768px) 50vw, 25vw"
-            />
-          </div>
-        ))}
+      <div className="w-full">
+        {renderStyleFilter()}
+        <div className="grid grid-cols-4 gap-4 p-4 w-full">
+          {imagesToShow.map((image) => (
+            <div 
+              key={image.id} 
+              className="cursor-pointer relative aspect-[4/3] group" 
+              onClick={() => {
+                onImageSelect(image);
+                onClose();
+              }}
+            >
+              <Image
+                src={image.image_url || image.url}
+                alt={image.title || 'User image'}
+                fill
+                className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
+                sizes="(max-width: 768px) 50vw, 25vw"
+              />
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
