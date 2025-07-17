@@ -42,6 +42,16 @@ body {
   filter: none !important;
 }
 
+/* Rainbow Animation for AI Prompt Button */
+@keyframes rainbowRotate {
+  0% {
+    background: linear-gradient(white, white) padding-box, conic-gradient(from 0deg, #ff006e, #ff6b35, #f7931e, #ffd700, #32cd32, #00bfff, #8a2be2, #ff1493, #ff006e) border-box !important;
+  }
+  100% {
+    background: linear-gradient(white, white) padding-box, conic-gradient(from 360deg, #ff006e, #ff6b35, #f7931e, #ffd700, #32cd32, #00bfff, #8a2be2, #ff1493, #ff006e) border-box !important;
+  }
+}
+
 /* Glass Sidebar Effect (from sidebar-demo.html) with dynamic page color tint */
 .glass-sidebar {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0%, var(--page-color-light, rgba(147, 197, 253, 0.15)) 100%);

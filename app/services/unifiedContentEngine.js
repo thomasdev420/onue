@@ -823,7 +823,9 @@ What category would best represent the theme or concept of this content?`;
     try {
       // Limit the number of images to analyze to avoid excessive API calls
       const maxImagesToAnalyze = intelligenceMode === 'max' ? 15 : 8;
-      const imagesToAnalyze = availableImages.slice(0, maxImagesToAnalyze);
+      
+      // Randomly sample images to avoid always analyzing the same ones
+      const imagesToAnalyze = this.getRandomSample(availableImages, maxImagesToAnalyze);
       
       apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex} (${intelligenceMode} mode)`);
       
@@ -881,6 +883,28 @@ What category would best represent the theme or concept of this content?`;
       // Fallback to keyword-based selection
       return this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
     }
+  }
+
+  /**
+   * Get a random sample of images to avoid analyzing the same ones repeatedly
+   * @param {Array} images - Array of available images
+   * @param {number} sampleSize - Number of images to sample
+   * @returns {Array} Random sample of images
+   */
+  getRandomSample(images, sampleSize) {
+    if (images.length <= sampleSize) {
+      return images; // Return all images if we have fewer than sample size
+    }
+    
+    // Create a copy of the array and shuffle it
+    const shuffled = [...images];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    
+    // Return the first sampleSize elements
+    return shuffled.slice(0, sampleSize);
   }
 
   /**

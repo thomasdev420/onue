@@ -350,12 +350,22 @@ export default function Home() {
       </header>
 
       {/* Hero Image */}
+      {/* TODO: Replace with your downloaded running slide image */}
+      {/* Steps: 
+          1. Download your preferred running slide from the slides interface
+          2. Upload it to a CDN or place in public/ folder
+          3. Replace the src below with your image URL
+      */}
       <Image
         src="https://reel.farm/hero.png"
-        alt="Hero Image"
+        alt="Running and Fitness Content Creation - Hero Image"
         width={800}
         height={400}
-        className="mx-auto max-w-full h-auto"
+        className="mx-auto max-w-full h-auto rounded-2xl shadow-lg"
+        style={{
+          border: '2px solid rgba(147, 197, 253, 0.2)',
+          boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+        }}
       />
 
       {/* The Problem */}

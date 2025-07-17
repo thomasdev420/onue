@@ -32,16 +32,23 @@ export default function ActionButton({
         color,
         transition: 'all 0.2s ease',
         ...(rainbowBorder ? {
-          background: 'linear-gradient(white, white) padding-box, conic-gradient(from 0deg, #ff0080, #7928ca, #007cf0, #00dfd8, #ff0080) border-box',
+          background: 'linear-gradient(white, white) padding-box, conic-gradient(from 0deg, #ff006e, #ff6b35, #f7931e, #ffd700, #32cd32, #00bfff, #8a2be2, #ff1493, #ff006e) border-box',
+          animation: 'rainbowRotate 3s linear infinite',
         } : {})
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = hoverBgColor;
         e.currentTarget.style.borderColor = hoverBorderColor;
+        if (rainbowBorder) {
+          e.currentTarget.style.animation = 'rainbowRotate 1s linear infinite';
+        }
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
         e.currentTarget.style.borderColor = rainbowBorder ? 'transparent' : '#E5E5E5';
+        if (rainbowBorder) {
+          e.currentTarget.style.animation = 'rainbowRotate 3s linear infinite';
+        }
       }}
     >
       {icon || content}
