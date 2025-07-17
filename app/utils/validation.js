@@ -1,3 +1,5 @@
+import { SLIDE_VALIDATION } from '../shared/constants/slideConstants.js';
+
 /**
  * Validation utilities for file uploads and user inputs
  */
@@ -120,8 +122,8 @@ export function validateSlide(slide) {
       if (!text.content || typeof text.content !== 'string') {
         return { success: false, error: `Text ${i + 1} must have valid content` };
       }
-      if (text.content.length > 500) {
-        return { success: false, error: `Text ${i + 1} is too long (max 500 characters)` };
+      if (text.content.length > SLIDE_VALIDATION.MAX_TEXT_LENGTH) {
+        return { success: false, error: `Text ${i + 1} is too long (max ${SLIDE_VALIDATION.MAX_TEXT_LENGTH} characters)` };
       }
     }
   }

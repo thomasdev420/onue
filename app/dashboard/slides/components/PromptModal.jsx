@@ -58,11 +58,21 @@ export default function PromptModal({
 
     // Let the AI figure out the intent from the user's prompt
     let finalSlideCount = slideCount;
-    const slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
+    // Try to extract explicit slide count (e.g., '3 slides')
+    let slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
     if (slideCountMatch) {
       const requestedCount = parseInt(slideCountMatch[1]);
       if (requestedCount >= 1 && requestedCount <= 10) {
         finalSlideCount = requestedCount;
+      }
+    } else {
+      // Try to extract numbers for prompts like '3 facts', '5 reasons', etc.
+      const genericCountMatch = userMessage.match(/(\d+)\s*(?:facts?|reasons?|tips?|secrets?|ideas?|lessons?|ways|methods|strategies|things|steps)/i);
+      if (genericCountMatch) {
+        const requestedCount = parseInt(genericCountMatch[1]);
+        if (requestedCount >= 1 && requestedCount <= 10) {
+          finalSlideCount = requestedCount + 1; // +1 for intro slide
+        }
       }
     }
     

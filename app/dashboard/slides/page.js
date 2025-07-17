@@ -190,7 +190,9 @@ export default function SlidesEditor() {
   useEffect(() => {
     const aiGeneratedSlides = localStorage.getItem('aiGeneratedSlides');
     console.log('Checking for AI-generated slides in localStorage:', aiGeneratedSlides);
-    if (aiGeneratedSlides && !isLoading && Array.isArray(libraryImages) && libraryImages.length > 0) {
+    
+    // Process slides even if library images aren't loaded yet - we'll add images later
+    if (aiGeneratedSlides && !isLoading) {
       try {
         const parsedSlides = JSON.parse(aiGeneratedSlides);
         console.log('Found AI-generated slides in localStorage:', parsedSlides);
@@ -231,114 +233,8 @@ export default function SlidesEditor() {
                 }))
               }));
               
-              // Auto-select images based on imageCategory with unique image tracking
-              console.log('Processing slides with images. Library images count:', libraryImages.length);
-              console.log('Sample library images:', libraryImages.slice(0, 3));
-              
-              // Track used images to ensure uniqueness
-              const usedImageIds = new Set();
-              
-              const slidesWithImages = positionedSlides.map((slide, index) => {
-                let selectedImage = null;
-                
-                console.log(`Processing slide ${index + 1}, imageCategory:`, slide.imageCategory);
-                
-                if (slide.imageCategory && libraryImages.length > 0) {
-                  // Find images that match the category (simple keyword matching)
-                  const categoryKeywords = {
-                    'business': ['business', 'office', 'corporate', 'professional', 'executive'],
-                    'technology': ['tech', 'computer', 'digital', 'innovation', 'ai', 'data'],
-                    'success': ['success', 'achievement', 'winning', 'trophy', 'accomplishment'],
-                    'motivation': ['motivation', 'inspiration', 'positive', 'energy', 'drive'],
-                    'growth': ['growth', 'progress', 'development', 'improvement', 'evolution'],
-                    'creativity': ['creative', 'art', 'design', 'imagination', 'aesthetic'],
-                    'social_media': ['social', 'media', 'connection', 'network', 'community'],
-                    'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership', 'founder'],
-                    'marketing': ['marketing', 'advertising', 'promotion', 'brand', 'strategy'],
-                    'lifestyle': ['lifestyle', 'life', 'daily', 'personal', 'wellness'],
-                    'luxury': ['luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant'],
-                    'nature': ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green'],
-                    'health': ['health', 'wellness', 'fitness', 'medical', 'healthcare', 'healthy'],
-                    'education': ['education', 'learning', 'academic', 'school', 'university', 'knowledge'],
-                    'finance': ['finance', 'money', 'investment', 'banking', 'financial', 'wealth'],
-                    'travel': ['travel', 'adventure', 'exploration', 'journey', 'destination', 'tourism'],
-                    'food': ['food', 'dining', 'restaurant', 'culinary', 'gastronomy', 'cuisine'],
-                    'fashion': ['fashion', 'style', 'clothing', 'apparel', 'trendy', 'designer'],
-                    'sports': ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete'],
-                    'family': ['family', 'relationships', 'love', 'connection', 'togetherness'],
-                    'abstract': ['abstract', 'conceptual', 'minimal', 'geometric', 'modern', 'contemporary'],
-                    'industrial': ['industrial', 'manufacturing', 'factory', 'production', 'machinery'],
-                    'urban': ['urban', 'city', 'metropolitan', 'architecture', 'skyline', 'downtown'],
-                    'rural': ['rural', 'countryside', 'farm', 'agriculture', 'pastoral', 'village'],
-                    'science': ['science', 'research', 'laboratory', 'experiment', 'discovery', 'scientific']
-                  };
-                  
-                  const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-                  const matchingImages = (libraryImages || []).filter(img => 
-                    img && img.title && keywords.some(keyword => 
-                      img.title.toLowerCase().includes(keyword.toLowerCase())
-                    ) && !usedImageIds.has(img.id) // Exclude already used images
-                  );
-                  
-                  // Select a random matching image, or fallback to any unused image
-                  if (matchingImages.length > 0) {
-                    selectedImage = matchingImages[Math.floor(Math.random() * matchingImages.length)];
-                  } else {
-                    // Fallback to any unused image from library
-                    const unusedImages = (libraryImages || []).filter(img => !usedImageIds.has(img.id));
-                    if (unusedImages.length > 0) {
-                      selectedImage = unusedImages[Math.floor(Math.random() * unusedImages.length)];
-                    }
-                  }
-                }
-                
-                // If no image was selected and we have unused library images, pick a random one
-                if (!selectedImage && libraryImages && libraryImages.length > 0) {
-                  const unusedImages = libraryImages.filter(img => !usedImageIds.has(img.id));
-                  if (unusedImages.length > 0) {
-                    selectedImage = unusedImages[Math.floor(Math.random() * unusedImages.length)];
-                  }
-                }
-                
-                // If still no image, create a placeholder image object
-                if (!selectedImage) {
-                  // Use some default technology/business images
-                  const defaultImages = [
-                    {
-                      id: `default-tech-${index}`,
-                      title: 'Technology Background',
-                      image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop'
-                    },
-                    {
-                      id: `default-business-${index}`,
-                      title: 'Business Background',
-                      image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=600&fit=crop'
-                    },
-                    {
-                      id: `default-abstract-${index}`,
-                      title: 'Abstract Background',
-                      image_url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=600&fit=crop'
-                    }
-                  ];
-                  
-                  selectedImage = defaultImages[index % defaultImages.length];
-                  console.log(`Using default image for slide ${index + 1}:`, selectedImage.title);
-                }
-                
-                // Mark this image as used
-                if (selectedImage && selectedImage.id) {
-                  usedImageIds.add(selectedImage.id);
-                  console.log(`Selected unique image for slide ${index + 1}:`, selectedImage.title, '(ID:', selectedImage.id, ')');
-                }
-                
-                return {
-                  ...slide,
-                  image: selectedImage
-                };
-              });
-              
-              // Replace current slides with processed ones
-              setSlides(slidesWithImages);
+              // Replace current slides with processed ones (images will be added later)
+              setSlides(positionedSlides);
               setActiveSlideIndex(0);
               
               console.log('Applied AI-generated slides successfully with images and positioning');
@@ -360,7 +256,104 @@ export default function SlidesEditor() {
         localStorage.removeItem('aiGeneratedSlides');
       }
     }
-  }, [setSlides, libraryImages, isLoading]);
+  }, [setSlides, isLoading]);
+
+  // Add images to slides that don't have them once library images are loaded
+  useEffect(() => {
+    if (slides && slides.length > 0 && libraryImages && libraryImages.length > 0) {
+      const slidesWithoutImages = slides.filter(slide => !slide.image);
+      
+      if (slidesWithoutImages.length > 0) {
+        console.log(`Adding images to ${slidesWithoutImages.length} slides that don't have images`);
+        
+        const updatedSlides = slides.map(slide => {
+          if (!slide.image) {
+            // Find a suitable image based on category
+            let selectedImage = null;
+            
+            if (slide.imageCategory) {
+              const categoryKeywords = {
+                'business': ['business', 'office', 'corporate', 'professional', 'executive'],
+                'technology': ['tech', 'computer', 'digital', 'innovation', 'ai', 'data'],
+                'success': ['success', 'achievement', 'winning', 'trophy', 'accomplishment'],
+                'motivation': ['motivation', 'inspiration', 'positive', 'energy', 'drive'],
+                'growth': ['growth', 'progress', 'development', 'improvement', 'evolution'],
+                'creativity': ['creative', 'art', 'design', 'imagination', 'aesthetic'],
+                'social_media': ['social', 'media', 'connection', 'network', 'community'],
+                'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership', 'founder'],
+                'marketing': ['marketing', 'advertising', 'promotion', 'brand', 'strategy'],
+                'lifestyle': ['lifestyle', 'life', 'daily', 'personal', 'wellness'],
+                'luxury': ['luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant'],
+                'nature': ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green'],
+                'health': ['health', 'wellness', 'fitness', 'medical', 'healthcare', 'healthy'],
+                'education': ['education', 'learning', 'academic', 'school', 'university', 'knowledge'],
+                'finance': ['finance', 'money', 'investment', 'banking', 'financial', 'wealth'],
+                'travel': ['travel', 'adventure', 'exploration', 'journey', 'destination', 'tourism'],
+                'food': ['food', 'dining', 'restaurant', 'culinary', 'gastronomy', 'cuisine'],
+                'fashion': ['fashion', 'style', 'clothing', 'apparel', 'trendy', 'designer'],
+                'sports': ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete'],
+                'family': ['family', 'relationships', 'love', 'connection', 'togetherness'],
+                'abstract': ['abstract', 'conceptual', 'minimal', 'geometric', 'modern', 'contemporary'],
+                'industrial': ['industrial', 'manufacturing', 'factory', 'production', 'machinery'],
+                'urban': ['urban', 'city', 'metropolitan', 'architecture', 'skyline', 'downtown'],
+                'rural': ['rural', 'countryside', 'farm', 'agriculture', 'pastoral', 'village'],
+                'science': ['science', 'research', 'laboratory', 'experiment', 'discovery', 'scientific']
+              };
+              
+              const keywords = categoryKeywords[slide.imageCategory] || ['business'];
+              const matchingImages = libraryImages.filter(img => 
+                img && img.title && keywords.some(keyword => 
+                  img.title.toLowerCase().includes(keyword.toLowerCase())
+                )
+              );
+              
+              if (matchingImages.length > 0) {
+                selectedImage = matchingImages[Math.floor(Math.random() * matchingImages.length)];
+              }
+            }
+            
+            // If no category match, pick a random image
+            if (!selectedImage && libraryImages.length > 0) {
+              selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
+            }
+            
+            // If still no image, create a placeholder image object
+            if (!selectedImage) {
+              // Use some default technology/business images
+              const defaultImages = [
+                {
+                  id: `default-tech-${slide.id || Date.now()}`,
+                  title: 'Technology Background',
+                  image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop'
+                },
+                {
+                  id: `default-business-${slide.id || Date.now()}`,
+                  title: 'Business Background',
+                  image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=600&fit=crop'
+                },
+                {
+                  id: `default-abstract-${slide.id || Date.now()}`,
+                  title: 'Abstract Background',
+                  image_url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=600&fit=crop'
+                }
+              ];
+              
+              selectedImage = defaultImages[Math.floor(Math.random() * defaultImages.length)];
+              console.log(`Using default image for slide:`, selectedImage.title);
+            }
+            
+            return {
+              ...slide,
+              image: selectedImage
+            };
+          }
+          return slide;
+        });
+        
+        setSlides(updatedSlides);
+      }
+    }
+  }, [slides, libraryImages, setSlides]);
 
   // Validate slides data and ensure text styles are properly initialized
   useEffect(() => {

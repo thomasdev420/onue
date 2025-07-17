@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload, Shield } from 'lucide-react';
 import ModeToggle from '../dashboard/components/ModeToggle';
+import SidebarCreditDisplay from './SidebarCreditDisplay';
 
 export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5FD' }) {
   const { data: session, status } = useSession();
@@ -107,49 +108,54 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5
           </nav>
         </div>
 
-        {/* Footer */}
-        <div className="p-4">
-          {!isCollapsed && (
-            <Link href="/#pricing">
-              <button
-                style={{
-                  position: 'relative',
-                  background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
-                  border: 'none',
-                  borderRadius: '16px',
-                  padding: '12px 24px',
-                  color: 'white',
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  boxShadow: '0 8px 32px 0 rgba(0,0,0,0.45), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
-                  cursor: 'pointer',
-                  outline: 'none',
-                  display: 'inline-block',
-                  textAlign: 'center',
-                  transition: 'transform 0.1s ease',
-                  letterSpacing: '0.01em',
-                  overflow: 'hidden',
-                  width: '100%',
-                }}
-                onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
-                onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
-              >
-                <span style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '55%',
-                  borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
-                  pointerEvents: 'none',
-                  zIndex: 1,
-                  filter: 'blur(0.5px)',
-                }} />
-                <span style={{ position: 'relative', zIndex: 2 }}>Upgrade</span>
-              </button>
-            </Link>
-          )}
+                  {/* Credit Display */}
+          <div className="px-4 mb-4">
+            <SidebarCreditDisplay isCollapsed={isCollapsed} />
+          </div>
+
+          {/* Footer */}
+          <div className="p-4">
+            {!isCollapsed && (
+              <Link href="/#pricing">
+                <button
+                  style={{
+                    position: 'relative',
+                    background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+                    border: 'none',
+                    borderRadius: '16px',
+                    padding: '12px 24px',
+                    color: 'white',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    boxShadow: '0 8px 32px 0 rgba(0,0,0,0.45), 0 1.5px 8px 0 rgba(255,255,255,0.08) inset',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    display: 'inline-block',
+                    textAlign: 'center',
+                    transition: 'transform 0.1s ease',
+                    letterSpacing: '0.01em',
+                    overflow: 'hidden',
+                    width: '100%',
+                  }}
+                  onMouseEnter={e => { e.target.style.transform = 'scale(1.03)'; }}
+                  onMouseLeave={e => { e.target.style.transform = 'scale(1)'; }}
+                >
+                  <span style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '55%',
+                    borderRadius: '16px 16px 40% 40%/16px 16px 60% 60%',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 100%)',
+                    pointerEvents: 'none',
+                    zIndex: 1,
+                    filter: 'blur(0.5px)',
+                  }} />
+                  <span style={{ position: 'relative', zIndex: 2 }}>Upgrade</span>
+                </button>
+              </Link>
+            )}
 
           {/* Dev Access Revoke Button */}
           {!isCollapsed && (

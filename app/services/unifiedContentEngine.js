@@ -6,6 +6,8 @@ import { retrieveUserMemory, buildMemoryContext, extractMemoryInsights, storeMem
 import { UNIFIED_CATEGORIES, getCategoryKeywords } from '../shared/constants/imageCategories.js';
 import { getModelConfig } from '../utils/modelSelection.js';
 import { getIntelligenceMode } from './userSettingsService.js';
+import { visualAnalysisService } from './visualAnalysisService.js';
+import { creditService } from './creditService.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -25,8 +27,6 @@ function getOpenAI() {
 const STOCK_PHOTO_CATEGORIES = Object.fromEntries(
   Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => [key, value.keywords])
 );
-
-
 
 /**
  * Unified Content Engine - Single service for generating complete slide content
@@ -425,6 +425,10 @@ What category would best represent the theme or concept of this content?`;
    * @returns {Promise<Array>} Complete slides with text and images
    */
   async generateCompleteSlides({ prompt, slideCount = 5, businessContext, userInfo, existingSlides = [] }) {
+    // Skip credit checks for vaporware - allow all functionality
+    // TODO: Re-enable credit checks when moving to production
+    apiLogger.info('Skipping credit checks for vaporware development');
+
     // Get user's intelligence mode setting
     let intelligenceMode = 'normal'; // Default fallback
     if (userInfo?.email) {
@@ -475,7 +479,7 @@ What category would best represent the theme or concept of this content?`;
       
       // Enhanced system prompt for unified generation
       const valuableSlides = slideCount - 1;
-      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides. Create EXACTLY ${slideCount} slides: the first slide is always an introduction, and the remaining ${valuableSlides} slides each contain valuable, informative content.\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each valuable slide (slides 2 to ${slideCount}) MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each valuable slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each valuable slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: \"The average person spends 2.5 hours daily on social media, equivalent to 38 days per year\"\n✅ GOOD: \"Compound interest can turn $10,000 into $100,000 in 25 years at 9% return\"\n✅ GOOD: \"Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers\"\n❌ BAD: \"Social media is important for business\"\n❌ BAD: \"Investing is good for your future\"\n❌ BAD: \"Reading books helps you grow\"\n\nIMAGE SELECTION:\n1. Use the AI-detected categories: ${allowedCategories.join(', ')}\n2. Select the most appropriate category from these options for each slide\n3. Maintain visual consistency by using related categories when multiple are available\n4. Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}\n\nSLIDE STRUCTURE:\n1. The first slide should introduce the topic and state the correct number of valuable slides (e.g., \"4 secrets of luxury life\" if there are 5 slides total)\n2. Each valuable slide (slides 2 to ${slideCount}) should focus on ONE specific point or insight\n3. No '#', ':' or '-' in the content EVER\n\nABSOLUTE RULES:\n1. CRITICAL: You MUST return EXACTLY ${slideCount} slides. No more, no less.\n2. NEVER use the same image twice in the same slide generation.\n2. YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.\n3. Each slide object must have: texts array, imageCategory, and ratio field.\n4. Texts array must contain objects with id, content and position fields.\n5. Each text object MUST have a unique id field (e.g., \"text-1-1\", \"text-2-1\", etc.).\n6. Ratio must be \"9:16\" for all slides.\n\nEXAMPLE FORMAT:\nYou should return the following format:\nuser prompt: \"make 5 slides about luxury life\"\n\n[{\n  \"texts\": [{\n    \"id\": \"text-1-1\",\n    \"content\": \"4 secrets of luxury life\",\n    \"position\": {\"x\": 50, \"y\": 40}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-2-1\",\n    \"content\": \"Secret 1: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-3-1\",\n    \"content\": \"Secret 2: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-4-1\",\n    \"content\": \"Secret 3: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-5-1\",\n    \"content\": \"Secret 4: ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"luxury\",\n  \"ratio\": \"9:16\"\n}]`;
+      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides.\n\nCreate EXACTLY ${slideCount} slides in total:\n- The first slide is always an introduction.\n- The remaining ${valuableSlides} slides each contain one valuable, informative fact.\n\nThe introduction slide MUST state the correct number of facts (for example, '${valuableSlides} incredible facts about Haile Gebrselassie' if there are ${slideCount} slides in total).\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each valuable slide (slides 2 to ${slideCount}) MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each valuable slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each valuable slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: \"The average person spends 2.5 hours daily on social media, equivalent to 38 days per year\"\n✅ GOOD: \"Compound interest can turn $10,000 into $100,000 in 25 years at 9% return\"\n✅ GOOD: \"Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers\"\n❌ BAD: \"Social media is important for business\"\n❌ BAD: \"Investing is good for your future\"\n❌ BAD: \"Reading books helps you grow\"\n\nIMPORTANT EXAMPLE FOR SLIDE COUNTING:\nUser prompt: \"3 incredible facts about Haile Gebrselassie\"\n\nIf the user prompt asks for N facts, you must create N+1 slides: 1 intro slide (with the text 'N incredible facts about ...') and N fact slides.\n\n[\n  {\n    \"texts\": [{\n      \"id\": \"text-1-1\",\n      \"content\": \"3 incredible facts about Haile Gebrselassie\",\n      \"position\": {\"x\": 50, \"y\": 40}\n    }],\n    \"imageCategory\": \"sports\",\n    \"ratio\": \"9:16\"\n  },\n  {\n    \"texts\": [{\n      \"id\": \"text-2-1\",\n      \"content\": \"Fact 1 ...\",\n      \"position\": {\"x\": 50, \"y\": 35}\n    }],\n    \"imageCategory\": \"sports\",\n    \"ratio\": \"9:16\"\n  },\n  {\n    \"texts\": [{\n      \"id\": \"text-3-1\",\n      \"content\": \"Fact 2 ...\",\n      \"position\": {\"x\": 50, \"y\": 35}\n    }],\n    \"imageCategory\": \"sports\",\n    \"ratio\": \"9:16\"\n  },\n  {\n    \"texts\": [{\n      \"id\": \"text-4-1\",\n      \"content\": \"Fact 3 ...\",\n      \"position\": {\"x\": 50, \"y\": 35}\n    }],\n    \"imageCategory\": \"sports\",\n    \"ratio\": \"9:16\"\n  }\n]\n\nNotice: The first slide is an introduction and the next 3 slides are the valuable content. The intro slide text states the correct number of valuable slides (e.g., '3 incredible facts about Haile Gebrselassie').\n\nIMAGE SELECTION:\n1. Use the AI-detected categories: ${allowedCategories.join(', ')}\n2. Select the most appropriate category from these options for each slide\n3. Maintain visual consistency by using related categories when multiple are available\n4. Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}\n\nSLIDE STRUCTURE:\n1. The first slide should introduce the topic and state the correct number of valuable slides (e.g., \"3 incredible facts about Haile Gebrselassie\" if there are 4 slides total)\n2. Each valuable slide (slides 2 to ${slideCount}) should focus on ONE specific point or insight\n3. No '#', ':' or '-' in the content EVER\n\nABSOLUTE RULES:\n1. CRITICAL: You MUST return EXACTLY ${slideCount} slides. No more, no less.\n2. NEVER use the same image twice in the same slide generation.\n2. YOU MUST RETURN VALID JSON ONLY. No explanations, no markdown, just the JSON array.\n3. Each slide object must have: texts array, imageCategory, and ratio field.\n4. Texts array must contain objects with id, content and position fields.\n5. Each text object MUST have a unique id field (e.g., \"text-1-1\", \"text-2-1\", etc.).\n6. Ratio must be \"9:16\" for all slides.\n\nEXAMPLE FORMAT:\nYou should return the following format:\nuser prompt: \"3 incredible facts about Haile Gebrselassie\"\n\n[{\n  \"texts\": [{\n    \"id\": \"text-1-1\",\n    \"content\": \"3 incredible facts about Haile Gebrselassie\",\n    \"position\": {\"x\": 50, \"y\": 40}\n  }],\n  \"imageCategory\": \"sports\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-2-1\",\n    \"content\": \"Fact 1 ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"sports\",\n  \"ratio\": \"9:16\"\n}, {\n  \"texts\": [{\n    \"id\": \"text-3-1\",\n    \"content\": \"Fact 2 ...\",\n    \"position\": {\"x\": 50, \"y\": 35}\n  }],\n  \"imageCategory\": \"sports\",\n  \"ratio\": \"9:16\"\n}, {\n    \"texts\": [{\n      \"id\": \"text-4-1\",\n      \"content\": \"Fact 3 ...\",\n      \"position\": {\"x\": 50, \"y\": 35}\n    }],\n    \"imageCategory\": \"sports\",\n    \"ratio\": \"9:16\"\n}]`;
 
       // Generate content using OpenAI with model selection based on intelligence mode
       const openaiClient = getOpenAI();
@@ -554,10 +558,18 @@ What category would best represent the theme or concept of this content?`;
         }
       }
 
+      // Skip credit consumption for vaporware - allow all functionality
+      // TODO: Re-enable credit consumption when moving to production
+      apiLogger.info('Skipping credit consumption for vaporware development');
+
       apiLogger.debug(`Successfully generated ${completeSlides.length} complete slides`);
       return completeSlides;
 
     } catch (error) {
+      // Skip credit consumption for vaporware - allow all functionality
+      // TODO: Re-enable credit consumption when moving to production
+      apiLogger.info('Skipping credit consumption for failed generation (vaporware mode)');
+      
       apiLogger.error('Error in unified content generation:', error);
       throw error;
     }
@@ -615,7 +627,7 @@ What category would best represent the theme or concept of this content?`;
   }
 
   /**
-   * Select image for a specific slide with enhanced keyword-based selection and intelligent fallback
+   * Select image for a specific slide with enhanced visual analysis and intelligent fallback
    * @param {string} imageCategory - Image category
    * @param {number} slideIndex - Slide index
    * @param {string} prompt - Original prompt
@@ -674,7 +686,7 @@ What category would best represent the theme or concept of this content?`;
           // Get fresh available images after reset
           const freshAvailableImages = images.filter(img => !this.usedImages.has(img.id));
           if (freshAvailableImages.length > 0) {
-            const selectedImage = this.selectBestMatchingImage(freshAvailableImages, specificKeywords, slideIndex);
+            const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(freshAvailableImages, specificKeywords, slideIndex, prompt);
             this.usedImages.add(selectedImage.id);
             apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
             return selectedImage;
@@ -685,7 +697,7 @@ What category would best represent the theme or concept of this content?`;
         // But still avoid duplicates by checking if it's already used
         const unusedImages = images.filter(img => !this.usedImages.has(img.id));
         if (unusedImages.length > 0) {
-          const selectedImage = this.selectBestMatchingImage(unusedImages, specificKeywords, slideIndex);
+          const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(unusedImages, specificKeywords, slideIndex, prompt);
           this.usedImages.add(selectedImage.id);
           apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
           return selectedImage;
@@ -697,8 +709,8 @@ What category would best represent the theme or concept of this content?`;
         }
       }
 
-      // Select the best matching image from available options
-      const selectedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
+      // Select the best matching image from available options using visual analysis
+      const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt);
       this.usedImages.add(selectedImage.id);
       
       return selectedImage;
@@ -763,6 +775,101 @@ What category would best represent the theme or concept of this content?`;
     const randomImage = availableImages[Math.floor(Math.random() * availableImages.length)];
     apiLogger.debug(`No keyword matches found for slide ${slideIndex}, using random image: "${randomImage.title}"`);
     return randomImage;
+  }
+
+  /**
+   * Select the best matching image using visual analysis and keyword matching
+   * @param {Array} availableImages - Array of available images
+   * @param {Array} specificKeywords - Specific keywords to match
+   * @param {number} slideIndex - Slide index for logging
+   * @param {string} prompt - Original user prompt for visual analysis
+   * @returns {Promise<Object>} Best matching image
+   */
+  async selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt) {
+    try {
+      // Limit the number of images to analyze to avoid excessive API calls
+      const maxImagesToAnalyze = 10;
+      const imagesToAnalyze = availableImages.slice(0, maxImagesToAnalyze);
+      
+      apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex}`);
+      
+      // First, try keyword-based selection for quick results
+      const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
+      
+      // If we have a good keyword match (score > 0), use it
+      const keywordScore = this.calculateKeywordScore(keywordBasedImage, specificKeywords);
+      if (keywordScore > 0) {
+        apiLogger.debug(`✅ Using keyword-based selection for slide ${slideIndex}: "${keywordBasedImage.title}" (score: ${keywordScore})`);
+        return keywordBasedImage;
+      }
+      
+      // If no good keyword matches, use visual analysis
+      apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex}`);
+      
+      // Analyze images with visual AI
+      const imageUrls = imagesToAnalyze.map(img => img.image_url);
+      const visualAnalyses = await visualAnalysisService.analyzeImageBatch(imageUrls, prompt);
+      
+      if (visualAnalyses.length === 0) {
+        apiLogger.warn(`❌ Visual analysis failed, falling back to random selection for slide ${slideIndex}`);
+        return availableImages[Math.floor(Math.random() * availableImages.length)];
+      }
+      
+      // Find the image with the highest relevance score
+      const bestVisualMatch = visualAnalyses[0];
+      const selectedImage = imagesToAnalyze.find(img => img.image_url === bestVisualMatch.imageUrl);
+      
+      if (selectedImage) {
+        apiLogger.info(`🎨 Visual analysis selected image for slide ${slideIndex}: "${selectedImage.title}" (relevance: ${bestVisualMatch.relevanceScore}/100)`);
+        apiLogger.debug(`📝 Visual analysis: ${bestVisualMatch.description}`);
+        
+        // Log if the image has low relevance
+        if (bestVisualMatch.relevanceScore < 70) {
+          apiLogger.warn(`⚠️ Low relevance image selected (${bestVisualMatch.relevanceScore}/100): "${selectedImage.title}" for prompt: "${prompt}"`);
+        }
+        
+        return selectedImage;
+      }
+      
+      // Fallback to random selection if visual analysis fails
+      apiLogger.warn(`❌ Visual analysis failed to find matching image, using random selection for slide ${slideIndex}`);
+      return availableImages[Math.floor(Math.random() * availableImages.length)];
+      
+    } catch (error) {
+      apiLogger.error(`Error in visual analysis for slide ${slideIndex}:`, error);
+      // Fallback to keyword-based selection
+      return this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
+    }
+  }
+
+  /**
+   * Calculate keyword score for an image
+   * @param {Object} image - Image object
+   * @param {Array} keywords - Keywords to match
+   * @returns {number} Keyword score
+   */
+  calculateKeywordScore(image, keywords) {
+    if (!keywords || keywords.length === 0) return 0;
+    
+    let score = 0;
+    const imageTitle = (image.title || '').toLowerCase();
+    
+    keywords.forEach(keyword => {
+      const lowerKeyword = keyword.toLowerCase();
+      if (imageTitle.includes(lowerKeyword)) {
+        score += 2; // Higher score for exact matches
+      }
+      
+      // Check for partial matches
+      const words = imageTitle.split(/\s+/);
+      words.forEach(word => {
+        if (word.includes(lowerKeyword) || lowerKeyword.includes(word)) {
+          score += 1; // Lower score for partial matches
+        }
+      });
+    });
+    
+    return score;
   }
 
   /**

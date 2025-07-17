@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { getSupabase } from '../../../supabaseClient';
-import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X } from 'lucide-react';
+import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X, Coins, TrendingUp, Crown, Zap, BarChart3, Calendar, RefreshCw } from 'lucide-react';
 import ErrorAlert from '../../components/ErrorAlert';
 import Image from 'next/image';
 import MemoryManager from '../components/MemoryManager';
 import IntelligenceModeToggle from '../../components/IntelligenceModeToggle';
 import AutomationModeToggle from '../../components/AutomationModeToggle';
 import { useUserSettings } from '../../shared/hooks/useUserSettings';
+import { useCredits } from '../../shared/hooks/useCredits';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
@@ -30,6 +31,26 @@ export default function SettingsPage() {
     saveStatus: settingsSaveStatus,
     clearError: clearSettingsError
   } = useUserSettings();
+
+  // Credits hook
+  const {
+    creditSummary,
+    usageHistory,
+    subscriptionTiers,
+    getCurrentTier,
+    getNextTier,
+    getUsagePercentage,
+    formatCredits,
+    getActionCreditCost,
+    fetchUsageHistory,
+    loading: creditsLoading,
+    error: creditsError,
+    refresh: refreshCredits
+  } = useCredits();
+
+  const currentTier = getCurrentTier();
+  const nextTier = getNextTier();
+  const usagePercentage = getUsagePercentage();
 
   const fetchUserImages = useCallback(async () => {
     try {
@@ -173,6 +194,49 @@ export default function SettingsPage() {
     { name: 'Twitter', icon: Twitter, color: 'bg-gradient-to-r from-blue-400 to-blue-500' },
     { name: 'LinkedIn', icon: Linkedin, color: 'bg-gradient-to-r from-blue-600 to-blue-700' },
     { name: 'YouTube', icon: Youtube, color: 'bg-gradient-to-r from-red-500 to-red-600' }
+  ];
+
+  const getTierIcon = (tier) => {
+    switch (tier) {
+      case 'growth':
+        return <Crown className="h-6 w-6 text-purple-500" />;
+      case 'scale':
+        return <Zap className="h-6 w-6 text-blue-500" />;
+      case 'starter':
+        return <TrendingUp className="h-6 w-6 text-green-500" />;
+      default:
+        return <Coins className="h-6 w-6 text-gray-500" />;
+    }
+  };
+
+  const getTierColor = (tier) => {
+    switch (tier) {
+      case 'growth':
+        return 'text-purple-600 bg-purple-50 border-purple-200';
+      case 'scale':
+        return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'starter':
+        return 'text-green-600 bg-green-50 border-green-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getUsageColor = (percentage) => {
+    if (percentage > 80) return 'bg-red-500';
+    if (percentage > 60) return 'bg-yellow-500';
+    return 'bg-blue-500';
+  };
+
+  const actionTypes = [
+    { key: 'slide_generation', label: 'Slide Generation', icon: <Coins className="h-4 w-4" /> },
+    { key: 'ai_chat', label: 'AI Chat', icon: <Coins className="h-4 w-4" /> },
+    { key: 'image_analysis', label: 'Image Analysis', icon: <Coins className="h-4 w-4" /> },
+    { key: 'visual_analysis', label: 'Visual Analysis', icon: <Coins className="h-4 w-4" /> },
+    { key: 'content_creation', label: 'Content Creation', icon: <Coins className="h-4 w-4" /> },
+    { key: 'memory_processing', label: 'Memory Processing', icon: <Coins className="h-4 w-4" /> },
+    { key: 'website_scraping', label: 'Website Scraping', icon: <Coins className="h-4 w-4" /> },
+    { key: 'brand_analysis', label: 'Brand Analysis', icon: <Coins className="h-4 w-4" /> }
   ];
 
   return (
@@ -323,6 +387,143 @@ export default function SettingsPage() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Credits & Usage Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">Credits & Usage</h2>
+          <button
+            onClick={refreshCredits}
+            disabled={creditsLoading}
+            className="flex items-center space-x-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 transition-colors"
+          >
+            <RefreshCw className={`h-4 w-4 ${creditsLoading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+        </div>
+
+        {creditsError && (
+          <ErrorAlert 
+            error={creditsError} 
+            onDismiss={() => {}}
+            className="mb-6"
+          />
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Current Plan Overview */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Current Plan</h3>
+              <div className="flex items-center space-x-2">
+                {getTierIcon(creditSummary?.subscription_tier)}
+                <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getTierColor(creditSummary?.subscription_tier)}`}>
+                  {creditSummary?.subscription_tier?.charAt(0).toUpperCase() + creditSummary?.subscription_tier?.slice(1)}
+                </span>
+              </div>
+            </div>
+
+            {currentTier && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Monthly Credits</span>
+                  <span className="font-semibold">{formatCredits(currentTier.monthly_credits)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Used This Month</span>
+                  <span className="font-semibold">{formatCredits(creditSummary?.usage_this_month || 0)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Remaining</span>
+                  <span className="font-semibold">{formatCredits(creditSummary?.credits_balance || 0)}</span>
+                </div>
+                
+                {/* Usage Progress */}
+                <div className="mt-4">
+                  <div className="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Usage Progress</span>
+                    <span>{usagePercentage.toFixed(1)}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className={`h-3 rounded-full transition-all duration-300 ${getUsageColor(usagePercentage)}`}
+                      style={{ width: `${usagePercentage}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Costs */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Action Costs</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {actionTypes.slice(0, 6).map((action) => (
+                <div key={action.key} className="text-center p-3 border border-gray-100 rounded-lg">
+                  <div className="flex items-center justify-center mb-1">
+                    {action.icon}
+                  </div>
+                  <div className="text-xs font-medium text-gray-900">{action.label}</div>
+                  <div className="text-sm font-bold text-blue-600">
+                    {getActionCreditCost(action.key)} credits
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Usage Breakdown */}
+          <div className="bg-white rounded-xl border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">This Month's Usage</h3>
+            {Object.keys(creditSummary?.usage_by_action || {}).length > 0 ? (
+              <div className="space-y-3">
+                {Object.entries(creditSummary?.usage_by_action || {}).slice(0, 5).map(([action, credits]) => {
+                  const actionInfo = actionTypes.find(a => a.key === action);
+                  return (
+                    <div key={action} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        {actionInfo?.icon}
+                        <span className="text-sm font-medium capitalize">{action.replace('_', ' ')}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-bold text-gray-900">{formatCredits(credits)}</div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-4">
+                <Coins className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No usage data yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Upgrade CTA */}
+        {nextTier && (
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white mt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Upgrade to {nextTier.subscription_tier}</h3>
+                <p className="text-blue-100 mb-4">
+                  Get {formatCredits(nextTier.monthly_credits)} credits/month for ${nextTier.monthly_price}
+                </p>
+                <ul className="space-y-1 text-sm text-blue-100">
+                  <li>• Lower credit costs per action</li>
+                  <li>• Advanced features unlocked</li>
+                  <li>• Priority support</li>
+                </ul>
+              </div>
+              <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                Upgrade Now
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* AI Memory Management */}
