@@ -6,7 +6,7 @@ export const UNIFIED_CATEGORIES = {
     name: 'Business',
     icon: '🏢',
     color: 'bg-blue-50 border-blue-200',
-    keywords: ['business', 'office', 'corporate', 'professional', 'executive']
+    keywords: ['business', 'office', 'corporate', 'professional', 'executive', 'work']
   },
   technology: {
     name: 'Technology',
@@ -156,7 +156,7 @@ export const UNIFIED_CATEGORIES = {
     name: 'Romantic',
     icon: '💖',
     color: 'bg-blue-50 border-blue-200',
-    keywords: ['romantic', 'love', 'couple', 'romance', 'wedding', 'kiss', 'affection', 'valentine', 'sweetheart', 'date']
+    keywords: ['romantic', 'love', 'couple', 'romance', 'wedding', 'kiss', 'affection', 'valentine', 'sweetheart', 'date', 'relationship', 'relationships']
   },
   running: {
     name: 'Running',
@@ -199,17 +199,3 @@ export const CATEGORIES = Object.fromEntries(
 export const CATEGORY_KEYWORDS = Object.fromEntries(
   Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => [key, value.keywords])
 ); 
-
-// Image styles (for filtering or tagging images by style)
-export const STYLES = {
-  black_and_white: {
-    name: 'Black & White',
-    icon: '⬛️⬜️',
-    keywords: ['black', 'white', 'monochrome', 'bw', 'black and white', 'b&w']
-  },
-  dark: {
-    name: 'Dark',
-    icon: '🌑',
-    description: 'Images with a dark, moody, or low-light aesthetic.'
-  }
-}; 

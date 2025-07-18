@@ -121,9 +121,26 @@ export const downloadSlide = async (slideElement, slideTitle = 'slide', format =
         }
         lines.push(currentLine);
         
-        // Draw each line with proper spacing
+        // Calculate text dimensions for background
         const lineHeight = scaledFontSize * 1.2;
         const totalHeight = lines.length * lineHeight;
+        const maxLineWidth = Math.max(...lines.map(line => ctx.measureText(line).width));
+        
+        // Add background padding behind text (matching slide styling)
+        const padding = scaledFontSize * 0.5; // Proportional padding
+        const bgWidth = maxLineWidth + (padding * 2);
+        const bgHeight = totalHeight + (padding * 2);
+        const bgX = x - (bgWidth / 2);
+        const bgY = y - (bgHeight / 2);
+        
+        // Draw background with semi-transparent black
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(bgX, bgY, bgWidth, bgHeight);
+        
+        // Reset text color
+        ctx.fillStyle = textItem.style.color || '#ffffff';
+        
+        // Draw each line with proper spacing
         const startY = y - (totalHeight / 2) + (lineHeight / 2);
         
         lines.forEach((line, index) => {

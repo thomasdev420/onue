@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import Image from "next/image";
 import { X, ChevronDown, Grid, List } from 'lucide-react';
-import { UNIFIED_CATEGORIES, CATEGORIES, CATEGORY_KEYWORDS, STYLES } from '../../../shared/constants/imageCategories.js';
+import { UNIFIED_CATEGORIES, CATEGORIES, CATEGORY_KEYWORDS } from '../../../shared/constants/imageCategories.js';
 
 export default function ContentModal({
   isOpen,
@@ -17,17 +17,15 @@ export default function ContentModal({
   onImageSelect
 }) {
   // All hooks must be called before any early return
-  const [viewMode, setViewMode] = useState(contentType === 'stock' ? 'categorized' : 'grid');
+  const [viewMode, setViewMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedStyle, setSelectedStyle] = useState(null);
 
   React.useEffect(() => {
-    if (contentType === 'stock') setViewMode('categorized');
-    else setViewMode('grid');
+    setViewMode('grid');
     setSelectedCategory(null);
   }, [contentType, isOpen]);
 
-  // Organize images by category, filtered by style if selected
+  // Organize images by category
   const categorizedImages = useMemo(() => {
     if (contentType !== 'stock' || !libraryImages) return {};
     const categorized = {};
@@ -35,7 +33,6 @@ export default function ContentModal({
       categorized[category] = [];
     });
     libraryImages.forEach(image => {
-      if (selectedStyle && image.style !== selectedStyle) return;
       let matched = false;
       for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
         if (image.title && keywords.some(keyword => 
@@ -50,9 +47,9 @@ export default function ContentModal({
       }
     });
     return categorized;
-  }, [libraryImages, contentType, selectedStyle]);
+  }, [libraryImages, contentType]);
 
-  // Get images for selected category or all images, filtered by style if selected
+  // Get images for selected category or all images
   const imagesToShow = useMemo(() => {
     let images = [];
     if (contentType === 'user') {
@@ -64,48 +61,16 @@ export default function ContentModal({
         images = libraryImages || [];
       }
     }
-    if (selectedStyle) {
-      images = images.filter(img => img.style === selectedStyle);
-    }
     return images;
-  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages, selectedStyle]);
+  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages]);
 
   // Only after all hooks, do early return
   if (!isOpen) return null;
-
-  const renderStyleFilter = () => (
-    <div className="flex gap-2 mb-4 px-4 mt-6">
-      {Object.entries(STYLES).map(([styleKey, style]) => (
-        <button
-          key={styleKey}
-          onClick={() => setSelectedStyle(selectedStyle === styleKey ? null : styleKey)}
-          className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors
-            ${selectedStyle === styleKey
-              ? 'bg-blue-500 text-white border-blue-500 shadow'
-              : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'}
-          `}
-        >
-          <span>{style.icon}</span>
-          <span>{style.name}</span>
-        </button>
-      ))}
-      {selectedStyle && (
-        <button
-          onClick={() => setSelectedStyle(null)}
-          className="ml-2 px-3 py-1.5 rounded-full text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200"
-        >
-          Clear Style
-        </button>
-      )}
-    </div>
-  );
 
   const renderCategorizedView = () => {
     const hasAnyImages = Object.values(categorizedImages).some(arr => arr.length > 0);
     return (
       <div className="space-y-6">
-        {/* Style Filter */}
-        {renderStyleFilter()}
         {/* Category Grid */}
         <div className="grid grid-cols-4 gap-4 p-4">
           {Object.entries(CATEGORIES).map(([categoryKey, category]) => {
@@ -232,13 +197,6 @@ export default function ContentModal({
             </div>
           </div>
         )}
-        
-        {/* No images fallback when no category selected */}
-        {!selectedCategory && imagesToShow.length === 0 && hasAnyImages && (
-          <div className="text-center text-gray-500 py-8">
-            No images match the selected style filter.
-          </div>
-        )}
       </div>
     );
   };
@@ -246,7 +204,13 @@ export default function ContentModal({
   const renderGridView = () => {
     return (
       <div className="w-full">
-        {renderStyleFilter()}
+        {contentType === 'stock' && (
+          <div className="px-4 mb-4 mt-6">
+            <h3 className="text-lg font-semibold text-gray-800">
+              All Stock Photos ({imagesToShow.length})
+            </h3>
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-4 p-4 w-full">
           {imagesToShow.map((image) => (
             <div 
@@ -380,26 +344,26 @@ export default function ContentModal({
                   {contentType === 'stock' && (
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => setViewMode('categorized')}
-                        className={`p-2 rounded-md transition-colors ${
-                          viewMode === 'categorized' 
-                            ? 'bg-blue-100 text-blue-600' 
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                        title="Categorized View"
-                      >
-                        <Grid size={16} />
-                      </button>
-                      <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-colors ${
+                        className={`px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                           viewMode === 'grid' 
                             ? 'bg-blue-100 text-blue-600' 
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
-                        title="Grid View"
+                        title="All Photos"
                       >
-                        <List size={16} />
+                        All Photos
+                      </button>
+                      <button
+                        onClick={() => setViewMode('categorized')}
+                        className={`px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                          viewMode === 'categorized' 
+                            ? 'bg-blue-100 text-blue-600' 
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        title="Categories"
+                      >
+                        Categories
                       </button>
                     </div>
                   )}
