@@ -264,7 +264,7 @@ export default function PromptModal({
           onKeyPress={handleKeyPress}
           placeholder={
             existingSlides && existingSlides.length > 0
-              ? `e.g., "Add another slide about success", "Make one more motivational slide", "Create new slides about entrepreneurship"...`
+              ? `e.g., "Create four slides featuring different personality types that pair perfectly with intjs. Use artistic images"`
               : `e.g., Create a motivational ${mode.slice(0, -1)} about entrepreneurship with a modern design...`
           }
           disabled={isGenerating}
