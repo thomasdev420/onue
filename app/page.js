@@ -624,10 +624,10 @@ export default function Home() {
                 J
               </div>
             </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Hey, it's Thomas</h3>
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Hey, it&apos;s Thomas</h3>
             <div className="text-gray-700 leading-relaxed space-y-4 text-left">
               <p>
-                Last year, I was spending 10+ hours every week brainstorming, making, and posting content just to get a little traction for my startup. As a founder, I needed attention, but I didn't have the time or the team to consistently create content that actually worked.
+                Last year, I was spending 10+ hours every week brainstorming, making, and posting content just to get a little traction for my startup. As a founder, I needed attention, but I didn&apos;t have the time or the team to consistently create content that actually worked.
               </p>
               <p>
                 I tried using existing AI tools, but they were either overpriced, too generic, or just made complete slop. Most wanted $100–$300/month just to give me surface-level results. I was barely making revenue, and none of it helped me <em>actually grow</em>.
@@ -636,10 +636,10 @@ export default function Home() {
                 So I built my own tool, just for myself at first. Something that could automatically generate <em>founder-style</em> content that felt real, looked native to TikTok/LinkedIn, and actually got traffic.
               </p>
               <p>
-                Turns out I wasn't the only one struggling.
+                Turns out I wasn&apos;t the only one struggling.
               </p>
               <p>
-                That's how <strong>Flightmedia</strong> was born.
+                That&apos;s how <strong>Flightmedia</strong> was born.
               </p>
               <p>
                 Today, FlightMedia helps founders auto-create quality content that builds attention, trust, and traffic, without the cost, burnout, or guesswork.

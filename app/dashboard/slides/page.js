@@ -353,7 +353,7 @@ export default function SlidesEditor() {
         setSlides(updatedSlides);
       }
     }
-  }, [slides, libraryImages, setSlides]);
+  }, [slides, libraryImages, libraryImages.length, setSlides]);
 
   // Validate slides data and ensure text styles are properly initialized
   useEffect(() => {
