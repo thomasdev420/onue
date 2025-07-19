@@ -52,6 +52,9 @@ export default function SettingsPage() {
   const nextTier = getNextTier();
   const usagePercentage = getUsagePercentage();
 
+  // Ensure usagePercentage is a valid number
+  const safeUsagePercentage = isNaN(usagePercentage) ? 0 : usagePercentage;
+
   const fetchUserImages = useCallback(async () => {
     try {
       const supabase = getSupabase();
@@ -443,12 +446,12 @@ export default function SettingsPage() {
                 <div className="mt-4">
                   <div className="flex justify-between text-sm text-gray-600 mb-2">
                     <span>Usage Progress</span>
-                    <span>{usagePercentage.toFixed(1)}%</span>
+                    <span>{safeUsagePercentage.toFixed(1)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-3">
                     <div 
-                      className={`h-3 rounded-full transition-all duration-300 ${getUsageColor(usagePercentage)}`}
-                      style={{ width: `${usagePercentage}%` }}
+                      className={`h-3 rounded-full transition-all duration-300 ${getUsageColor(safeUsagePercentage)}`}
+                      style={{ width: `${safeUsagePercentage}%` }}
                     />
                   </div>
                 </div>

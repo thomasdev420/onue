@@ -34,6 +34,9 @@ export default function CreditDisplay({
   const nextTier = getNextTier();
   const usagePercentage = getUsagePercentage();
 
+  // Ensure usagePercentage is a valid number
+  const safeUsagePercentage = isNaN(usagePercentage) ? 0 : usagePercentage;
+
   if (loading) {
     return (
       <div className={`flex items-center space-x-2 text-gray-500 ${className}`}>
@@ -129,14 +132,14 @@ export default function CreditDisplay({
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  usagePercentage > 80 ? 'bg-red-500' : 
-                  usagePercentage > 60 ? 'bg-yellow-500' : 'bg-blue-500'
+                  safeUsagePercentage > 80 ? 'bg-red-500' : 
+                  safeUsagePercentage > 60 ? 'bg-yellow-500' : 'bg-blue-500'
                 }`}
-                style={{ width: `${usagePercentage}%` }}
+                style={{ width: `${safeUsagePercentage}%` }}
               ></div>
             </div>
             <div className="text-xs text-gray-500 mt-1">
-              {usagePercentage.toFixed(1)}% used
+              {safeUsagePercentage.toFixed(1)}% used
             </div>
           </div>
         )}

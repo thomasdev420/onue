@@ -27,6 +27,9 @@ export default function SidebarCreditDisplay({ isCollapsed, className = '' }) {
   const currentTier = getCurrentTier();
   const usagePercentage = getUsagePercentage();
 
+  // Ensure usagePercentage is a valid number
+  const safeUsagePercentage = isNaN(usagePercentage) ? 0 : usagePercentage;
+
   // Debug logging
   if (process.env.NODE_ENV === 'development') {
     console.log('SidebarCreditDisplay Debug:', {
@@ -136,8 +139,8 @@ export default function SidebarCreditDisplay({ isCollapsed, className = '' }) {
       {/* Thin Bar Chart */}
       <div className="w-full bg-gray-200 rounded-full h-1">
         <div 
-          className={`h-1 rounded-full transition-all duration-300 ${getUsageColor(usagePercentage)}`}
-          style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+          className={`h-1 rounded-full transition-all duration-300 ${getUsageColor(safeUsagePercentage)}`}
+          style={{ width: `${Math.min(safeUsagePercentage, 100)}%` }}
         />
       </div>
     </div>

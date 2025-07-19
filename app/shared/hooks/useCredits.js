@@ -196,7 +196,7 @@ export function useCredits() {
 
   // Format credit balance for display
   const formatCredits = useCallback((credits) => {
-    if (credits === null || credits === undefined) return '0';
+    if (credits === null || credits === undefined || isNaN(credits)) return '0';
     return credits.toLocaleString();
   }, []);
 
@@ -207,8 +207,11 @@ export function useCredits() {
     const userTier = subscriptionTiers.find(tier => tier.subscription_tier === creditSummary.subscription_tier);
     if (!userTier) return 0;
     
-    const monthlyCredits = userTier.monthly_credits;
+    const monthlyCredits = userTier.monthly_credits || 0;
     const usedThisMonth = creditSummary.usage_this_month || 0;
+    
+    // Prevent division by zero
+    if (monthlyCredits === 0) return 0;
     
     return Math.min((usedThisMonth / monthlyCredits) * 100, 100);
   }, [creditSummary, subscriptionTiers]);

@@ -491,6 +491,11 @@ What category would best represent the theme or concept of this content?`;
       const context = { businessContext, userInfo };
       let systemPrompt = buildContextAwarePrompt(context, prompt);
       
+      // Add specific handling for romantic quotes
+      if (prompt.toLowerCase().includes('romantic') || prompt.toLowerCase().includes('quote')) {
+        systemPrompt += `\n\nSPECIAL INSTRUCTIONS FOR QUOTES:\n- When creating quote slides, use the actual quote text in the "content" field\n- Do NOT include JSON metadata, position data, or structural information in the quote text\n- The quote should be clean, readable text that users can understand\n- Include the author attribution as a separate text element if needed\n- Focus on the emotional impact and readability of the quote\n\nEXAMPLE FOR QUOTES:\n✅ GOOD: "I have waited for this opportunity for more than half a century, to repeat to you once again my vow of eternal fidelity and everlasting love."\n❌ BAD: "I have waited for this opportunity for more than half a century, to repeat to you once again my vow of eternal fidelity and everlasting love." {"position": {"x": 50, "y": 35}} "id": "text-2-2"\n`;
+      }
+      
       // Add existing slides context if available
       if (existingSlides && existingSlides.length > 0) {
         const existingSlidesContext = existingSlides.map((slide, index) => {
@@ -511,8 +516,10 @@ What category would best represent the theme or concept of this content?`;
       }
       
       // Enhanced system prompt for unified generation
-      const valuableSlides = slideCount - 1;
-      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides.\n\nCreate EXACTLY ${slideCount} slides in total:\n- The first slide is always an introduction.\n- The remaining ${valuableSlides} slides each contain one valuable, informative fact.\n\nThe introduction slide MUST state the correct number of facts (for example, '${valuableSlides} incredible facts about Haile Gebrselassie' if there are ${slideCount} slides in total).\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each valuable slide (slides 2 to ${slideCount}) MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each valuable slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each valuable slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: "The average person spends 2.5 hours daily on social media, equivalent to 38 days per year"\n✅ GOOD: "Compound interest can turn $10,000 into $100,000 in 25 years at 9% return"\n✅ GOOD: "Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers"\n❌ BAD: "Social media is important for business"\n❌ BAD: "Investing is good for your future"\n❌ BAD: "Reading books helps you grow"\n\nIMPORTANT EXAMPLE FOR SLIDE COUNTING:\nUser prompt: "3 incredible facts about Haile Gebrselassie"\n\nIf the user prompt asks for N facts, you must create N+1 slides: 1 intro slide (with the text 'N incredible facts about ...') and N fact slides.\n\nEXAMPLE FORMAT ONE:\nuser prompt: "3 incredible facts about Haile Gebrselassie"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "3 incredible facts about Haile Gebrselassie",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "Fact 1 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-3-1",\n    "content": "Fact 2 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n    "texts": [{\n      "id": "text-4-1",\n      "content": "Fact 3 ...",\n      "position": {"x": 50, "y": 35}\n    }],\n    "imageCategory": "sports",\n    "ratio": "9:16"\n}]\n\nEXAMPLE FORMAT TWO:\nuser prompt: "make 6 slides about things people learn too late in life"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "6 things people learn too late in life",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "1. your body is not invisible",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "the choices you make in your 20s and 30s will affect the quality of life in your 50s and beyond",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{   \n    "id": "text-3-1",\n    "content": "2. discipline beats motivation",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-3-2",\n    "content": "motivation is temporary but showing up even when you don't feel like it is what makes real progress",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-4-1",\n    "content": "3. comparison steals progress",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-4-2",\n    "content": "the only person you should be competing against is the person you were yesterday",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-5-1",\n    "content": "4. consistency over intensity",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-5-2",\n    "content": "making small progress consistently is better than the occasional all out effort",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-6-1",\n    "content": "5. your habits shape your future",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-6-2",\n    "content": "small daily habits compound both negatively and positively",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-7-1",\n    "content": "6. time is the only true currency",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-7-2",\n    "content": "money can be made, but time once gone, is gone",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}]\n\nEXAMPLE FORMAT THREE:\nuser prompt: "make 3 long texts about different personality types intjs match with perfectly. Use artsy images" \n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "3 personality types that perfectly match with intjs",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "1. enfp, the perfect contrast",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "enfps bring emotional warmth, adaptability, and endless curiosity. They pull intjs out of their heads and into the moment, making strategy feel alive and human.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-3-1",\n    "content": "2. infj, the intuitive equal",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-3-2",\n    "content": "Both are future-focused and value deep meaning. While intjs bring vision and systems, infjs add emotional intelligence and insight that makes the plan more human-centered.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-4-1",\n    "content": "3. entj, the empire builder",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-4-2",\n    "content": "When an entj's bold action meets an intj's strategic depth, they create powerful momentum. Their shared ambition fuels massive impact, when ego stays in check.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}]\n\nNotice: The first slide is always an introduction and the remaining slides contain the valuable content. The intro slide text states the correct number of valuable slides. Content slides can have multiple text elements with different positioning for better visual hierarchy.`;
+      const contentSlides = slideCount - 1; // Number of actual content slides (excluding intro)
+      systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides.\n\nCreate EXACTLY ${slideCount} slides in total:\n- The first slide is ALWAYS an introduction/title slide.\n- The remaining ${contentSlides} slides each contain one valuable, informative fact.\n\nCRITICAL SLIDE COUNTING RULE:\nWhen user asks for "N slides about X", create:\n- Slide 1: Introduction saying "${contentSlides} [topic] about X" (NOT "N slides about X")\n- Slides 2-${slideCount}: ${contentSlides} actual content slides\n\nEXAMPLES:\n- User asks "5 slides about fitness" → Intro says "4 incredible facts about fitness" + 4 content slides\n- User asks "3 slides about money" → Intro says "2 powerful insights about money" + 2 content slides\n- User asks "6 slides about success" → Intro says "5 proven strategies for success" + 5 content slides\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each valuable slide (slides 2 to ${slideCount}) MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each valuable slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each valuable slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: "The average person spends 2.5 hours daily on social media, equivalent to 38 days per year"\n✅ GOOD: "Compound interest can turn $10,000 into $100,000 in 25 years at 9% return"\n✅ GOOD: "Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers"\n❌ BAD: "Social media is important for business"\n❌ BAD: "Investing is good for your future"\n❌ BAD: "Reading books helps you grow"\n\nEXAMPLE FORMAT ONE:\nuser prompt: "5 slides about Haile Gebrselassie"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "4 incredible facts about Haile Gebrselassie",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "Fact 1 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-3-1",\n    "content": "Fact 2 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-4-1",\n    "content": "Fact 3 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-5-1",\n    "content": "Fact 4 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}]\n\nEXAMPLE FORMAT TWO:\nuser prompt: "6 slides about things people learn too late in life"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "5 things people learn too late in life",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "1. your body is not invisible",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "the choices you make in your 20s and 30s will affect the quality of life in your 50s and beyond",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{   \n    "id": "text-3-1",\n    "content": "2. discipline beats motivation",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-3-2",\n    "content": "motivation is temporary but showing up even when you don't feel like it is what makes real progress",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-4-1",\n    "content": "3. comparison steals progress",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-4-2",\n    "content": "the only person you should be competing against is the person you were yesterday",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-5-1",\n    "content": "4. consistency over intensity",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-5-2",\n    "content": "making small progress consistently is better than the occasional all out effort",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-6-1",\n    "content": "5. time is the only true currency",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-6-2",\n    "content": "money can be made, but time once gone, is gone",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}]\n\nEXAMPLE FORMAT THREE:\nuser prompt: "3 slides about personality types that match with intjs" \n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "2 personality types that perfectly match with intjs",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "1. enfp, the perfect contrast",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "enfps bring emotional warmth, adaptability, and endless curiosity. They pull intjs out of their heads and into the moment, making strategy feel alive and human.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-3-1",\n    "content": "2. infj, the intuitive equal",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-3-2",\n    "content": "Both are future-focused and value deep meaning. While intjs bring vision and systems, infjs add emotional intelligence and insight that makes the plan more human-centered.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}]\n\nNotice: The first slide is always an introduction and the remaining slides contain the valuable content. The intro slide text states the correct number of content slides (N-1), not the total number of slides (N). Content slides can have multiple text elements with different positioning for better visual hierarchy.
+
+CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, markdown formatting, or other content outside the JSON array. The response must be parseable by JSON.parse().`;
 
       // Generate content using OpenAI with model selection based on intelligence mode
       const openaiClient = getOpenAI();
@@ -540,6 +547,10 @@ What category would best represent the theme or concept of this content?`;
       try {
         slides = JSON.parse(completion.choices[0].message.content);
         if (!Array.isArray(slides)) throw new Error('Not an array');
+        
+        // Clean any JSON metadata that might have been mixed into content
+        slides = this.cleanSlideContent(slides);
+        
       } catch (e) {
         apiLogger.error('Failed to parse AI response:', e);
         // Fallback parsing logic
@@ -661,6 +672,145 @@ What category would best represent the theme or concept of this content?`;
   }
 
   /**
+   * Dynamic image selection that bypasses rigid category system
+   * Uses AI to find the best images for any topic by analyzing the entire image database
+   * @param {string} prompt - User prompt
+   * @param {Array} specificKeywords - Specific keywords to match
+   * @param {number} slideIndex - Slide index
+   * @param {Object} businessContext - Business context
+   * @param {string} intelligenceMode - Intelligence mode
+   * @returns {Promise<Object|null>} Best matching image
+   */
+  async selectImageDynamically(prompt, specificKeywords, slideIndex, businessContext = {}, intelligenceMode = 'normal') {
+    try {
+      apiLogger.info(`🚀 Using DYNAMIC image selection for slide ${slideIndex} - prompt: "${prompt}"`);
+      
+      // Step 1: Use AI to generate search keywords for the specific topic
+      const openaiClient = getOpenAI();
+      const systemPrompt = `You are an expert at finding relevant images for any topic. Your job is to generate search keywords that will find the most relevant images in a stock photo database.
+
+TASK: Analyze the user's prompt and generate 5-8 search keywords that would find relevant images. Focus on:
+1. Visual elements that would appear in images
+2. Objects, people, scenes, or concepts mentioned
+3. Related visual terms that might be used in image titles
+4. Broader visual categories that could represent the topic
+5. Historical, cultural, or thematic elements that might be visually represented
+
+GUIDELINES:
+- Think about what someone would search for to find relevant images
+- Include both specific and broader terms
+- Consider visual symbolism and representation
+- Focus on what would actually appear in stock photos
+- Avoid overly specific terms that might not exist in the database
+
+EXAMPLES:
+- "personality types" → ["people", "portraits", "diversity", "relationships", "communication", "teamwork", "collaboration", "psychology", "behavior"]
+- "compatible personality types" → ["people", "relationships", "couples", "friendship", "teamwork", "collaboration", "partnership", "connection"]
+- "knights" → ["medieval", "armor", "warrior", "castle", "history", "battle", "chivalry"]
+- "romantic quotes" → ["couples", "love", "romance", "relationships", "hearts", "flowers", "sunset"]
+- "startup funding" → ["business", "money", "investment", "entrepreneurs", "meeting", "growth", "success"]
+
+RESPONSE FORMAT: Return ONLY a JSON array of keywords.
+Example: ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]`;
+
+      const userPrompt = `User prompt: "${prompt}"
+Specific keywords already identified: ${specificKeywords.join(', ')}
+
+Generate search keywords for finding relevant images:`;
+
+      const completion = await openaiClient.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        max_tokens: 200,
+        temperature: 0.7,
+        response_format: { type: 'json_object' }
+      });
+
+      let dynamicKeywords = [];
+      try {
+        const response = JSON.parse(completion.choices[0].message.content);
+        dynamicKeywords = Array.isArray(response.keywords) ? response.keywords : 
+                        Array.isArray(response) ? response : [];
+      } catch (e) {
+        apiLogger.warn('Failed to parse dynamic keywords, using fallback');
+        dynamicKeywords = specificKeywords.length > 0 ? specificKeywords : ['people', 'business'];
+      }
+
+      // Combine with specific keywords
+      const allKeywords = [...new Set([...dynamicKeywords, ...specificKeywords])];
+      apiLogger.info(`🔍 Dynamic keywords for slide ${slideIndex}: ${allKeywords.join(', ')}`);
+
+      // Step 2: Search the entire database with these keywords
+      let images = await this.queryImagesByKeywords(allKeywords);
+      
+      if (!images || images.length === 0) {
+        apiLogger.warn(`❌ No images found with dynamic keywords: ${allKeywords.join(', ')}`);
+        
+        // Fallback to broader search
+        const fallbackKeywords = ['people', 'business', 'lifestyle', 'abstract'];
+        images = await this.queryImagesByKeywords(fallbackKeywords);
+        
+        if (!images || images.length === 0) {
+          apiLogger.error(`❌ No images found even with fallback keywords`);
+          return null;
+        }
+      }
+
+      // Step 3: Filter out already used images
+      const availableImages = images.filter(img => !this.usedImages.has(img.id));
+      apiLogger.info(`🔍 Dynamic search found ${images.length} total images, ${availableImages.length} available (not used)`);
+      
+      if (availableImages.length === 0) {
+        // Only reset if we've used a significant number of images to prevent premature resets
+        const usedPercentage = this.usedImages.size / Math.max(images.length, 1);
+        if (usedPercentage > 0.7) {
+          apiLogger.warn(`⚠️ Used ${Math.round(usedPercentage * 100)}% of images in dynamic search. Resetting selection.`);
+          this.usedImages.clear();
+          const freshImages = images.filter(img => !this.usedImages.has(img.id));
+          if (freshImages.length === 0) {
+            apiLogger.error(`❌ No fresh images available after reset`);
+            return null;
+          }
+          images = freshImages;
+          apiLogger.info(`🔄 Reset complete. Now have ${images.length} fresh images available.`);
+        } else {
+          apiLogger.warn(`⚠️ No available images but only ${Math.round(usedPercentage * 100)}% used. Using random selection.`);
+          // Pick a random image but log it as reused
+          const randomImage = images[Math.floor(Math.random() * images.length)];
+          apiLogger.warn(`🔄 Reusing image: "${randomImage.title}" (ID: ${randomImage.id}) for slide ${slideIndex}`);
+          return randomImage;
+        }
+      } else {
+        images = availableImages;
+      }
+
+      // Step 4: Use visual analysis to select the best image
+      const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(
+        images, 
+        allKeywords, 
+        slideIndex, 
+        prompt, 
+        intelligenceMode
+      );
+
+      if (selectedImage) {
+        this.usedImages.add(selectedImage.id);
+        apiLogger.info(`✅ Dynamic selection found image: "${selectedImage.title}" for slide ${slideIndex}`);
+        return selectedImage;
+      }
+
+      return null;
+
+    } catch (error) {
+      apiLogger.error(`Error in dynamic image selection for slide ${slideIndex}:`, error);
+      return null;
+    }
+  }
+
+  /**
    * Select image for a specific slide with enhanced visual analysis and intelligent fallback
    * @param {string} imageCategory - Image category
    * @param {number} slideIndex - Slide index
@@ -672,6 +822,25 @@ What category would best represent the theme or concept of this content?`;
    */
   async selectImageForSlide(imageCategory, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
     try {
+      // Use dynamic image selection instead of rigid category system
+      apiLogger.info(`🎯 Using dynamic image selection for slide ${slideIndex}`);
+      
+      const dynamicSelectedImage = await this.selectImageDynamically(
+        prompt, 
+        specificKeywords, 
+        slideIndex, 
+        businessContext, 
+        intelligenceMode
+      );
+      
+      if (dynamicSelectedImage) {
+        apiLogger.info(`✅ Dynamic selection found image: "${dynamicSelectedImage.title}" for slide ${slideIndex}`);
+        return dynamicSelectedImage;
+      }
+      
+      // Fallback to category-based selection if dynamic selection fails
+      apiLogger.warn(`❌ Dynamic selection failed, falling back to category-based selection for slide ${slideIndex}`);
+      
       // Enforce category restrictions
       if (!allowedCategories.includes(imageCategory)) {
         apiLogger.warn(`Category "${imageCategory}" not in allowed categories: ${allowedCategories.join(', ')}. Using first allowed category.`);
@@ -720,10 +889,10 @@ What category would best represent the theme or concept of this content?`;
           // Get fresh available images after reset
           const freshAvailableImages = images.filter(img => !this.usedImages.has(img.id));
           if (freshAvailableImages.length > 0) {
-            const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(freshAvailableImages, specificKeywords, slideIndex, prompt);
-            this.usedImages.add(selectedImage.id);
-            apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
-            return selectedImage;
+            const categorySelectedImage = await this.selectBestMatchingImageWithVisualAnalysis(freshAvailableImages, specificKeywords, slideIndex, prompt);
+            this.usedImages.add(categorySelectedImage.id);
+            apiLogger.debug(`Selected image ${categorySelectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
+            return categorySelectedImage;
           }
         }
         
@@ -731,10 +900,10 @@ What category would best represent the theme or concept of this content?`;
         // But still avoid duplicates by checking if it's already used
         const unusedImages = images.filter(img => !this.usedImages.has(img.id));
         if (unusedImages.length > 0) {
-          const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(unusedImages, specificKeywords, slideIndex, prompt);
-          this.usedImages.add(selectedImage.id);
-          apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
-          return selectedImage;
+          const categorySelectedImage = await this.selectBestMatchingImageWithVisualAnalysis(unusedImages, specificKeywords, slideIndex, prompt);
+          this.usedImages.add(categorySelectedImage.id);
+          apiLogger.debug(`Selected image ${categorySelectedImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
+          return categorySelectedImage;
         } else {
           // If all images are used, we have no choice but to reuse one
           const randomImage = images[Math.floor(Math.random() * images.length)];
@@ -1059,6 +1228,57 @@ What category would best represent the theme or concept of this content?`;
     }
   }
 
+  /**
+   * Clean slide content to remove JSON metadata that might be mixed in
+   * @param {Array} slides - Array of slide objects
+   * @returns {Array} Cleaned slides
+   */
+  cleanSlideContent(slides) {
+    return slides.map(slide => {
+      if (slide.texts && slide.texts.length > 0) {
+        slide.texts = slide.texts.map(text => {
+          if (text.content) {
+            // Remove JSON metadata patterns that might be mixed into content
+            let cleanedContent = text.content;
+            
+            // Remove JSON object patterns like {"position": {"x": 50, "y": 35}}
+            cleanedContent = cleanedContent.replace(/\{\s*"[^"]*"\s*:\s*\{[^}]*\}\s*\}/g, '');
+            
+            // Remove JSON key-value patterns like "id": "text-2-2"
+            cleanedContent = cleanedContent.replace(/"\s*[^"]*"\s*:\s*"[^"]*"/g, '');
+            
+            // Remove JSON key-value patterns like "content": "some text"
+            cleanedContent = cleanedContent.replace(/"\s*content\s*"\s*:\s*"[^"]*"/g, '');
+            
+            // Remove JSON key-value patterns like "position": {"x": 50, "y": 35}
+            cleanedContent = cleanedContent.replace(/"\s*position\s*"\s*:\s*\{[^}]*\}/g, '');
+            
+            // Remove JSON key-value patterns like "imageCategory": "love"
+            cleanedContent = cleanedContent.replace(/"\s*imageCategory\s*"\s*:\s*"[^"]*"/g, '');
+            
+            // Remove JSON key-value patterns like "ratio": "9:16"
+            cleanedContent = cleanedContent.replace(/"\s*ratio\s*"\s*:\s*"[^"]*"/g, '');
+            
+            // Remove JSON array patterns like {"id": "text-3-1", "content": ""}
+            cleanedContent = cleanedContent.replace(/\{\s*"[^"]*"\s*:\s*"[^"]*"\s*,\s*"[^"]*"\s*:\s*"[^"]*"\s*\}/g, '');
+            
+            // Remove any remaining JSON-like patterns
+            cleanedContent = cleanedContent.replace(/\{\s*"[^"]*"\s*:\s*[^}]*\}/g, '');
+            
+            // Clean up extra whitespace and commas
+            cleanedContent = cleanedContent.replace(/\s*,\s*/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            // Remove any leading/trailing quotes that might be left
+            cleanedContent = cleanedContent.replace(/^["']+|["']+$/g, '');
+            
+            text.content = cleanedContent;
+          }
+          return text;
+        });
+      }
+      return slide;
+    });
+  }
 
 
   /**
