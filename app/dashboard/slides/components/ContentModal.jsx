@@ -19,6 +19,22 @@ export default function ContentModal({
   // All hooks must be called before any early return
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [generatedImages, setGeneratedImages] = useState([]);
+
+  // Load generated images from localStorage
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('aiGeneratedImages');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setGeneratedImages(parsed);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading generated images:', error);
+    }
+  }, []);
 
   React.useEffect(() => {
     setViewMode('grid');
@@ -60,9 +76,11 @@ export default function ContentModal({
       } else {
         images = libraryImages || [];
       }
+    } else if (contentType === 'generated') {
+      images = generatedImages || [];
     }
     return images;
-  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages]);
+  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages, generatedImages]);
 
   // Only after all hooks, do early return
   if (!isOpen) return null;
@@ -104,8 +122,8 @@ export default function ContentModal({
                         className="w-6 h-6 rounded border border-white overflow-hidden"
                       >
                         <Image
-                          src={img.image_url || img.url}
-                          alt={img.title}
+                          src={img.image_url || img.url || img.image}
+                          alt={img.title || img.content}
                           width={24}
                           height={24}
                           className="object-cover w-full h-full"
@@ -186,8 +204,8 @@ export default function ContentModal({
                   }}
                 >
                   <Image
-                    src={image.image_url || image.url}
-                    alt={image.title || 'Stock image'}
+                    src={image.image_url || image.url || image.image}
+                    alt={image.title || image.content || 'Image'}
                     fill
                     className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, 25vw"
@@ -211,6 +229,18 @@ export default function ContentModal({
             </h3>
           </div>
         )}
+        {contentType === 'generated' && (
+          <div className="px-4 mb-4 mt-6">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Generated Images ({imagesToShow.length})
+            </h3>
+          </div>
+        )}
+        {contentType === 'generated' && imagesToShow.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            No generated images available. Use AI prompts to generate images.
+          </div>
+        )}
         <div className="grid grid-cols-4 gap-4 p-4 w-full">
           {imagesToShow.map((image) => (
             <div 
@@ -222,8 +252,8 @@ export default function ContentModal({
               }}
             >
               <Image
-                src={image.image_url || image.url}
-                alt={image.title || 'User image'}
+                src={image.image_url || image.url || image.image}
+                alt={image.title || image.content || 'Image'}
                 fill
                 className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
                 sizes="(max-width: 768px) 50vw, 25vw"
@@ -299,7 +329,7 @@ export default function ContentModal({
                       onClick={() => setIsDropdownOpen(!isDropdownOpen)} 
                       className="w-full bg-white border border-gray-300 rounded-md shadow-sm px-4 py-2 inline-flex justify-between items-center text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
                     >
-                      {contentType === 'stock' ? 'Stock Photos' : 'Your Photos'}
+                      {contentType === 'stock' ? 'Stock Photos' : contentType === 'user' ? 'Your Photos' : 'Generated Images'}
                       <ChevronDown className="-mr-1 ml-2 h-5 w-5" />
                     </button>
                     {isDropdownOpen && (
@@ -332,6 +362,21 @@ export default function ContentModal({
                                 className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
                               >
                                 Your Photos
+                              </a>
+                            </li>
+                          )}
+                          {contentType !== 'generated' && (
+                            <li>
+                              <a
+                                href="#"
+                                onClick={(e) => { 
+                                  e.preventDefault(); 
+                                  setContentType('generated'); 
+                                  setIsDropdownOpen(false); 
+                                }}
+                                className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-gray-700 hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
+                              >
+                                Generated Images
                               </a>
                             </li>
                           )}
