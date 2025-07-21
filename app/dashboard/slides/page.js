@@ -9,6 +9,7 @@ import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 import SlideCanvas from './components/SlideCanvas';
 import ContentModal from './components/ContentModal';
 import PromptModal from './components/PromptModal';
+
 import DownloadModal from './components/DownloadModal';
 import { useSlideManagement } from './hooks/useSlideManagement';
 import { useSlideNavigation } from './hooks/useSlideNavigation';
@@ -130,7 +131,7 @@ export default function SlidesEditor() {
         setIsLoading(true);
         setError(null);
         const supabase = getSupabase();
-        const { data, error } = await supabase.from('images').select('id, title, image_url');
+        const { data, error } = await supabase.from('images').select('id, title, image_url, category');
         if (error) {
           console.warn('Failed to fetch images from database:', error);
           // Use empty array as fallback

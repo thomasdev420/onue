@@ -58,20 +58,53 @@ export default function PromptModal({
 
     // Let the AI figure out the intent from the user's prompt
     let finalSlideCount = slideCount;
-    // Try to extract explicit slide count (e.g., '3 slides')
-    let slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
-    if (slideCountMatch) {
-      const requestedCount = parseInt(slideCountMatch[1]);
-      if (requestedCount >= 1 && requestedCount <= 10) {
-        finalSlideCount = requestedCount;
+    
+    // Check if this is a "more slides" request
+    const isMoreSlidesRequest = existingSlides && existingSlides.length > 0 && (
+      userMessage.toLowerCase().includes('more') || 
+      userMessage.toLowerCase().includes('additional') || 
+      userMessage.toLowerCase().includes('continue') || 
+      userMessage.toLowerCase().includes('add') ||
+      userMessage.toLowerCase().includes('extra')
+    );
+    
+    if (isMoreSlidesRequest) {
+      // For "more slides" requests, extract the number of additional slides
+      let slideCountMatch = userMessage.match(/(\d+)\s*(?:more|additional|extra)?\s*(?:slides?|slide)/i);
+      if (slideCountMatch) {
+        const requestedCount = parseInt(slideCountMatch[1]);
+        if (requestedCount >= 1 && requestedCount <= 10) {
+          finalSlideCount = requestedCount;
+        }
+      } else {
+        // Try to extract numbers for prompts like '3 more facts', '5 additional tips', etc.
+        const genericCountMatch = userMessage.match(/(\d+)\s*(?:more|additional|extra)?\s*(?:facts?|reasons?|tips?|secrets?|ideas?|lessons?|ways|methods|strategies|things|steps)/i);
+        if (genericCountMatch) {
+          const requestedCount = parseInt(genericCountMatch[1]);
+          if (requestedCount >= 1 && requestedCount <= 10) {
+            finalSlideCount = requestedCount;
+          }
+        } else {
+          // Default to 3 additional slides for "more slides" requests
+          finalSlideCount = 3;
+        }
       }
     } else {
-      // Try to extract numbers for prompts like '3 facts', '5 reasons', etc.
-      const genericCountMatch = userMessage.match(/(\d+)\s*(?:facts?|reasons?|tips?|secrets?|ideas?|lessons?|ways|methods|strategies|things|steps)/i);
-      if (genericCountMatch) {
-        const requestedCount = parseInt(genericCountMatch[1]);
+      // For new slide sets, try to extract explicit slide count (e.g., '3 slides')
+      let slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
+      if (slideCountMatch) {
+        const requestedCount = parseInt(slideCountMatch[1]);
         if (requestedCount >= 1 && requestedCount <= 10) {
-          finalSlideCount = requestedCount + 1; // +1 for intro slide
+          finalSlideCount = requestedCount;
+        }
+      } else {
+        // Try to extract numbers for prompts like '3 facts', '5 reasons', etc.
+        const genericCountMatch = userMessage.match(/(\d+)\s*(?:facts?|reasons?|tips?|secrets?|ideas?|lessons?|ways|methods|strategies|things|steps)/i);
+        if (genericCountMatch) {
+          const requestedCount = parseInt(genericCountMatch[1]);
+          if (requestedCount >= 1 && requestedCount <= 10) {
+            finalSlideCount = requestedCount + 1; // +1 for intro slide
+          }
         }
       }
     }
@@ -254,7 +287,7 @@ export default function PromptModal({
             borderRadius: '8px',
             border: '1px solid #E5E7EB'
           }}>
-            💡 <strong>Tip:</strong> Use "add another slide" to keep existing content, or "create new slides" to start fresh
+            💡 <strong>Tip:</strong> Say "add more slides" or "continue with 3 slides" to build upon your existing content. The AI will maintain the same style and theme.
           </div>
         )}
         <textarea
@@ -264,7 +297,7 @@ export default function PromptModal({
           onKeyPress={handleKeyPress}
           placeholder={
             existingSlides && existingSlides.length > 0
-              ? `e.g., "Create four slides featuring different personality types that pair perfectly with intjs. Use artistic images"`
+              ? `e.g., "add 3 more slides about the same topic" or "continue with 2 additional facts" or "create 4 new slides about different aspects"`
               : `e.g., Create a motivational ${mode.slice(0, -1)} about entrepreneurship with a modern design...`
           }
           disabled={isGenerating}

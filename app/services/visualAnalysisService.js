@@ -89,25 +89,44 @@ User's request: "${prompt}"
 
 Please provide a detailed analysis of the visual content and relevance to the user's request.`;
 
-      const completion = await openaiClient.chat.completions.create({
-        model: modelConfig.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { 
-            role: 'user', 
-            content: [
-              { type: 'text', text: userPrompt },
-              { type: 'image_url', image_url: { url: imageUrl } }
-            ]
+      // Add rate limit handling with retry logic
+      let completion;
+      let retries = 0;
+      const maxRetries = 3;
+      
+      while (retries < maxRetries) {
+        try {
+          completion = await openaiClient.chat.completions.create({
+            model: modelConfig.model,
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { 
+                role: 'user', 
+                content: [
+                  { type: 'text', text: userPrompt },
+                  { type: 'image_url', image_url: { url: imageUrl } }
+                ]
+              }
+            ],
+            max_tokens: modelConfig.max_tokens,
+            temperature: modelConfig.temperature,
+            top_p: modelConfig.top_p,
+            frequency_penalty: modelConfig.frequency_penalty,
+            presence_penalty: modelConfig.presence_penalty,
+            response_format: { type: 'json_object' }
+          });
+          break; // Success, exit retry loop
+        } catch (error) {
+          if (error.code === 'rate_limit_exceeded' && retries < maxRetries - 1) {
+            const retryAfter = parseInt(error.headers?.['retry-after-ms']) || 1000;
+            apiLogger.warn(`⚠️ Rate limit hit in visual analysis, retrying in ${retryAfter}ms (attempt ${retries + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, retryAfter));
+            retries++;
+          } else {
+            throw error; // Re-throw if not rate limit or max retries reached
           }
-        ],
-        max_tokens: modelConfig.max_tokens,
-        temperature: modelConfig.temperature,
-        top_p: modelConfig.top_p,
-        frequency_penalty: modelConfig.frequency_penalty,
-        presence_penalty: modelConfig.presence_penalty,
-        response_format: { type: 'json_object' }
-      });
+        }
+      }
 
       const response = completion.choices[0]?.message?.content;
       if (!response) {
@@ -134,6 +153,10 @@ Please provide a detailed analysis of the visual content and relevance to the us
       return analysis;
 
     } catch (error) {
+      if (error.code === 'rate_limit_exceeded') {
+        apiLogger.warn('⚠️ Rate limit exceeded in visual analysis, using fallback');
+        return this.getFallbackAnalysis();
+      }
       apiLogger.error('Error in visual analysis:', error);
       return this.getFallbackAnalysis();
     }
@@ -165,6 +188,10 @@ Please provide a detailed analysis of the visual content and relevance to the us
       return analyses;
 
     } catch (error) {
+      if (error.code === 'rate_limit_exceeded') {
+        apiLogger.warn('⚠️ Rate limit exceeded in batch analysis, returning empty results');
+        return [];
+      }
       apiLogger.error('Error in batch analysis:', error);
       return [];
     }

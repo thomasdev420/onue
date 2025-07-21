@@ -5,6 +5,92 @@ import Image from "next/image";
 import { X, ChevronDown, Grid, List } from 'lucide-react';
 import { UNIFIED_CATEGORIES, CATEGORIES, CATEGORY_KEYWORDS } from '../../../shared/constants/imageCategories.js';
 
+// Utility: extract dominant color from image using Canvas API
+function extractDominantColor(imageUrl) {
+  return new Promise((resolve) => {
+    const img = document.createElement('img');
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 50; // Small size for performance
+      canvas.height = 50;
+      ctx.drawImage(img, 0, 0, 50, 50);
+      
+      const imageData = ctx.getImageData(0, 0, 50, 50).data;
+      let r = 0, g = 0, b = 0, count = 0;
+      
+      // Sample pixels and get average color
+      for (let i = 0; i < imageData.length; i += 4) {
+        r += imageData[i];
+        g += imageData[i + 1];
+        b += imageData[i + 2];
+        count++;
+      }
+      
+      r = Math.round(r / count);
+      g = Math.round(g / count);
+      b = Math.round(b / count);
+      
+      // Convert to HSL for better sorting
+      const hsl = rgbToHsl(r, g, b);
+      resolve({ r, g, b, h: hsl[0], s: hsl[1], l: hsl[2] });
+    };
+    img.onerror = () => {
+      // Fallback for failed images
+      resolve({ r: 128, g: 128, b: 128, h: 0, s: 0, l: 0.5 });
+    };
+    img.src = imageUrl;
+  });
+}
+
+// Convert RGB to HSL
+function rgbToHsl(r, g, b) {
+  r /= 255;
+  g /= 255;
+  b /= 255;
+  
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h, s, l = (max + min) / 2;
+  
+  if (max === min) {
+    h = s = 0;
+  } else {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    
+    switch (max) {
+      case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+      case g: h = (b - r) / d + 2; break;
+      case b: h = (r - g) / d + 4; break;
+    }
+    h /= 6;
+  }
+  
+  return [h * 360, s * 100, l * 100];
+}
+
+// Sort images by color (hue first, then saturation, then lightness)
+function sortImagesByColor(images) {
+  return images.sort((a, b) => {
+    if (!a.colorData || !b.colorData) return 0;
+    
+    // Sort by hue first (color wheel order)
+    if (Math.abs(a.colorData.h - b.colorData.h) > 10) {
+      return a.colorData.h - b.colorData.h;
+    }
+    
+    // Then by saturation (more saturated first)
+    if (Math.abs(a.colorData.s - b.colorData.s) > 5) {
+      return b.colorData.s - a.colorData.s;
+    }
+    
+    // Then by lightness
+    return a.colorData.l - b.colorData.l;
+  });
+}
+
 export default function ContentModal({
   isOpen,
   onClose,
@@ -20,6 +106,8 @@ export default function ContentModal({
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [generatedImages, setGeneratedImages] = useState([]);
+  const [sortedImages, setSortedImages] = useState([]);
+  const [isColorSorting, setIsColorSorting] = useState(false);
 
   // Load generated images from localStorage
   React.useEffect(() => {
@@ -41,6 +129,59 @@ export default function ContentModal({
     setSelectedCategory(null);
   }, [contentType, isOpen]);
 
+  // Extract colors and sort images when libraryImages changes
+  React.useEffect(() => {
+    if (contentType === 'stock' && libraryImages && libraryImages.length > 0) {
+      // Check if we have cached sorted results
+      const cacheKey = `sortedImages_${libraryImages.length}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached);
+          // Verify the cache is still valid by checking if image IDs match
+          const currentIds = libraryImages.map(img => img.id).sort().join(',');
+          const cachedIds = parsed.imageIds;
+          
+          if (currentIds === cachedIds) {
+            setSortedImages(parsed.images);
+            setIsColorSorting(false);
+            return; // Use cached results
+          }
+        } catch (error) {
+          console.error('Error parsing cached sorted images:', error);
+        }
+      }
+      
+      // Only sort if we don't have valid cached results
+      setIsColorSorting(true);
+      
+      // Extract colors for all images
+      const extractColors = async () => {
+        const imagesWithColors = await Promise.all(
+          libraryImages.map(async (image) => {
+            const colorData = await extractDominantColor(image.image_url);
+            return { ...image, colorData };
+          })
+        );
+        
+        const sorted = sortImagesByColor(imagesWithColors);
+        setSortedImages(sorted);
+        setIsColorSorting(false);
+        
+        // Cache the results
+        const cacheData = {
+          images: sorted,
+          imageIds: libraryImages.map(img => img.id).sort().join(','),
+          timestamp: Date.now()
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+      };
+      
+      extractColors();
+    }
+  }, [libraryImages, contentType]);
+
   // Organize images by category
   const categorizedImages = useMemo(() => {
     if (contentType !== 'stock' || !libraryImages) return {};
@@ -49,17 +190,26 @@ export default function ContentModal({
       categorized[category] = [];
     });
     libraryImages.forEach(image => {
-      let matched = false;
-      for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
-        if (image.title && keywords.some(keyword => 
-          image.title.toLowerCase().includes(keyword.toLowerCase())
-        )) {
-          categorized[category].push(image);
-          matched = true;
+      // Use database category if available, otherwise fall back to keyword matching
+      const dbCategory = image.category;
+      if (dbCategory && categorized[dbCategory]) {
+        categorized[dbCategory].push(image);
+      } else {
+        // Fallback to keyword matching for images without database categories
+        let matched = false;
+        for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+          if (image.title && keywords.some(keyword => 
+            image.title.toLowerCase().includes(keyword.toLowerCase())
+          )) {
+            categorized[category].push(image);
+            matched = true;
+            break;
+          }
         }
-      }
-      if (!matched) {
-        categorized.business.push(image);
+        if (!matched) {
+          // Default to general instead of business
+          categorized.general.push(image);
+        }
       }
     });
     return categorized;
@@ -74,13 +224,14 @@ export default function ContentModal({
       if (selectedCategory && categorizedImages[selectedCategory]) {
         images = categorizedImages[selectedCategory];
       } else {
-        images = libraryImages || [];
+        // Use sorted images for all-photos view
+        images = sortedImages.length > 0 ? sortedImages : (libraryImages || []);
       }
     } else if (contentType === 'generated') {
       images = generatedImages || [];
     }
     return images;
-  }, [contentType, userImages, selectedCategory, categorizedImages, libraryImages, generatedImages]);
+  }, [contentType, userImages, selectedCategory, categorizedImages, sortedImages, libraryImages, generatedImages]);
 
   // Only after all hooks, do early return
   if (!isOpen) return null;
@@ -123,7 +274,7 @@ export default function ContentModal({
                       >
                         <Image
                           src={img.image_url || img.url || img.image}
-                          alt={img.title || img.content}
+                          alt={img.name || img.title || img.content}
                           width={24}
                           height={24}
                           className="object-cover w-full h-full"
@@ -168,7 +319,7 @@ export default function ContentModal({
                 >
                   <Image
                     src={image.image_url || image.url}
-                    alt={image.title || 'Stock image'}
+                    alt={image.name || image.title || 'Stock image'}
                     fill
                     className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, 25vw"
@@ -205,7 +356,7 @@ export default function ContentModal({
                 >
                   <Image
                     src={image.image_url || image.url || image.image}
-                    alt={image.title || image.content || 'Image'}
+                    alt={image.name || image.title || image.content || 'Image'}
                     fill
                     className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
                     sizes="(max-width: 768px) 50vw, 25vw"
@@ -224,9 +375,17 @@ export default function ContentModal({
       <div className="w-full">
         {contentType === 'stock' && (
           <div className="px-4 mb-4 mt-6">
-            <h3 className="text-lg font-semibold text-gray-800">
-              All Stock Photos ({imagesToShow.length})
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">
+                All Stock Photos ({imagesToShow.length})
+              </h3>
+              {isColorSorting && (
+                <div className="text-sm text-gray-500 flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-500"></div>
+                  Sorting by color...
+                </div>
+              )}
+            </div>
           </div>
         )}
         {contentType === 'generated' && (

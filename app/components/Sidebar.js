@@ -98,7 +98,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5
             <ul className="space-y-1 text-sm">
               <SidebarLink href="/dashboard" icon={<Home size={18} />} label="Home" currentPath={pathname} isCollapsed={isCollapsed} />
               <SidebarLink href="/dashboard/slides" icon={<Video size={18} />} label="Content Generator" currentPath={pathname} isCollapsed={isCollapsed} pageColor={pageColor} setShowModeModal={setShowModeModal} isContentPage={pathname.includes('/dashboard/slides') || pathname.includes('/dashboard/videos') || pathname.includes('/dashboard/images') || pathname.includes('/dashboard/text')} />
-              <SidebarLink href="/dashboard/upload" icon={<Upload size={18} />} label="Content Upload" currentPath={pathname} isCollapsed={isCollapsed} />
+              <SidebarLink href="/dashboard/bulk-upload" icon={<Upload size={18} />} label="Bulk Upload" currentPath={pathname} isCollapsed={isCollapsed} />
               <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
               <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />
               <div className="mt-4"></div>

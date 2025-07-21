@@ -222,13 +222,17 @@ export async function retrieveUserMemory(userEmail, category = null, limit = 20)
     // Update access count and timestamp for retrieved memories
     if (data && data.length > 0) {
       const memoryIds = data.map(memory => memory.id);
-      await supabase
-        .from('ai_memory')
-        .update({ 
-          access_count: supabase.raw('access_count + 1'),
-          last_accessed: new Date().toISOString()
-        })
-        .in('id', memoryIds);
+      
+      // Update each memory individually since Supabase doesn't support raw SQL in updates
+      for (const memory of data) {
+        await supabase
+          .from('ai_memory')
+          .update({ 
+            access_count: (memory.access_count || 0) + 1,
+            last_accessed: new Date().toISOString()
+          })
+          .eq('id', memory.id);
+      }
     }
 
     return data || [];

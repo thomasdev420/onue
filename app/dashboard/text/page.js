@@ -103,7 +103,7 @@ export default function TextEditor() {
         setIsLoading(true);
         setError(null);
         const supabase = getSupabase();
-        const { data, error } = await supabase.from('images').select('id, title, image_url');
+        const { data, error } = await supabase.from('images').select('id, title, image_url, category');
         if (error) throw error;
         console.log('Fetched images from database:', data?.length || 0, 'images');
         if (data && data.length > 0) {

@@ -163,6 +163,12 @@ export const UNIFIED_CATEGORIES = {
     icon: '🏃',
     color: 'bg-blue-50 border-blue-200',
     keywords: ['running', 'athletic', 'fitness', 'competition', 'training', 'athlete', 'run']
+  },
+  general: {
+    name: 'General',
+    icon: '📷',
+    color: 'bg-gray-50 border-gray-200',
+    keywords: ['general', 'miscellaneous', 'various', 'diverse', 'mixed', 'assorted']
   }
 };
 
