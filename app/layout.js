@@ -140,12 +140,9 @@ export const metadata = {
       title: "Flightmedia - Content Creation Platform",
       description: "Create viral, self-improving videos and posts that drive millions of views, boost traffic, and grow your brand automatically.",
       icons: {
-        icon: [
-          { url: '/favicon.ico?v=3', sizes: 'any' },
-          { url: '/favicon.png?v=3', type: 'image/png', sizes: '32x32' }
-        ],
-        apple: { url: '/favicon.png?v=3', type: 'image/png', sizes: '32x32' },
-        shortcut: '/favicon.ico?v=3'
+        icon: { url: '/favicon.png?v=5', type: 'image/png', sizes: '32x32' },
+        apple: { url: '/favicon.png?v=5', type: 'image/png', sizes: '32x32' },
+        shortcut: '/favicon.png?v=5'
       }
 };
 
@@ -155,6 +152,13 @@ export default async function RootLayout({ children }) {
   
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png?v=5" />
+        <link rel="shortcut icon" href="/favicon.png?v=5" />
+        <link rel="apple-touch-icon" href="/favicon.png?v=5" />
+        <meta name="msapplication-TileImage" content="/favicon.png?v=5" />
+        <meta name="msapplication-TileColor" content="#3953e6" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} ${poppins.variable} ${roboto.variable} ${openSans.variable} ${montserrat.variable} ${raleway.variable} ${playfairDisplay.variable} ${merriweather.variable} ${oswald.variable} ${lato.variable} ${nunito.variable} ${quicksand.variable} ${comfortaa.variable} ${bebasNeue.variable} ${anton.variable} ${pacifico.variable} ${dancingScript.variable} ${caveat.variable} ${indieFlower.variable} ${permanentMarker.variable} antialiased`}>
         <ErrorBoundary>
           <ProductionSessionProvider session={session}>

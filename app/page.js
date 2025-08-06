@@ -505,7 +505,7 @@ export default function Home() {
           3. Replace the src below with your image URL
       */}
       <Image
-        src="https://reel.farm/hero.png"
+        src="/contentpage.png"
         alt="Running and Fitness Content Creation - Hero Image"
         width={800}
         height={400}

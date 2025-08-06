@@ -30,6 +30,19 @@ const nextConfig = {
       { protocol: 'https', hostname: 'randomuser.me' },
     ],
   },
+  async headers() {
+    return [
+      {
+        source: '/favicon.png',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate, max-age=0',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 module.exports = nextConfig
