@@ -17,12 +17,56 @@ export default function DashboardLayout({ children }) {
   const [devAccessChecked, setDevAccessChecked] = useState(false);
   const [hasOAuthParams, setHasOAuthParams] = useState(false);
   const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+  const [onboardingStatusChecked, setOnboardingStatusChecked] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
+
+  // Check onboarding status on mount
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/user/onboarding-status', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          
+          if (response.ok) {
+            const { hasCompleted } = await response.json();
+            setHasCompletedOnboarding(hasCompleted);
+            
+            // Show mandatory onboarding only for first-time users
+            if (!hasCompleted) {
+              setIsFirstTimeUser(true);
+              setShowWebsiteOnboarding(true);
+            } else {
+              setIsFirstTimeUser(false);
+            }
+          }
+        } catch (error) {
+          console.error('Error checking onboarding status:', error);
+          // Default to showing mandatory onboarding for new users
+          setIsFirstTimeUser(true);
+          setShowWebsiteOnboarding(true);
+        }
+      }
+      setOnboardingStatusChecked(true);
+    };
+
+    if (session?.user?.email) {
+      checkOnboardingStatus();
+    } else {
+      setOnboardingStatusChecked(true);
+    }
+  }, [session?.user?.email]);
 
   // Determine page color based on current pathname
   const getPageColor = () => {
     if (pathname.includes('/dashboard/slides')) return '#059669'; // Green for slides
-    if (pathname.includes('/dashboard/text')) return '#DC2626'; // Red for text
+    if (pathname.includes('/dashboard/meme')) return '#DC2626'; // Red for meme
     if (pathname.includes('/dashboard/videos')) return '#6366F1'; // Blue for videos
     if (pathname.includes('/dashboard/images')) return '#9333EA'; // Purple for avatars
     if (pathname.includes('/dashboard/analytics')) return '#10B981'; // Green for analytics
@@ -30,6 +74,7 @@ export default function DashboardLayout({ children }) {
     if (pathname.includes('/dashboard/support')) return '#3B82F6'; // Blue for support
     if (pathname.includes('/dashboard/settings')) return '#6B7280'; // Gray for settings
     if (pathname.includes('/dashboard/upload')) return '#8B5CF6'; // Purple for upload
+    if (pathname.includes('/dashboard/research')) return '#8B5CF6'; // Purple for research
     return '#93C5FD'; // Default blue for dashboard home
   };
 
@@ -74,8 +119,8 @@ export default function DashboardLayout({ children }) {
     setIsCollapsed(!isCollapsed);
   };
 
-  // Show loading state while checking authentication and dev access
-  if (!devAccessChecked || (status === 'loading' && !hasOAuthParams)) {
+  // Show loading state while checking authentication, dev access, and onboarding status
+  if (!devAccessChecked || (status === 'loading' && !hasOAuthParams) || !onboardingStatusChecked) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#FAF9F6' }}>
         <div className="flex items-center gap-3">
@@ -106,7 +151,12 @@ export default function DashboardLayout({ children }) {
       <WebsiteOnboarding 
         open={showWebsiteOnboarding} 
         onClose={() => setShowWebsiteOnboarding(false)} 
-        onComplete={() => setShowWebsiteOnboarding(false)} 
+        onComplete={() => {
+          setShowWebsiteOnboarding(false);
+          setHasCompletedOnboarding(true);
+          setIsFirstTimeUser(false);
+        }}
+        isMandatory={isFirstTimeUser}
       />
       <FeedbackButton />
     </OnboardingModalContext.Provider>

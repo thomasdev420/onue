@@ -17,7 +17,7 @@ const VIDEO_FORMATS = [
     name: 'UGC-style',
     description: 'User-generated content style videos',
     icon: <Sparkles className="w-6 h-6" />,
-    color: 'from-purple-500 to-pink-500'
+    color: 'from-blue-500 to-blue-600'
   },
   {
     id: 'veo3',
@@ -318,7 +318,7 @@ export default function WebsiteOnboardingModal({ open, onClose, onComplete }) {
           {currentStep === ONBOARDING_STEPS.MEDIA_UPLOAD && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl flex items-center justify-center text-purple-600 mx-auto mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center text-blue-600 mx-auto mb-4">
                   <Upload className="w-8 h-8" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">Add your media</h3>
@@ -342,7 +342,7 @@ export default function WebsiteOnboardingModal({ open, onClose, onComplete }) {
                   Skip for now
                 </button>
                 <button
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200"
                   onClick={() => setCurrentStep(ONBOARDING_STEPS.VIDEO_CREATION)}
                 >
                   Continue

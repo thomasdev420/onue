@@ -9,11 +9,11 @@
  * @returns {boolean} True if overlapped
  */
 export function isOverlapping(a, b) {
-  // Default width/height if not set
-  const widthA = a.width || 30; // percent
-  const heightA = a.height || 8; // percent
-  const widthB = b.width || 30;
-  const heightB = b.height || 8;
+  // Default width/height if not set - increased for better spacing
+  const widthA = a.width || 45; // percent - increased for more conservative spacing
+  const heightA = a.height || 18; // percent - increased for more conservative spacing
+  const widthB = b.width || 45;
+  const heightB = b.height || 18;
   
   const leftA = a.position.x - widthA / 2;
   const rightA = a.position.x + widthA / 2;
@@ -25,9 +25,18 @@ export function isOverlapping(a, b) {
   const topB = b.position.y - heightB / 2;
   const bottomB = b.position.y + heightB / 2;
   
-  return (
-    leftA < rightB && rightA > leftB && topA < bottomB && bottomA > topB
+  // Check for overlap with some buffer for better spacing
+  const horizontalOverlap = leftA < rightB && rightA > leftB;
+  const verticalOverlap = topA < bottomB && bottomA > topB;
+  
+  // Also check if positions are too close (within 25% of each other for more spacing)
+  const distance = Math.sqrt(
+    Math.pow(a.position.x - b.position.x, 2) + 
+    Math.pow(a.position.y - b.position.y, 2)
   );
+  const tooClose = distance < 25;
+  
+  return horizontalOverlap && verticalOverlap || tooClose;
 }
 
 /**

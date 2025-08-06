@@ -6,13 +6,7 @@ import {
   retrieveUserMemory, 
   buildMemoryContext 
 } from '../../services/aiMemoryService.js';
-import { 
-  analyzePromptClarity, 
-  generateClarificationResponse, 
-  isClarificationResponse,
-  extractClarifiedInformation,
-  buildEnhancedPrompt
-} from '../../utils/clarificationSystem.js';
+// Removed clarification system imports to allow natural conversation
 import { getModelConfig } from '../../utils/modelSelection.js';
 import { getIntelligenceMode } from '../../services/userSettingsService.js';
 
@@ -43,9 +37,9 @@ export async function POST(req) {
     // Log the raw request body for debugging
     const rawBody = await req.text();
     console.log('Raw request body:', rawBody);
-    let prompt, businessContext, userInfo, isClarificationFollowup, originalAnalysis;
+    let prompt, businessContext, userInfo;
     try {
-      ({ prompt, businessContext, userInfo, isClarificationFollowup, originalAnalysis } = JSON.parse(rawBody));
+      ({ prompt, businessContext, userInfo } = JSON.parse(rawBody));
     } catch (parseError) {
       console.error('JSON parse error:', parseError.message);
       return Response.json({
@@ -89,34 +83,8 @@ export async function POST(req) {
       }
     }
 
-    // Handle clarification logic - only for extremely vague requests
+    // Use the original prompt directly - no clarification restrictions
     let finalPrompt = prompt;
-    let clarificationResponse = null;
-    
-    // If this is a follow-up to a clarification, extract information and enhance the prompt
-    if (isClarificationFollowup && originalAnalysis) {
-      const clarifiedInfo = extractClarifiedInformation(prompt, originalAnalysis);
-      finalPrompt = buildEnhancedPrompt(originalAnalysis.originalPrompt || prompt, clarifiedInfo, { businessContext, userInfo });
-      console.log('Enhanced prompt with clarified information:', { original: prompt, enhanced: finalPrompt });
-    } else {
-      // Only analyze for clarity if the prompt is extremely vague
-      const analysis = analyzePromptClarity(prompt, { businessContext, userInfo });
-      
-      // Only ask for clarification if it's absolutely necessary (high severity)
-      if (analysis.needsClarification && analysis.reasons.some(r => r.severity === 'high')) {
-        clarificationResponse = generateClarificationResponse(analysis, prompt, { businessContext, userInfo });
-        console.log('Prompt needs clarification:', { analysis, clarificationResponse });
-        
-        return Response.json({ 
-          response: clarificationResponse,
-          needsClarification: true,
-          analysis: {
-            ...analysis,
-            originalPrompt: prompt
-          }
-        });
-      }
-    }
 
     // Extract and store memory insights from user input
     if (userEmail && finalPrompt) {
@@ -134,13 +102,13 @@ export async function POST(req) {
       console.log(`Retrieved ${userMemory.length} memory records for user`);
     }
 
-    // Build context-aware system prompt with proper priority
+    // Build a more conversational and natural system prompt
     const context = {
       businessContext,
       userInfo
     };
     
-    let systemPrompt = buildContextAwarePrompt(context, finalPrompt);
+    let systemPrompt = `You are flightmedia – a friendly, helpful AI content creator assistant. You can chat naturally about any topic and provide helpful, accurate information. You're knowledgeable about marketing and content creation. Be conversational, engaging, and genuinely helpful.`;
     
     // Add memory context if available
     if (userMemory.length > 0) {
@@ -148,8 +116,13 @@ export async function POST(req) {
       systemPrompt += memoryContext;
     }
     
-    // Add Mr Flightmedia-specific instructions
-    systemPrompt += `\n\nYou are Mr Flightmedia – a friendly, knowledgeable marketing assistant. You're here to help users optimize their marketing and grow their business, but you're also happy to chat naturally about other topics while gently steering conversations toward marketing success.`;
+    // Add business context if available (but don't force it)
+    if (context.businessContext) {
+      const bc = context.businessContext;
+      if (bc.companyName || bc.businessType) {
+        systemPrompt += `\n\nUser's business context: ${bc.companyName || ''} ${bc.businessType || ''}`.trim();
+      }
+    }
 
     const openaiClient = getOpenAI();
     

@@ -13,7 +13,7 @@ import { useSlideManagement } from '../slides/hooks/useSlideManagement';
 import { useSlideNavigation } from '../slides/hooks/useSlideNavigation';
 import { validateSlide } from '../../utils/validation';
 import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
-import ModeToggle from '../components/ModeToggle';
+import ModeToggle from '../components/ModeToggle.jsx';
 import { useRouter, usePathname } from 'next/navigation';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -46,7 +46,7 @@ export default function AvatarsEditor() {
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-    } else if (pathname.includes('/dashboard/text')) {
+    } else if (pathname.includes('/dashboard/meme')) {
       setMode('text');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
@@ -159,7 +159,7 @@ export default function AvatarsEditor() {
     
     const routeMap = {
       videos: '/dashboard/videos',
-      text: '/dashboard/text',
+      text: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -259,7 +259,7 @@ export default function AvatarsEditor() {
         businessContext={businessContext}
         existingSlides={avatars}
         mode="avatars"
-
+        libraryImages={libraryImages}
       />
       <div style={{ 
         display: "flex", 
@@ -274,6 +274,34 @@ export default function AvatarsEditor() {
           flexDirection: "column",
           position: "relative"
         }}>
+          {/* Creative Mode Button - Positioned at the top of the canvas area */}
+          <div className="flex justify-center mb-4" style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+            <button
+              onClick={() => setShowModeModal(true)}
+              style={{
+                background: `${modeColorMap[mode] || '#9333EA'}20`,
+                border: `1px solid ${modeColorMap[mode] || '#9333EA'}40`,
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)',
+                color: modeColorMap[mode] || '#9333EA',
+                minWidth: 80,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 500,
+                padding: '0 12px',
+                letterSpacing: '0.02em',
+              }}
+              aria-label="Switch content type"
+            >
+              {modeLabelMap[mode] || 'Avatars'}
+            </button>
+          </div>
           <SlideCanvas
             slides={avatars}
             activeSlideIndex={activeAvatarIndex}

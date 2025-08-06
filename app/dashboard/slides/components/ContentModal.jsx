@@ -2,8 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from "next/image";
-import { X, ChevronDown, Grid, List } from 'lucide-react';
+import { X, ChevronDown, Grid, List, Plus, Palette } from 'lucide-react';
 import { UNIFIED_CATEGORIES, CATEGORIES, CATEGORY_KEYWORDS } from '../../../shared/constants/imageCategories.js';
+import CustomCategoryModal from './CustomCategoryModal';
+import ColorBackgroundModal from './ColorBackgroundModal';
 
 // Utility: extract dominant color from image using Canvas API
 function extractDominantColor(imageUrl) {
@@ -108,6 +110,9 @@ export default function ContentModal({
   const [generatedImages, setGeneratedImages] = useState([]);
   const [sortedImages, setSortedImages] = useState([]);
   const [isColorSorting, setIsColorSorting] = useState(false);
+  const [isCustomCategoryModalOpen, setIsCustomCategoryModalOpen] = useState(false);
+  const [customCategories, setCustomCategories] = useState([]);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
 
   // Load generated images from localStorage
   React.useEffect(() => {
@@ -128,6 +133,11 @@ export default function ContentModal({
     setViewMode('grid');
     setSelectedCategory(null);
   }, [contentType, isOpen]);
+
+  // Handle color selection
+  const handleColorSelect = (colorData) => {
+    onImageSelect(colorData);
+  };
 
   // Extract colors and sort images when libraryImages changes
   React.useEffect(() => {
@@ -207,8 +217,8 @@ export default function ContentModal({
           }
         }
         if (!matched) {
-          // Default to general instead of business
-          categorized.general.push(image);
+          // Default to pool instead of general (since general category was removed)
+          categorized.pool.push(image);
         }
       }
     });
@@ -221,7 +231,20 @@ export default function ContentModal({
     if (contentType === 'user') {
       images = userImages || [];
     } else if (contentType === 'stock') {
-      if (selectedCategory && categorizedImages[selectedCategory]) {
+      if (selectedCategory && selectedCategory.startsWith('custom_')) {
+        // Handle custom category
+        const customCategoryId = selectedCategory.replace('custom_', '');
+        const customCategory = customCategories.find(cat => cat.id === customCategoryId);
+        if (customCategory) {
+          // Convert File objects to image-like objects for display
+          images = customCategory.images.map((file, index) => ({
+            id: `custom_${customCategoryId}_${index}`,
+            image_url: URL.createObjectURL(file),
+            title: `${customCategory.title} - Image ${index + 1}`,
+            category: 'custom'
+          }));
+        }
+      } else if (selectedCategory && categorizedImages[selectedCategory]) {
         images = categorizedImages[selectedCategory];
       } else {
         // Use sorted images for all-photos view
@@ -231,61 +254,182 @@ export default function ContentModal({
       images = generatedImages || [];
     }
     return images;
-  }, [contentType, userImages, selectedCategory, categorizedImages, sortedImages, libraryImages, generatedImages]);
+  }, [contentType, userImages, selectedCategory, categorizedImages, sortedImages, libraryImages, generatedImages, customCategories]);
 
   // Only after all hooks, do early return
   if (!isOpen) return null;
 
+  const handleCustomCategoryCreated = (newCategory) => {
+    setCustomCategories(prev => [...prev, newCategory]);
+    setSelectedCategory(`custom_${newCategory.id}`);
+  };
+
   const renderCategorizedView = () => {
     const hasAnyImages = Object.values(categorizedImages).some(arr => arr.length > 0);
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
         {/* Category Grid */}
-        <div className="grid grid-cols-4 gap-4 p-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 p-6">
           {Object.entries(CATEGORIES).map(([categoryKey, category]) => {
             const imageCount = categorizedImages[categoryKey]?.length || 0;
             const isSelected = selectedCategory === categoryKey;
             return (
               <div
                 key={categoryKey}
-                className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-200 hover:scale-105 ${
+                className={`group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
                   isSelected 
-                    ? 'border-blue-500 bg-blue-50 shadow-lg' 
-                    : category.color
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-2xl scale-105' 
+                    : 'bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border border-gray-200 hover:border-gray-300'
                 }`}
                 onClick={() => setSelectedCategory(isSelected ? null : categoryKey)}
               >
-                <div className="text-center">
-                  <div className="text-3xl mb-2">{category.icon}</div>
-                  <div className="font-semibold text-sm text-gray-800 mb-1">
+                {/* Background pattern */}
+                <div className={`absolute inset-0 rounded-2xl opacity-5 ${
+                  isSelected ? 'bg-white' : 'bg-gray-400'
+                }`}></div>
+                
+                <div className="relative text-center">
+                  {/* Image count in top right */}
+                  <div className="absolute -top-1 -right-1">
+                    <div className={`text-xs font-bold px-1.5 py-0.5 rounded-full transition-all duration-300 ${
+                      isSelected 
+                        ? 'bg-white/30 text-white' 
+                        : 'bg-gray-300 text-gray-700 group-hover:bg-gray-400'
+                    }`}>
+                      {imageCount}
+                    </div>
+                  </div>
+                  
+                  <div className={`text-4xl mb-3 transition-transform duration-300 group-hover:scale-110 ${
+                    isSelected ? 'text-white' : 'text-gray-600'
+                  }`}>
+                    {category.icon}
+                  </div>
+                  <div className={`font-bold text-sm mb-4 transition-colors duration-300 ${
+                    isSelected ? 'text-white' : 'text-gray-800'
+                  }`}>
                     {category.name}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {imageCount} {imageCount === 1 ? 'image' : 'images'}
-                  </div>
-                </div>
-                {/* Preview images */}
-                {imageCount > 0 && (
-                  <div className="absolute bottom-2 right-2 flex space-x-1">
-                    {categorizedImages[categoryKey].slice(0, 3).map((img, idx) => (
-                      <div
-                        key={idx}
-                        className="w-6 h-6 rounded border border-white overflow-hidden"
-                      >
-                        <Image
-                          src={img.image_url || img.url || img.image}
-                          alt={img.name || img.title || img.content}
-                          width={24}
-                          height={24}
-                          className="object-cover w-full h-full"
-                        />
+                  
+                  {/* Preview images in center with overlapping effect */}
+                  {imageCount > 0 && (
+                    <div className="flex items-center justify-center">
+                      <div className="relative flex items-center">
+                        {categorizedImages[categoryKey].slice(0, 3).map((img, idx) => (
+                          <div
+                            key={idx}
+                            className={`w-12 h-12 rounded-lg border-2 overflow-hidden shadow-md transition-all duration-300 hover:scale-110 ${
+                              isSelected ? 'border-white' : 'border-gray-200'
+                            } ${idx === 0 ? '-mr-3' : idx === 2 ? '-ml-3' : 'z-10'}`}
+                            style={{
+                              transform: idx === 0 ? 'rotate(-5deg)' : idx === 2 ? 'rotate(5deg)' : 'rotate(0deg)',
+                              zIndex: idx === 1 ? 10 : 5
+                            }}
+                          >
+                            <Image
+                              src={img.image_url || img.url || img.image}
+                              alt={img.name || img.title || img.content}
+                              width={48}
+                              height={48}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
+                
+
               </div>
             );
           })}
+          
+          {/* Custom Categories */}
+          {customCategories.map((customCategory) => {
+            const isSelected = selectedCategory === `custom_${customCategory.id}`;
+            return (
+              <div
+                key={`custom_${customCategory.id}`}
+                className={`group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl ${
+                  isSelected 
+                    ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-2xl scale-105' 
+                    : 'bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setSelectedCategory(isSelected ? null : `custom_${customCategory.id}`)}
+              >
+                {/* Background pattern */}
+                <div className={`absolute inset-0 rounded-2xl opacity-5 ${
+                  isSelected ? 'bg-white' : 'bg-gray-400'
+                }`}></div>
+                
+                <div className="relative text-center">
+                  {/* Image count in top right */}
+                  <div className="absolute -top-1 -right-1">
+                    <div className={`text-xs font-bold px-1.5 py-0.5 rounded-full transition-all duration-300 ${
+                      isSelected 
+                        ? 'bg-white/30 text-white' 
+                        : 'bg-gray-300 text-gray-700 group-hover:bg-gray-400'
+                    }`}>
+                      {customCategory.images.length}
+                    </div>
+                  </div>
+                  
+                  <div className={`text-4xl mb-3 transition-transform duration-300 group-hover:scale-110 ${
+                    isSelected ? 'text-white' : 'text-gray-600'
+                  }`}>
+                    🎨
+                  </div>
+                  <div className={`font-bold text-sm mb-4 transition-colors duration-300 ${
+                    isSelected ? 'text-white' : 'text-gray-800'
+                  }`}>
+                    {customCategory.title}
+                  </div>
+                  
+                  {/* Preview images in center with overlapping effect */}
+                  {customCategory.images.length > 0 && (
+                    <div className="flex items-center justify-center">
+                      <div className="relative flex items-center">
+                        {customCategory.images.slice(0, 3).map((file, idx) => (
+                          <div
+                            key={idx}
+                            className={`w-12 h-12 rounded-lg border-2 overflow-hidden shadow-md transition-all duration-300 hover:scale-110 ${
+                              isSelected ? 'border-white' : 'border-gray-200'
+                            } ${idx === 0 ? '-mr-3' : idx === 2 ? '-ml-3' : 'z-10'}`}
+                            style={{
+                              transform: idx === 0 ? 'rotate(-5deg)' : idx === 2 ? 'rotate(5deg)' : 'rotate(0deg)',
+                              zIndex: idx === 1 ? 10 : 5
+                            }}
+                          >
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`Custom ${idx + 1}`}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          
+          {/* Create Custom Category Card */}
+          <div
+            className="group relative cursor-pointer rounded-2xl p-6 transition-all duration-300 hover:scale-105 hover:shadow-xl bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 border-2 border-dashed border-gray-300 hover:border-gray-400"
+            onClick={() => setIsCustomCategoryModalOpen(true)}
+          >
+            <div className="relative text-center">
+              <div className="text-4xl mb-3 transition-transform duration-300 group-hover:scale-110 text-gray-400 group-hover:text-gray-600">
+                <Plus size={48} />
+              </div>
+              <div className="font-bold text-sm mb-4 transition-colors duration-300 text-gray-600 group-hover:text-gray-800">
+                Create Custom Category
+              </div>
+            </div>
+          </div>
         </div>
         {/* No images fallback */}
         {!hasAnyImages && (
@@ -294,24 +438,34 @@ export default function ContentModal({
           </div>
         )}
         {/* Selected Category Images */}
-        {selectedCategory && categorizedImages[selectedCategory]?.length > 0 && (
-          <div className="px-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">
-                {CATEGORIES[selectedCategory].icon} {CATEGORIES[selectedCategory].name} Images
-              </h3>
+        {selectedCategory && (
+          <div className="px-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">
+                  {selectedCategory.startsWith('custom_') ? '🎨' : CATEGORIES[selectedCategory]?.icon}
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {selectedCategory.startsWith('custom_') 
+                      ? customCategories.find(cat => cat.id === selectedCategory.replace('custom_', ''))?.title + ' Images'
+                      : CATEGORIES[selectedCategory]?.name + ' Images'
+                    }
+                  </h3>
+                </div>
+              </div>
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200"
               >
-                View All Categories
+                ← Back to Categories
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-4 p-4">
-              {categorizedImages[selectedCategory].map((image) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {imagesToShow.map((image) => (
                 <div 
                   key={image.id} 
-                  className="cursor-pointer relative aspect-[4/3] group" 
+                  className="group cursor-pointer relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105" 
                   onClick={() => {
                     onImageSelect(image);
                     onClose();
@@ -321,49 +475,27 @@ export default function ContentModal({
                     src={image.image_url || image.url}
                     alt={image.name || image.title || 'Stock image'}
                     fill
-                    className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 25vw"
+                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                    sizes="(max-width: 768px) 50vw, 20vw"
                   />
+                  {/* Hover overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <div className="bg-white/90 backdrop-blur-sm rounded-lg px-3 py-1 text-sm font-medium text-gray-800">
+                        Select Image
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-            {/* No images in category fallback */}
-            {categorizedImages[selectedCategory]?.length === 0 && (
-              <div className="text-center text-gray-500 py-8">
-                No images in this category.
-              </div>
-            )}
           </div>
         )}
         
-        {/* All Images (when no category is selected) */}
-        {!selectedCategory && imagesToShow.length > 0 && (
-          <div className="px-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">
-                All Stock Photos
-              </h3>
-            </div>
-            <div className="grid grid-cols-4 gap-4 p-4">
-              {imagesToShow.map((image) => (
-                <div 
-                  key={image.id} 
-                  className="cursor-pointer relative aspect-[4/3] group" 
-                  onClick={() => {
-                    onImageSelect(image);
-                    onClose();
-                  }}
-                >
-                  <Image
-                    src={image.image_url || image.url || image.image}
-                    alt={image.name || image.title || image.content || 'Image'}
-                    fill
-                    className="rounded-lg object-cover transition-transform duration-200 group-hover:scale-105"
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                  />
-                </div>
-              ))}
-            </div>
+        {/* No images in category fallback */}
+        {selectedCategory && imagesToShow.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            No images in this category.
           </div>
         )}
       </div>
@@ -539,6 +671,19 @@ export default function ContentModal({
                               </a>
                             </li>
                           )}
+                          <li>
+                            <a
+                              href="#"
+                              onClick={(e) => { 
+                                e.preventDefault(); 
+                                setIsColorModalOpen(true);
+                                setIsDropdownOpen(false); 
+                              }}
+                              className="block px-3 py-1.5 text-sm font-medium rounded-md transition-colors duration-150 text-green-700 hover:bg-green-100 hover:text-green-800"
+                            >
+                              Color Backgrounds
+                            </a>
+                          </li>
                         </ul>
                       </div>
                     )}
@@ -581,6 +726,20 @@ export default function ContentModal({
           </div>
         </div>
       </div>
+      
+      {/* Custom Category Modal */}
+      <CustomCategoryModal
+        isOpen={isCustomCategoryModalOpen}
+        onClose={() => setIsCustomCategoryModalOpen(false)}
+        onCategoryCreated={handleCustomCategoryCreated}
+      />
+      
+      {/* Color Background Modal */}
+      <ColorBackgroundModal
+        isOpen={isColorModalOpen}
+        onClose={() => setIsColorModalOpen(false)}
+        onColorSelect={handleColorSelect}
+      />
     </div>
   );
 } 

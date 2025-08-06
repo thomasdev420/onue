@@ -10,8 +10,7 @@ export async function POST() {
       .from('user_settings')
       .insert({
         user_id: 'test-setup',
-        intelligence_mode: 'normal',
-        automation_mode: 'balance'
+        intelligence_mode: 'normal'
       });
 
     if (testError && testError.code === '42P01') {
@@ -25,7 +24,7 @@ export async function POST() {
               id SERIAL PRIMARY KEY,
               user_id TEXT NOT NULL UNIQUE,
               intelligence_mode TEXT NOT NULL DEFAULT 'normal',
-              automation_mode TEXT NOT NULL DEFAULT 'balance',
+
               created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
               updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
             );
@@ -50,8 +49,7 @@ export async function POST() {
       .from('user_settings')
       .upsert({
         user_id: 'dev@local.com',
-        intelligence_mode: 'normal',
-        automation_mode: 'balance'
+        intelligence_mode: 'normal'
       }, {
         onConflict: 'user_id'
       });

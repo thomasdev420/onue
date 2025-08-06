@@ -11,11 +11,13 @@ import ContentModal from './components/ContentModal';
 import PromptModal from './components/PromptModal';
 
 import DownloadModal from './components/DownloadModal';
+import BottomSections from './components/BottomSections';
+import MusicModal from './components/MusicModal';
 import { useSlideManagement } from './hooks/useSlideManagement';
 import { useSlideNavigation } from './hooks/useSlideNavigation';
 import { validateSlide } from '../../utils/validation';
 import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
-import ModeToggle from '../components/ModeToggle';
+import ModeToggle from '../components/ModeToggle.jsx';
 import { useRouter, usePathname } from 'next/navigation';
 import { downloadSlide, downloadAllSlides } from '../../utils/slideDownload';
 
@@ -43,6 +45,8 @@ export default function SlidesEditor() {
   const [scheduledDate, setScheduledDate] = useState(null);
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [downloadSlideIndex, setDownloadSlideIndex] = useState(0);
+  const [isMusicModalOpen, setIsMusicModalOpen] = useState(false);
+  const [selectedMusic, setSelectedMusic] = useState(null);
   const pathname = usePathname();
   const [mode, setMode] = useState('slides');
   
@@ -50,7 +54,7 @@ export default function SlidesEditor() {
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-    } else if (pathname.includes('/dashboard/text')) {
+    } else if (pathname.includes('/dashboard/meme')) {
       setMode('text');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
@@ -72,14 +76,13 @@ export default function SlidesEditor() {
       style: {
         fontSize: '18px',
         color: 'white',
-        fontWeight: 'normal',
-        textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+        fontWeight: 'bold',
+        caption: true,
         textAlign: 'center',
         fontFamily: "'Inter', sans-serif"
       }
     }],
-    ratio: '9:16',
-    imageCategory: 'business'
+    ratio: '9:16'
   }];
   
   const { 
@@ -93,7 +96,7 @@ export default function SlidesEditor() {
   // Ensure slides is always an array and patch missing ratio
   const slides = (Array.isArray(slidesData) && slidesData.length > 0 ? slidesData : defaultSlides).map(slide => ({
     ...slide,
-    ratio: ['16:9', '4:3', '1:1', '9:16'].includes(slide.ratio) ? slide.ratio : '9:16'
+    ratio: ['9:16', '4:5', '1:1'].includes(slide.ratio) ? slide.ratio : '9:16'
   }));
 
   const { data: userImagesData } = usePersistence('userImages', []);
@@ -222,15 +225,15 @@ export default function SlidesEditor() {
                 texts: slide.texts.map(text => ({
                   ...text,
                   content: text.content, // Keep original formatting from AI
-                  style: {
-                    fontSize: '16px',
-                    color: 'white',
-                    fontWeight: 'normal',
-                    textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
-                    textAlign: 'center',
-                    lineHeight: '1.4',
-                    maxWidth: '90%'
-                  }
+                                  style: {
+                  fontSize: '18px',
+                  color: 'white',
+                  fontWeight: 'bold',
+                  textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
+                  textAlign: 'center',
+                  lineHeight: '1.4',
+                  maxWidth: '90%'
+                }
                 }))
               }));
               
@@ -259,103 +262,6 @@ export default function SlidesEditor() {
     }
   }, [setSlides, isLoading]);
 
-  // Add images to slides that don't have them once library images are loaded
-  useEffect(() => {
-    if (slides && slides.length > 0 && libraryImages && libraryImages.length > 0) {
-      const slidesWithoutImages = slides.filter(slide => !slide.image);
-      
-      if (slidesWithoutImages.length > 0) {
-        console.log(`Adding images to ${slidesWithoutImages.length} slides that don't have images`);
-        
-        const updatedSlides = slides.map(slide => {
-          if (!slide.image) {
-            // Find a suitable image based on category
-            let selectedImage = null;
-            
-            if (slide.imageCategory) {
-              const categoryKeywords = {
-                'business': ['business', 'office', 'corporate', 'professional', 'executive'],
-                'technology': ['tech', 'computer', 'digital', 'innovation', 'ai', 'data'],
-                'success': ['success', 'achievement', 'winning', 'trophy', 'accomplishment'],
-                'motivation': ['motivation', 'inspiration', 'positive', 'energy', 'drive'],
-                'growth': ['growth', 'progress', 'development', 'improvement', 'evolution'],
-                'creativity': ['creative', 'art', 'design', 'imagination', 'aesthetic'],
-                'social_media': ['social', 'media', 'connection', 'network', 'community'],
-                'entrepreneurship': ['entrepreneur', 'startup', 'business', 'leadership', 'founder'],
-                'marketing': ['marketing', 'advertising', 'promotion', 'brand', 'strategy'],
-                'lifestyle': ['lifestyle', 'life', 'daily', 'personal', 'wellness'],
-                'luxury': ['luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant'],
-                'nature': ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green'],
-                'health': ['health', 'wellness', 'fitness', 'medical', 'healthcare', 'healthy'],
-                'education': ['education', 'learning', 'academic', 'school', 'university', 'knowledge'],
-                'finance': ['finance', 'money', 'investment', 'banking', 'financial', 'wealth'],
-                'travel': ['travel', 'adventure', 'exploration', 'journey', 'destination', 'tourism'],
-                'food': ['food', 'dining', 'restaurant', 'culinary', 'gastronomy', 'cuisine'],
-                'fashion': ['fashion', 'style', 'clothing', 'apparel', 'trendy', 'designer'],
-                'sports': ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete'],
-                'family': ['family', 'relationships', 'love', 'connection', 'togetherness'],
-                'abstract': ['abstract', 'conceptual', 'minimal', 'geometric', 'modern', 'contemporary'],
-                'industrial': ['industrial', 'manufacturing', 'factory', 'production', 'machinery'],
-                'urban': ['urban', 'city', 'metropolitan', 'architecture', 'skyline', 'downtown'],
-                'rural': ['rural', 'countryside', 'farm', 'agriculture', 'pastoral', 'village'],
-                'science': ['science', 'research', 'laboratory', 'experiment', 'discovery', 'scientific']
-              };
-              
-              const keywords = categoryKeywords[slide.imageCategory] || ['business'];
-              const matchingImages = libraryImages.filter(img => 
-                img && img.title && keywords.some(keyword => 
-                  img.title.toLowerCase().includes(keyword.toLowerCase())
-                )
-              );
-              
-              if (matchingImages.length > 0) {
-                selectedImage = matchingImages[Math.floor(Math.random() * matchingImages.length)];
-              }
-            }
-            
-            // If no category match, pick a random image
-            if (!selectedImage && libraryImages.length > 0) {
-              selectedImage = libraryImages[Math.floor(Math.random() * libraryImages.length)];
-            }
-            
-            // If still no image, create a placeholder image object
-            if (!selectedImage) {
-              // Use some default technology/business images
-              const defaultImages = [
-                {
-                  id: `default-tech-${slide.id || Date.now()}`,
-                  title: 'Technology Background',
-                  image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=400&h=600&fit=crop'
-                },
-                {
-                  id: `default-business-${slide.id || Date.now()}`,
-                  title: 'Business Background',
-                  image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=600&fit=crop'
-                },
-                {
-                  id: `default-abstract-${slide.id || Date.now()}`,
-                  title: 'Abstract Background',
-                  image_url: 'https://images.unsplash.com/photo-1557683316-973673baf926?w=400&h=600&fit=crop'
-                }
-              ];
-              
-              selectedImage = defaultImages[Math.floor(Math.random() * defaultImages.length)];
-              console.log(`Using default image for slide:`, selectedImage.title);
-            }
-            
-            return {
-              ...slide,
-              image: selectedImage
-            };
-          }
-          return slide;
-        });
-        
-        setSlides(updatedSlides);
-      }
-    }
-  }, [slides, libraryImages, libraryImages.length, setSlides]);
-
   // Validate slides data and ensure text styles are properly initialized
   useEffect(() => {
     if (slides && slides.length > 0) {
@@ -367,21 +273,40 @@ export default function SlidesEditor() {
           validationErrors.push(`Slide ${slideIndex + 1}: ${validation.error}`);
         }
         
-        // Ensure all text items have proper style structure
+        // Ensure all text items have proper style structure and update font size
         if (slide.texts && slide.texts.length > 0) {
           const updatedTexts = slide.texts.map(text => {
+            let needsTextUpdate = false;
+            let updatedText = text;
+            
             if (!text.style) {
-              needsUpdate = true;
-              return {
+              needsTextUpdate = true;
+              updatedText = {
                 ...text,
                 style: {
-                  fontSize: '16px',
+                  fontSize: '18px',
                   color: 'white',
-                  fontWeight: 'normal'
+                  fontWeight: 'bold',
+                  caption: true
+                }
+              };
+            } else if (text.style.fontSize === '16px' || text.style.fontSize === '20px') {
+              // Update existing text items that still have the old font size
+              needsTextUpdate = true;
+              updatedText = {
+                ...text,
+                style: {
+                  ...text.style,
+                  fontSize: '18px'
                 }
               };
             }
-            return text;
+            
+            if (needsTextUpdate) {
+              needsUpdate = true;
+            }
+            
+            return updatedText;
           });
           
           if (needsUpdate) {
@@ -399,9 +324,9 @@ export default function SlidesEditor() {
         setError(null);
       }
       
-      // Update slides if text styles needed initialization
+      // Update slides if text styles needed initialization or font size update
       if (needsUpdate) {
-        console.log('Initializing text styles for existing slides');
+        console.log('Updating text styles and font sizes for existing slides');
         setSlides(updatedSlides);
       }
     }
@@ -497,31 +422,28 @@ export default function SlidesEditor() {
 
       console.log('Applying generated slides from unified content engine...');
       
-      // Slides are already complete with text and images from unified engine
-      const slidesWithImages = generatedSlides;
+      // Process slides to ensure proper text styling (bold, caption, etc.)
+      const slidesWithImages = generatedSlides.map(slide => ({
+        ...slide,
+        texts: slide.texts.map(text => ({
+          ...text,
+          style: {
+            fontSize: '18px',
+            color: 'white',
+            fontWeight: 'bold',
+            caption: true,
+            textAlign: 'center',
+            lineHeight: '1.4',
+            maxWidth: '90%'
+          }
+        }))
+      }));
       
-      // Analyze user intent to determine whether to add or replace slides
-      const lowerPrompt = prompt.toLowerCase();
-      const addKeywords = ['add', 'another', 'more', 'additional', 'extra', 'one more', 'two more', 'three more', 'four more', 'five more'];
-      const replaceKeywords = ['replace', 'new', 'completely new', 'start over', 'fresh', 'different', 'change', 'redo', 'remake'];
+      // Always start from scratch - replace existing slides with new ones
+      const finalSlides = slidesWithImages;
+      const newActiveIndex = 0;
       
-      const isAddRequest = addKeywords.some(keyword => lowerPrompt.includes(keyword));
-      const isReplaceRequest = replaceKeywords.some(keyword => lowerPrompt.includes(keyword));
-      
-      let finalSlides;
-      let newActiveIndex;
-      
-      if (isAddRequest && !isReplaceRequest) {
-        // Add slides to existing ones
-        finalSlides = [...slides, ...slidesWithImages];
-        newActiveIndex = slides.length; // Set active to first new slide
-        console.log(`Adding ${slidesWithImages.length} new slides to existing ${slides.length} slides`);
-      } else {
-        // Replace all slides (default behavior for new requests, replace requests, or unclear intent)
-        finalSlides = slidesWithImages;
-        newActiveIndex = 0;
-        console.log(`Replacing all slides with ${slidesWithImages.length} new slides`);
-      }
+      console.log(`Starting from scratch with ${slidesWithImages.length} new slides`);
       
       // Update slides
       setSlides(finalSlides);
@@ -565,24 +487,34 @@ export default function SlidesEditor() {
         return;
       }
 
-      const updatedTexts = [...currentSlide.texts];
-      const text = updatedTexts[textIndex];
-      const currentStyle = text.style || {};
-      const currentFontSize = parseInt(currentStyle.fontSize) || 16;
-      const newFontSize = Math.min(currentFontSize + 2, 48); // Max 48px
-      
-      console.log('Text:', text.content, 'Current fontSize:', currentFontSize, 'New fontSize:', newFontSize);
-      
-      updatedTexts[textIndex] = {
-        ...text,
-        style: {
-          ...currentStyle,
-          fontSize: `${newFontSize}px`
-        }
-      };
+      const updatedSlides = slides.map((slide, i) => {
+        if (i === slideIndex) {
+          const updatedTexts = [...slide.texts];
+          const text = updatedTexts[textIndex];
+          const currentStyle = text.style || {};
+          const currentFontSize = parseInt(currentStyle.fontSize) || 18;
+          const newFontSize = Math.min(currentFontSize + 2, 48); // Max 48px
+          
+          console.log('Text:', text.content, 'Current fontSize:', currentFontSize, 'New fontSize:', newFontSize);
+          
+          updatedTexts[textIndex] = {
+            ...text,
+            style: {
+              ...currentStyle,
+              fontSize: `${newFontSize}px`
+            }
+          };
 
-      console.log('Updated texts:', updatedTexts);
-      updateSlide(slideIndex, { texts: updatedTexts });
+          return {
+            ...slide,
+            texts: updatedTexts
+          };
+        }
+        return slide;
+      });
+
+      console.log('Updated slides:', updatedSlides);
+      setSlides(updatedSlides);
     } catch (error) {
       console.error('Error increasing font size:', error);
       setError('Failed to increase font size. Please try again.');
@@ -596,21 +528,31 @@ export default function SlidesEditor() {
         return;
       }
 
-      const updatedTexts = [...currentSlide.texts];
-      const text = updatedTexts[textIndex];
-      const currentStyle = text.style || {};
-      const currentFontSize = parseInt(currentStyle.fontSize) || 16;
-      const newFontSize = Math.max(currentFontSize - 2, 8); // Min 8px
-      
-      updatedTexts[textIndex] = {
-        ...text,
-        style: {
-          ...currentStyle,
-          fontSize: `${newFontSize}px`
-        }
-      };
+      const updatedSlides = slides.map((slide, i) => {
+        if (i === slideIndex) {
+          const updatedTexts = [...slide.texts];
+          const text = updatedTexts[textIndex];
+          const currentStyle = text.style || {};
+          const currentFontSize = parseInt(currentStyle.fontSize) || 18;
+          const newFontSize = Math.max(currentFontSize - 2, 6); // Min 6px
+          
+          updatedTexts[textIndex] = {
+            ...text,
+            style: {
+              ...currentStyle,
+              fontSize: `${newFontSize}px`
+            }
+          };
 
-      updateSlide(slideIndex, { texts: updatedTexts });
+          return {
+            ...slide,
+            texts: updatedTexts
+          };
+        }
+        return slide;
+      });
+
+      setSlides(updatedSlides);
     } catch (error) {
       console.error('Error decreasing font size:', error);
       setError('Failed to decrease font size. Please try again.');
@@ -629,6 +571,141 @@ export default function SlidesEditor() {
     } catch (error) {
       console.error('Error deleting text:', error);
       setError('Failed to delete text. Please try again.');
+    }
+  };
+
+  const handleFontChange = (slideIndex, textIndex, fontFamily) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              fontFamily: fontFamily
+            }
+          };
+        }
+        return text;
+      });
+
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error changing font:', error);
+      setError('Failed to change font. Please try again.');
+    }
+  };
+
+  const handleColorChange = (slideIndex, textIndex, color) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              color: color
+            }
+          };
+        }
+        return text;
+      });
+
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error changing color:', error);
+      setError('Failed to change color. Please try again.');
+    }
+  };
+
+  const handleItalicToggle = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              fontStyle: text.style?.fontStyle === 'italic' ? 'normal' : 'italic'
+            }
+          };
+        }
+        return text;
+      });
+
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error toggling italic:', error);
+      setError('Failed to toggle italic. Please try again.');
+    }
+  };
+
+  const handleCaptionToggle = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              caption: !text.style?.caption
+            }
+          };
+        }
+        return text;
+      });
+
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error toggling caption:', error);
+      setError('Failed to toggle caption. Please try again.');
+    }
+  };
+
+  const handleCaptionBackgroundToggle = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = slides[slideIndex];
+      if (!currentSlide || !currentSlide.texts || !currentSlide.texts[textIndex]) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              captionBackground: !text.style?.captionBackground
+            }
+          };
+        }
+        return text;
+      });
+
+      updateSlide(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error toggling caption background:', error);
+      setError('Failed to toggle caption background. Please try again.');
     }
   };
 
@@ -790,7 +867,7 @@ export default function SlidesEditor() {
     
     const routeMap = {
       videos: '/dashboard/videos',
-      text: '/dashboard/text',
+      text: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -806,7 +883,7 @@ export default function SlidesEditor() {
     setShowModeModal(false);
     const modeToRoute = {
       videos: '/dashboard/videos',
-      text: '/dashboard/text',
+      text: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -814,6 +891,35 @@ export default function SlidesEditor() {
     if (targetRoute && pathname !== targetRoute) {
       router.push(targetRoute);
     }
+  };
+
+  const handleSlideReorder = (sourceIndex, targetIndex) => {
+    const newSlides = [...slides];
+    const [movedSlide] = newSlides.splice(sourceIndex, 1);
+    newSlides.splice(targetIndex, 0, movedSlide);
+    setSlides(newSlides);
+  };
+
+  const handleMusicSelect = (music) => {
+    console.log('Selected music:', music);
+    setSelectedMusic(music);
+    setIsMusicModalOpen(false);
+    // Store selected music in slide data
+    const updatedSlides = slides.map((slide, index) => {
+      if (index === activeSlideIndex) {
+        return {
+          ...slide,
+          selectedMusic: music
+        };
+      }
+      return slide;
+    });
+    setSlides(updatedSlides);
+  };
+
+  const handleUpload = () => {
+    console.log('Upload button clicked');
+    // TODO: Implement upload functionality
   };
 
   // Add a guard to prevent rendering while loading
@@ -908,16 +1014,47 @@ export default function SlidesEditor() {
         businessContext={businessContext}
         existingSlides={slides}
         mode="slides"
+        libraryImages={libraryImages}
       />
 
               <DownloadModal
-          isOpen={isDownloadModalOpen}
-          onClose={handleCloseDownloadModal}
-          onDownloadSingle={handleDownloadSlide}
-          onDownloadAll={handleDownloadAllSlides}
-          slideIndex={downloadSlideIndex}
-          totalSlides={slides.length}
-        />
+                isOpen={isDownloadModalOpen}
+                onClose={handleCloseDownloadModal}
+                onDownloadSingle={handleDownloadSlide}
+                onDownloadAll={handleDownloadAllSlides}
+                onSaveContent={async () => {
+                  try {
+                    const userEmail = session?.user?.email || 'dev-user@example.com';
+                    const slideData = {
+                      slides: slides,
+                      title: `Slide Deck ${new Date().toLocaleDateString()}`,
+                      created_at: new Date().toISOString(),
+                      slide_count: slides.length
+                    };
+                    
+                    const response = await fetch('/api/save-user-content', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userId: userEmail,
+                        contentType: 'slides',
+                        data: slideData
+                      })
+                    });
+                    
+                    if (response.ok) {
+                      alert('Slides saved successfully!');
+                    } else {
+                      alert('Failed to save slides');
+                    }
+                  } catch (error) {
+                    console.error('Error saving slides:', error);
+                    alert('Error saving slides');
+                  }
+                }}
+                slideIndex={downloadSlideIndex}
+                totalSlides={slides.length}
+              />
 
       <div style={{ 
         display: "flex", 
@@ -932,6 +1069,34 @@ export default function SlidesEditor() {
           flexDirection: "column",
           position: "relative"
         }}>
+          {/* Creative Mode Button - Positioned at the top of the canvas area */}
+          <div className="flex justify-center mb-4" style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+            <button
+              onClick={() => setShowModeModal(true)}
+              style={{
+                background: `${modeColorMap[mode] || '#059669'}20`,
+                border: `1px solid ${modeColorMap[mode] || '#059669'}40`,
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)',
+                color: modeColorMap[mode] || '#059669',
+                minWidth: 80,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 500,
+                padding: '0 12px',
+                letterSpacing: '0.02em',
+              }}
+              aria-label="Switch content type"
+            >
+              {modeLabelMap[mode] || 'Slides'}
+            </button>
+          </div>
           {/* Colored dot centered above the slide */}
           <SlideCanvas
             slides={slides}
@@ -946,11 +1111,19 @@ export default function SlidesEditor() {
             onScheduleClick={handleScheduleClick}
             onFontSizeIncrease={handleFontSizeIncrease}
             onFontSizeDecrease={handleFontSizeDecrease}
+            onFontChange={handleFontChange}
+            onColorChange={handleColorChange}
+            onItalicToggle={handleItalicToggle}
+            onCaptionToggle={handleCaptionToggle}
+            onCaptionBackgroundToggle={handleCaptionBackgroundToggle}
             onDeleteText={handleDeleteText}
             onOpenDownloadModal={handleOpenDownloadModal}
+            onMusicSelect={() => setIsMusicModalOpen(true)}
           />
         </div>
       </div>
+
+
       {/* Schedule Modal */}
       {isScheduleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -966,6 +1139,22 @@ export default function SlidesEditor() {
           </div>
         </div>
       )}
+
+      {/* Bottom Sections */}
+      <BottomSections
+        slides={slides}
+        activeSlideIndex={activeSlideIndex}
+        onSlideSelect={handleSlideSelect}
+        onSlideReorder={handleSlideReorder}
+      />
+
+      {/* Music Modal - Full Page Overlay */}
+      <MusicModal
+        isOpen={isMusicModalOpen}
+        onClose={() => setIsMusicModalOpen(false)}
+        onMusicSelect={handleMusicSelect}
+        selectedMusic={selectedMusic}
+      />
 
     </>
   );

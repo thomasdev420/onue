@@ -46,10 +46,9 @@ export class AutomatedImageLabelingService {
       const systemPrompt = `You are an expert at analyzing images for content creation and marketing. Your task is to provide comprehensive labeling for images that will be used in a content creation platform.
 
 CRITICAL CATEGORIZATION RULES:
-- ONLY use "business" category for images that are SPECIFICALLY about business activities, corporate environments, or professional work settings
-- DO NOT default to "business" for generic images
 - Choose the MOST SPECIFIC category that matches the image content
 - If an image could fit multiple categories, choose the one that is MOST PROMINENT in the image
+- Use "pool" as default fallback for images that don't clearly fit other categories
 
 ANALYSIS REQUIREMENTS:
 1. Create a descriptive, SEO-friendly title (max 100 characters)
@@ -63,14 +62,12 @@ AVAILABLE CATEGORIES:
 ${Object.entries(UNIFIED_CATEGORIES).map(([key, cat]) => `- ${key}: ${cat.name} (${cat.keywords.join(', ')})`).join('\n')}
 
 CATEGORIZATION EXAMPLES:
-- A person running in a park → "sports" or "lifestyle" (NOT business)
-- A beautiful sunset over mountains → "nature" (NOT business)
-- A family having dinner → "family" or "food" (NOT business)
-- A person using a laptop at home → "technology" or "lifestyle" (NOT business)
-- A team in a conference room → "business" (correct)
-- A person in a suit at a desk → "business" (correct)
-- A startup team brainstorming → "entrepreneurship" (NOT business)
-- A marketing campaign photo → "marketing" (NOT business)
+- Swimming pool, beach, ocean scenes → "pool"
+- Sunset, sunrise, golden hour, sky scenes → "sunset_sunrise"
+- Artwork, paintings, sculptures, galleries → "art"
+- Street scenes, neighborhood walks, urban life → "neighbourhood_walk"
+- Luxury items, premium products, high-end scenes → "luxury"
+- Default fallback for unclear images → "pool"
 
 RESPONSE FORMAT: Return ONLY a JSON object with:
 {
@@ -289,8 +286,8 @@ Please provide detailed analysis and labeling that will help users find this ima
       }
     }
     
-    // Default to general for unknown categories
-    return 'general';
+    // Default to pool for unknown categories
+    return 'pool';
   }
 
   /**
@@ -325,7 +322,7 @@ Please provide detailed analysis and labeling that will help users find this ima
     return {
       title: originalTitle || 'Image',
       description: 'Image content',
-      category: 'business',
+      category: 'pool',
       subcategory: '',
       keywords: ['image', 'content'],
       visualStyle: ['unknown'],
@@ -349,24 +346,18 @@ Please provide detailed analysis and labeling that will help users find this ima
    * @returns {Object} Corrected labels
    */
   correctBusinessOvercategorization(labels, imageUrl) {
-    // If categorized as business, check if it should be something else
-    if (labels.category === 'business') {
+    // If categorized as luxury, check if it should be something else
+    if (labels.category === 'luxury') {
       const title = labels.title.toLowerCase();
       const description = (labels.description || '').toLowerCase();
       const keywords = labels.keywords.map(k => k.toLowerCase());
       
       // Check for indicators that suggest other categories
       const categoryIndicators = {
-        sports: ['running', 'athlete', 'fitness', 'exercise', 'workout', 'training', 'sport', 'gym'],
-        nature: ['nature', 'outdoor', 'landscape', 'mountain', 'forest', 'tree', 'green', 'environmental'],
-        lifestyle: ['lifestyle', 'daily', 'personal', 'life', 'casual', 'relaxed', 'comfortable'],
-        family: ['family', 'child', 'children', 'parent', 'baby', 'kids', 'together'],
-        food: ['food', 'dining', 'restaurant', 'meal', 'cuisine', 'cooking', 'chef'],
-        travel: ['travel', 'adventure', 'journey', 'destination', 'tourism', 'vacation'],
-        technology: ['technology', 'computer', 'digital', 'tech', 'laptop', 'smartphone', 'device'],
-        creativity: ['creative', 'art', 'design', 'artistic', 'creative', 'aesthetic'],
-        health: ['health', 'wellness', 'medical', 'healthcare', 'healthy', 'fitness'],
-        education: ['education', 'learning', 'academic', 'school', 'university', 'study']
+        pool: ['swimming', 'pool', 'beach', 'ocean', 'water', 'aquatic', 'swimming pool', 'poolside'],
+        sunset_sunrise: ['sunset', 'sunrise', 'golden hour', 'dusk', 'dawn', 'twilight', 'morning', 'evening', 'sky', 'horizon'],
+        art: ['art', 'artistic', 'creative', 'painting', 'sculpture', 'gallery', 'museum', 'design', 'aesthetic', 'creative'],
+        neighbourhood_walk: ['neighbourhood', 'walk', 'street', 'local', 'community', 'residential', 'sidewalk', 'walking', 'urban', 'city']
       };
       
       // Check if any other category indicators are more prominent

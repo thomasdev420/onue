@@ -6,6 +6,7 @@ import { useSlideCanvas } from '../hooks/useSlideCanvas';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useInlineEditing } from '../hooks/useInlineEditing';
 import TextOverlay from './TextOverlay';
+import TextToolbar from './TextToolbar';
 import SlideControls from './SlideControls';
 
 export default function SlideCanvas({ 
@@ -22,8 +23,17 @@ export default function SlideCanvas({
   onFontSizeDecrease,
   onDeleteText,
   onOpenDownloadModal,
+  onFontChange,
+  onColorChange,
+  onItalicToggle,
+  onCaptionToggle,
+  onCaptionBackgroundToggle,
+  onMusicSelect,
   modeColor
 }) {
+  // Animation state for controls transition
+  const [isTextEditing, setIsTextEditing] = useState(false);
+  const [controlsAnimation, setControlsAnimation] = useState('slide'); // 'slide' | 'text'
   const {
     slideWidth,
     slideItemRefs,
@@ -68,6 +78,8 @@ export default function SlideCanvas({
     e.stopPropagation();
     if (!inlineEditing.isEditing) {
       startInlineEditing(activeSlideIndex, textIndex);
+      setIsTextEditing(true);
+      setControlsAnimation('text');
     }
   };
 
@@ -97,11 +109,23 @@ export default function SlideCanvas({
     }
   }, [handleTextMouseUp]);
 
+  // Watch for text editing state changes to trigger animations
+  React.useEffect(() => {
+    if (!inlineEditing.isEditing && isTextEditing) {
+      // Text editing stopped, animate back to slide controls
+      setIsTextEditing(false);
+      setControlsAnimation('slide');
+    }
+  }, [inlineEditing.isEditing, isTextEditing]);
+
   // Handle add text with proper refs
   const handleAddText = () => {
     const activeSlide = slides[activeSlideIndex];
-    if (!activeSlide.image) {
-      alert("Please select an image before adding text.");
+    if (!activeSlide.image && !activeSlide.backgroundColor) {
+      const message = modeColor === '#DC2626' ? 
+        "Please select a color background before adding text." : 
+        "Please select an image before adding text.";
+      alert(message);
       return;
     }
 
@@ -109,11 +133,12 @@ export default function SlideCanvas({
       id: `text-${activeSlide.id}-${activeSlide.texts.length}`,
       content: 'New Text',
       position: { x: 50, y: 50 }, // Center at 50% for both x and y
-      style: {
-        fontSize: '16px',
-        color: 'white',
-        fontWeight: 'normal'
-      }
+              style: {
+          fontSize: '18px',
+          color: 'white',
+          fontWeight: 'bold',
+          caption: true
+        }
     };
     const newTexts = [...activeSlide.texts, newText];
     onSlideUpdate(activeSlideIndex, { texts: newTexts });
@@ -158,27 +183,34 @@ export default function SlideCanvas({
               opacity: index === activeSlideIndex ? 1 : 0.6
             }}
           >
-            {slide.image ? (
+            {slide.image || slide.backgroundColor ? (
               <div
                 ref={el => imageContainerRefs.current[index] = el}
                 style={{
                   position: 'relative',
                   width: '100%',
-                  aspectRatio: (slide.ratio === '16:9') ? '16 / 9' : (slide.ratio === '4:3') ? '4 / 3' : (slide.ratio === '1:1') ? '1 / 1' : '9 / 16',
+                  aspectRatio: (slide.ratio === '4:5') ? '4 / 5' : (slide.ratio === '1:1') ? '1 / 1' : '9 / 16',
                   maxWidth: '100%',
                   maxHeight: '100%',
                   borderRadius: '12px',
                   overflow: 'hidden',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  backgroundColor: slide.backgroundColor || 'transparent',
+                  padding: '16px'
                 }}
               >
                 {/* Slide number display removed */}
-                <Image
-                  fill
-                  src={slide.image.image_url}
-                  alt={slide.image.title}
-                  style={{ objectFit: 'cover' }}
-                />
+                {slide.image && (
+                  <Image
+                    fill
+                    src={slide.image.image_url}
+                    alt={slide.image.title}
+                    style={{ objectFit: 'cover' }}
+                    quality={100}
+                    priority={true}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                )}
                 
                 {slide.texts && slide.texts.length > 0 && (
                   slide.texts.map((textItem, i) => {
@@ -204,6 +236,10 @@ export default function SlideCanvas({
                         onFontSizeIncrease={onFontSizeIncrease}
                         onFontSizeDecrease={onFontSizeDecrease}
                         onDeleteText={onDeleteText}
+                        onFontChange={onFontChange}
+                        onColorChange={onColorChange}
+                        onItalicToggle={onItalicToggle}
+                        onCaptionBackgroundToggle={onCaptionBackgroundToggle}
                       />
                     );
                   })
@@ -252,7 +288,7 @@ export default function SlideCanvas({
                 style={{
                   position: 'relative',
                   width: '100%',
-                  aspectRatio: (slide.ratio === '16:9') ? '16 / 9' : (slide.ratio === '4:3') ? '4 / 3' : (slide.ratio === '1:1') ? '1 / 1' : '9 / 16',
+                  aspectRatio: (slide.ratio === '4:5') ? '4 / 5' : (slide.ratio === '1:1') ? '1 / 1' : '9 / 16',
                   maxWidth: '100%',
                   maxHeight: '100%',
                   borderRadius: '12px',
@@ -270,7 +306,10 @@ export default function SlideCanvas({
                 }}
               >
                 {/* Slide number display for placeholder removed */}
-                Select an image
+                {modeColor === '#DC2626' ? 'Select a color background' : 
+                 modeColor === '#6366F1' ? 'Select a video background' :
+                 modeColor === '#9333EA' ? 'Select an avatar image' :
+                 'Select an image'}
               </div> 
             )}
             
@@ -284,6 +323,25 @@ export default function SlideCanvas({
               onAddText={handleAddText}
               onPromptModalOpen={onPromptModalOpen}
               onOpenDownloadModal={onOpenDownloadModal}
+              onMusicSelect={onMusicSelect}
+              animationState={controlsAnimation}
+              isTextEditing={isTextEditing}
+            />
+            
+            {/* Text Toolbar - Positioned relative to slide */}
+            <TextToolbar
+              isVisible={inlineEditing.isEditing && index === inlineEditing.slideIndex}
+              textItem={inlineEditing.isEditing && index === inlineEditing.slideIndex ? slides[inlineEditing.slideIndex]?.texts?.[inlineEditing.textIndex] : null}
+              slideIndex={inlineEditing.slideIndex}
+              textIndex={inlineEditing.textIndex}
+              onFontChange={onFontChange}
+              onColorChange={onColorChange}
+              onItalicToggle={onItalicToggle}
+              onCaptionToggle={onCaptionToggle}
+              onCaptionBackgroundToggle={onCaptionBackgroundToggle}
+              onFontSizeIncrease={onFontSizeIncrease}
+              onFontSizeDecrease={onFontSizeDecrease}
+              onDeleteText={onDeleteText}
             />
           </div>
         )) : (

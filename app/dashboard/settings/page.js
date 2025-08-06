@@ -3,12 +3,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { getSupabase } from '../../../supabaseClient';
-import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X, Coins, TrendingUp, Crown, Zap, BarChart3, Calendar, RefreshCw } from 'lucide-react';
+import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X, Coins, TrendingUp, Crown, Zap, BarChart3, Calendar, RefreshCw, Play } from 'lucide-react';
 import ErrorAlert from '../../components/ErrorAlert';
 import Image from 'next/image';
 import MemoryManager from '../components/MemoryManager';
 import IntelligenceModeToggle from '../../components/IntelligenceModeToggle';
-import AutomationModeToggle from '../../components/AutomationModeToggle';
+
 import { useUserSettings } from '../../shared/hooks/useUserSettings';
 import { useCredits } from '../../shared/hooks/useCredits';
 
@@ -23,9 +23,7 @@ export default function SettingsPage() {
   // User settings hook
   const {
     intelligenceMode,
-    automationMode,
     updateIntelligenceMode,
-    updateAutomationMode,
     isLoading: isLoadingSettings,
     error: settingsError,
     saveStatus: settingsSaveStatus,
@@ -192,11 +190,8 @@ export default function SettingsPage() {
   };
 
   const socialPlatforms = [
-    { name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500' },
-    { name: 'Facebook', icon: Facebook, color: 'bg-gradient-to-r from-blue-500 to-blue-600' },
-    { name: 'Twitter', icon: Twitter, color: 'bg-gradient-to-r from-blue-400 to-blue-500' },
-    { name: 'LinkedIn', icon: Linkedin, color: 'bg-gradient-to-r from-blue-600 to-blue-700' },
-    { name: 'YouTube', icon: Youtube, color: 'bg-gradient-to-r from-red-500 to-red-600' }
+    { name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500', subtitle: 'Creator accounts only' },
+    { name: 'TikTok', icon: 'tiktok', color: 'bg-gradient-to-r from-black to-gray-800', subtitle: 'Business accounts only' }
   ];
 
   const getTierIcon = (tier) => {
@@ -289,16 +284,10 @@ export default function SettingsPage() {
             {isSettingUp ? 'Setting up...' : 'Setup Database'}
           </button>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
           <IntelligenceModeToggle
             currentMode={intelligenceMode}
             onModeChange={updateIntelligenceMode}
-            isLoading={isLoadingSettings}
-            saveStatus={settingsSaveStatus}
-          />
-          <AutomationModeToggle
-            currentMode={automationMode}
-            onModeChange={updateAutomationMode}
             isLoading={isLoadingSettings}
             saveStatus={settingsSaveStatus}
           />
@@ -373,11 +362,17 @@ export default function SettingsPage() {
               <div key={platform.name} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 ${platform.color} rounded-lg flex items-center justify-center`}>
-                    <platform.icon className="w-5 h-5 text-white" />
+                    {platform.icon === 'tiktok' ? (
+                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-.88-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
+                      </svg>
+                    ) : (
+                      <platform.icon className="w-5 h-5 text-white" />
+                    )}
                   </div>
                   <div>
                     <h3 className="font-medium text-gray-800">{platform.name}</h3>
-                    <p className="text-sm text-gray-500">Connect your account</p>
+                    <p className="text-sm text-gray-500">{platform.subtitle}</p>
                   </div>
                 </div>
                 <button

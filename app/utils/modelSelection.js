@@ -36,11 +36,11 @@ export function getModelForIntelligenceMode(intelligenceMode, prompt = '', conte
  */
 export function getModelConfig(intelligenceMode, prompt = '', context = {}, service = 'content') {
   const baseConfig = {
-    temperature: 0.7,
+    temperature: 0.9,
     max_tokens: 4000,
     top_p: 1,
-    frequency_penalty: 0,
-    presence_penalty: 0
+    frequency_penalty: 0.1,
+    presence_penalty: 0.1
   };
 
   switch (intelligenceMode) {
@@ -48,9 +48,11 @@ export function getModelConfig(intelligenceMode, prompt = '', context = {}, serv
       return {
         ...baseConfig,
         model: 'gpt-4o',
-        temperature: 0.8, // Slightly more creative for max mode
+        temperature: 0.95, // Higher creativity for max mode
         max_tokens: 6000, // More tokens for complex responses
-        top_p: 0.9
+        top_p: 0.9,
+        frequency_penalty: 0.2,
+        presence_penalty: 0.2
       };
     case 'auto':
       // Import auto mode selection dynamically to avoid circular dependencies
@@ -59,24 +61,30 @@ export function getModelConfig(intelligenceMode, prompt = '', context = {}, serv
       return optimalMode === 'max' ? {
         ...baseConfig,
         model: 'gpt-4o',
-        temperature: 0.8,
+        temperature: 0.95,
         max_tokens: 6000,
-        top_p: 0.9
+        top_p: 0.9,
+        frequency_penalty: 0.2,
+        presence_penalty: 0.2
       } : {
         ...baseConfig,
         model: 'gpt-4o-mini',
-        temperature: 0.7,
+        temperature: 0.9,
         max_tokens: 4000,
-        top_p: 1
+        top_p: 1,
+        frequency_penalty: 0.1,
+        presence_penalty: 0.1
       };
     case 'normal':
     default:
       return {
         ...baseConfig,
         model: 'gpt-4o-mini',
-        temperature: 0.7,
+        temperature: 0.9,
         max_tokens: 4000,
-        top_p: 1
+        top_p: 1,
+        frequency_penalty: 0.1,
+        presence_penalty: 0.1
       };
   }
 }

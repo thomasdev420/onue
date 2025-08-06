@@ -387,24 +387,54 @@ export default function Home() {
           </div>
         </div>
         <h1 className="text-6xl font-extrabold tracking-tight text-gray-800" style={{ fontWeight: 800, margin: 0, lineHeight: 1.1, textAlign: 'center', marginBottom: '18px' }}>
-          Automate content<br />
-          that drives traffic to<br />
-          your website
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginLeft: '12px', verticalAlign: 'middle' }}>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#E4405F' }}>
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#000000' }}>
-              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-            </svg>
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#0077B5' }}>
-              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-            </svg>
+          Automate TikToks<br />
+          that drive traffic to<br />
+          your startup
+          <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: '4px', marginLeft: '12px', verticalAlign: 'middle' }}>
+            {/* TikTok Logo - Rounded Square with Border and Glow */}
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              backgroundColor: '#000000',
+              border: '2px solid rgba(255, 255, 255, 0.8)',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              transform: 'rotate(-15deg)'
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#FFFFFF', zIndex: 2 }}>
+                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+              </svg>
+            </div>
+            
+            {/* Instagram Logo - Rounded Square with Gradient Border and Glow */}
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+              border: '2px solid rgba(255, 255, 255, 0.8)',
+              boxShadow: '0 4px 12px rgba(220, 39, 67, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              overflow: 'hidden',
+              transform: 'rotate(15deg)'
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#FFFFFF', zIndex: 2 }}>
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </div>
           </span>
         </h1>
         <div className="max-w-2xl text-center" style={{ marginTop: '0', marginBottom: '18px' }}>
           <p className="text-lg font-semibold text-gray-500 mb-4" style={{ marginBottom: '0', marginTop: '0' }}>
-          without wasting time, money, or momentum.
+          Get startup growth without a growth team
           </p>
         </div>
         <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '18px' }}>
@@ -535,7 +565,7 @@ export default function Home() {
           className="text-2xl font-bold tracking-tight text-gray-800 leading-relaxed"
           style={{ fontWeight: "700" }}
         >
-          Creating content that actually drives results takes <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>hours</span> and often still <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>fails</span> to deliver for most founders.
+          Creating content that actually drives results often takes <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>hours,</span> <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>costs</span> a lot, and still <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>fails</span> for most founders.
         </h2>
       </div>
 
@@ -591,7 +621,7 @@ export default function Home() {
       {/* Comparison Section */}
       <section className="max-w-7xl mx-auto mb-16 px-4 mt-20">
         <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-8 text-center">
-          Alternatives are <span className="text-red-600">expensive</span>
+          Alternatives <span className="text-red-600">suck</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-20 items-stretch justify-items-center">
           {/* UGC Agencies */}
@@ -664,13 +694,13 @@ export default function Home() {
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Hey, it&apos;s Thomas</h3>
             <div className="text-gray-700 leading-relaxed space-y-4 text-left">
               <p>
-                Last year, I was spending 10+ hours every week brainstorming, making, and posting content just to get a little traction for my startup. As a founder, I needed attention, but I didn&apos;t have the time or the team to consistently create content that actually worked.
+                Last year, i was spending 10+ hours every week brainstorming, making, and posting content just to get the smallest ammount of traction for my startup. As a founder, I needed attention, but I didn&apos;t have the time or the team to consistently create content that actually worked.
               </p>
               <p>
-                I tried using existing AI tools, but they were either overpriced, too generic, or just made complete slop. Most wanted $100–$300/month just to give me surface-level results. I was barely making revenue, and none of it helped me <em>actually grow</em>.
+                I tried using existing AI tools, but they were either overpriced, too generic or just made complete slop. Most wanted $100 to $300/month just to give me surface-level results. I was barely making revenue, and none of it helped me <em>actually grow</em>.
               </p>
               <p>
-                So I built my own tool, just for myself at first. Something that could automatically generate <em>founder-style</em> content that felt real, looked native to TikTok/LinkedIn, and actually got traffic.
+                So I built my own tool, just for myself at first. Something that could automatically generate <em>founder-style</em> content that felt real, looked native to TikTok and most of all actually got traffic.
               </p>
               <p>
                 Turns out I wasn&apos;t the only one struggling.
@@ -679,10 +709,10 @@ export default function Home() {
                 That&apos;s how <strong>Flightmedia</strong> was born.
               </p>
               <p>
-                Today, FlightMedia helps founders auto-create quality content that builds attention, trust, and traffic, without the cost, burnout, or guesswork.
+                Today, FlightMedia helps founders auto-create quality content that builds attention, trust and traffic without the cost, burnout or guesswork.
               </p>
                               <p>
-                  I use it every week to grow my own audience and bring in users and now, so can you. 😎
+                  I use it every day to grow my own audience and bring in users and now, so can you. 😎
                 </p>
                 <p className="text-sm text-gray-500 italic mt-6 pt-4 border-t border-gray-100">
                   P.S. You can try it 100% for free, but for a limited time.

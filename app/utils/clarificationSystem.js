@@ -31,13 +31,8 @@ export const VAGUE_PATTERNS = [
     pattern: /^(help|assist|support)\s+(me|us)$/i,
     type: AMBIGUITY_TYPES.UNCLEAR_INTENT,
     severity: 'high'
-  },
-  // Only very short prompts that are clearly incomplete
-  {
-    pattern: /^.{1,5}$/,
-    type: AMBIGUITY_TYPES.MISSING_CONTEXT,
-    severity: 'high'
   }
+  // Removed the short prompt pattern to disable "What are you working on?" messages
 ];
 
 // Context-specific clarification questions
@@ -122,36 +117,36 @@ export function analyzePromptClarity(prompt, context = {}) {
     }
   });
 
-  // Additional context-based checks
-  if (context.businessContext) {
-    // Check if prompt lacks business context when available
-    const businessTerms = [
-      context.businessContext.companyName,
-      context.businessContext.businessType,
-      context.businessContext.productInfo
-    ].filter(Boolean);
+  // Additional context-based checks - DISABLED to prevent "What are you working on?" messages
+  // if (context.businessContext) {
+  //   // Check if prompt lacks business context when available
+  //   const businessTerms = [
+  //     context.businessContext.companyName,
+  //     context.businessContext.businessType,
+  //     context.businessContext.productInfo
+  //   ].filter(Boolean);
 
-    if (businessTerms.length > 0 && !businessTerms.some(term => 
-      trimmedPrompt.toLowerCase().includes(term.toLowerCase())
-    )) {
-      reasons.push({
-        type: AMBIGUITY_TYPES.MISSING_CONTEXT,
-        severity: 'medium',
-        pattern: 'missing_business_context',
-        extracted: 'business context available but not referenced'
-      });
-    }
-  }
+  //   if (businessTerms.length > 0 && !businessTerms.some(term => 
+  //     trimmedPrompt.toLowerCase().includes(term.toLowerCase())
+  //   )) {
+  //     reasons.push({
+  //       type: AMBIGUITY_TYPES.MISSING_CONTEXT,
+  //       severity: 'medium',
+  //       pattern: 'missing_business_context',
+  //       extracted: 'business context available but not referenced'
+  //     });
+  //   }
+  // }
 
-  // Only check for extremely short prompts
-  if (trimmedPrompt.length < 5) {
-    reasons.push({
-      type: AMBIGUITY_TYPES.MISSING_CONTEXT,
-      severity: 'high',
-      pattern: 'short_prompt',
-      extracted: `prompt length: ${trimmedPrompt.length} characters`
-    });
-  }
+  // Only check for extremely short prompts - DISABLED to prevent "What are you working on?" messages
+  // if (trimmedPrompt.length < 5) {
+  //   reasons.push({
+  //     type: AMBIGUITY_TYPES.MISSING_CONTEXT,
+  //     severity: 'high',
+  //     pattern: 'short_prompt',
+  //     extracted: `prompt length: ${trimmedPrompt.length} characters`
+  //   });
+  // }
 
   // Check for question marks (might indicate user is asking for clarification)
   if (trimmedPrompt.includes('?')) {

@@ -21,7 +21,7 @@ export default function ActionButton({
         height: '40px',
         borderRadius: '50%',
         backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        border: rainbowBorder ? '2.5px solid transparent' : '1px solid #E5E5E5',
+        border: rainbowBorder ? '2.5px solid transparent' : 'none',
         cursor: 'pointer',
         display: 'flex',
         justifyContent: 'center',
@@ -45,7 +45,7 @@ export default function ActionButton({
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        e.currentTarget.style.borderColor = rainbowBorder ? 'transparent' : '#E5E5E5';
+        e.currentTarget.style.borderColor = rainbowBorder ? 'transparent' : 'transparent';
         if (rainbowBorder) {
           e.currentTarget.style.animation = 'rainbowRotate 3s linear infinite';
         }

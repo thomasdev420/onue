@@ -8,12 +8,14 @@ export default function DownloadModal({
   onClose, 
   onDownloadSingle, 
   onDownloadAll, 
+  onSaveContent,
   slideIndex,
   totalSlides
 }) {
   const [format, setFormat] = useState('png');
   const [quality, setQuality] = useState(0.95);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleDownloadSingle = async () => {
     setIsDownloading(true);
@@ -31,6 +33,16 @@ export default function DownloadModal({
       await onDownloadAll(format, quality);
     } finally {
       setIsDownloading(false);
+      onClose();
+    }
+  };
+
+  const handleSaveContent = async () => {
+    setIsSaving(true);
+    try {
+      await onSaveContent();
+    } finally {
+      setIsSaving(false);
       onClose();
     }
   };
@@ -113,8 +125,29 @@ export default function DownloadModal({
           </div>
         )}
 
-        {/* Download Buttons */}
+        {/* Action Buttons */}
         <div className="space-y-3">
+          {/* Save Content */}
+          <button
+            onClick={handleSaveContent}
+            disabled={isSaving}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 text-white py-3 px-4 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+          >
+            {isSaving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                Save Content
+              </>
+            )}
+          </button>
+
           {/* Download Single Slide */}
           <button
             onClick={handleDownloadSingle}

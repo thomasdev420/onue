@@ -67,7 +67,7 @@ const authOptions = {
 
 export async function POST(req) {
   try {
-    const { prompt, slideCount = 5, businessContext, userInfo, forceGenerate, isClarificationFollowup, originalAnalysis, existingSlidesContext, existingSlides = [] } = await req.json();
+    const { prompt, slideCount = 5, businessContext, userInfo, forceGenerate, isClarificationFollowup, originalAnalysis, existingSlidesContext, existingSlides = [], selectedCategory, mode = 'slides' } = await req.json();
 
     // Validate required fields
     if (!prompt) {
@@ -130,7 +130,9 @@ export async function POST(req) {
           slideCount,
           businessContext,
           userInfo,
-          existingSlides
+          existingSlides,
+          selectedCategory,
+          mode
         });
         
         return Response.json({ slides });
@@ -168,7 +170,9 @@ export async function POST(req) {
         slideCount,
         businessContext,
         userInfo,
-        existingSlides
+        existingSlides,
+        selectedCategory,
+        mode
       });
       
       return Response.json({ slides });

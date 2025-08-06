@@ -2,173 +2,83 @@
 // Single source of truth for all category-related functionality
 
 export const UNIFIED_CATEGORIES = {
-  business: {
-    name: 'Business',
-    icon: '🏢',
+  pool: {
+    name: 'Pool',
+    icon: '🏊',
     color: 'bg-blue-50 border-blue-200',
-    keywords: ['business', 'office', 'corporate', 'professional', 'executive', 'work']
+    keywords: ['pool', 'swimming', 'water', 'aquatic', 'swimming pool', 'poolside', 'beach', 'ocean', 'waterfront']
   },
-  technology: {
-    name: 'Technology',
-    icon: '💻',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['tech', 'computer', 'digital', 'innovation', 'ai', 'data']
+  sunset_sunrise: {
+    name: 'Sunset/Sunrise',
+    icon: '🌅',
+    color: 'bg-orange-50 border-orange-200',
+    keywords: ['sunset', 'sunrise', 'golden hour', 'dusk', 'dawn', 'twilight', 'morning', 'evening', 'sky', 'horizon']
   },
-  success: {
-    name: 'Success',
-    icon: '🏆',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['success', 'achievement', 'winning', 'trophy', 'accomplishment']
-  },
-  motivation: {
-    name: 'Motivation',
-    icon: '💪',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['motivation', 'inspiration', 'positive', 'energy', 'drive']
-  },
-  growth: {
-    name: 'Growth',
-    icon: '📈',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['growth', 'progress', 'development', 'improvement', 'evolution']
-  },
-  creativity: {
-    name: 'Creativity',
+  art: {
+    name: 'Old art',
     icon: '🎨',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['creative', 'art', 'design', 'imagination', 'aesthetic', 'creativity']
+    color: 'bg-purple-50 border-purple-200',
+    keywords: ['art', 'artistic', 'creative', 'painting', 'sculpture', 'gallery', 'museum', 'design', 'aesthetic', 'creative']
   },
-  social_media: {
-    name: 'Social Media',
-    icon: '📱',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['social', 'media', 'connection', 'network', 'community']
-  },
-  entrepreneurship: {
-    name: 'Entrepreneurship',
-    icon: '🚀',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['entrepreneur', 'startup', 'business', 'leadership', 'founder']
-  },
-  marketing: {
-    name: 'Marketing',
-    icon: '📢',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['marketing', 'advertising', 'promotion', 'brand', 'strategy']
-  },
-  lifestyle: {
-    name: 'Lifestyle',
-    icon: '🌟',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['lifestyle', 'life', 'daily', 'personal', 'wellness']
+  neighbourhood_walk: {
+    name: 'Walk',
+    icon: '🚶',
+    color: 'bg-green-50 border-green-200',
+    keywords: ['neighbourhood', 'walk', 'street', 'local', 'community', 'residential', 'sidewalk', 'walking', 'urban', 'city']
   },
   luxury: {
-    name: 'Luxury',
+    name: 'Loud Luxury',
     icon: '💎',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant']
+    color: 'bg-yellow-50 border-yellow-200',
+    keywords: ['luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant', 'upscale', 'premium', 'deluxe', 'flashy cars', 'watches', 'range rover', 'dubai', 'dark city', 'luxury cars', 'sports cars', 'supercars', 'rolex', 'cartier', 'patek philippe', 'audemars piguet', 'luxury watches', 'dubai skyline', 'night city', 'urban luxury', 'wealth', 'opulence', 'extravagance']
   },
-  nature: {
-    name: 'Nature',
-    icon: '🌿',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['nature', 'outdoor', 'landscape', 'environmental', 'sustainable', 'green', 'trees', 'tree']
-  },
-  health: {
-    name: 'Health',
-    icon: '🏥',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['health', 'wellness', 'fitness', 'medical', 'healthcare', 'healthy']
-  },
-  education: {
-    name: 'Education',
-    icon: '🎓',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['education', 'learning', 'academic', 'school', 'university', 'knowledge']
-  },
-  finance: {
-    name: 'Finance',
-    icon: '💰',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['finance', 'money', 'investment', 'banking', 'financial', 'wealth']
-  },
-  travel: {
-    name: 'Travel',
-    icon: '✈️',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['travel', 'adventure', 'exploration', 'journey', 'destination', 'tourism']
-  },
-  food: {
-    name: 'Food',
-    icon: '🍽️',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['food', 'dining', 'restaurant', 'culinary', 'gastronomy', 'cuisine']
-  },
-  fashion: {
-    name: 'Fashion',
-    icon: '👗',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['fashion', 'style', 'clothing', 'apparel', 'trendy', 'designer']
-  },
-  sports: {
-    name: 'Sports',
-    icon: '🚴',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['sports', 'athletic', 'fitness', 'competition', 'training', 'athlete', 'sport']
-  },
-  family: {
-    name: 'Family',
-    icon: '👨‍👩‍👧‍👦',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['family', 'relationships', 'love', 'connection', 'togetherness']
-  },
-  abstract: {
-    name: 'Abstract',
-    icon: '🎭',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['abstract', 'conceptual', 'minimal', 'geometric', 'modern', 'contemporary']
-  },
-  industrial: {
-    name: 'Industrial',
-    icon: '🏭',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['industrial', 'manufacturing', 'factory', 'production', 'machinery']
-  },
-  urban: {
-    name: 'Urban',
-    icon: '🏙️',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['urban', 'city', 'metropolitan', 'architecture', 'skyline', 'downtown']
-  },
-  rural: {
-    name: 'Rural',
-    icon: '🌾',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['rural', 'countryside', 'farm', 'agriculture', 'pastoral', 'village']
-  },
-  science: {
-    name: 'Science',
-    icon: '🔬',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['science', 'research', 'laboratory', 'experiment', 'discovery', 'scientific']
-  },
-  romantic: {
-    name: 'Romantic',
-    icon: '💖',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['romantic', 'love', 'couple', 'romance', 'wedding', 'kiss', 'affection', 'valentine', 'sweetheart', 'date', 'relationship', 'relationships']
+  old_money: {
+    name: 'Old Money',
+    icon: '🏛️',
+    color: 'bg-amber-50 border-amber-200',
+    keywords: ['old money', 'heritage', 'tradition', 'classic', 'timeless', 'sophisticated', 'understated', 'elegant', 'prestigious', 'aristocratic', 'vintage', 'antique', 'manor', 'estate', 'country club', 'yacht', 'sailing', 'polo', 'tennis', 'golf', 'hunting', 'fishing', 'wine', 'whiskey', 'cigar', 'tailored', 'savile row', 'oxford', 'cambridge', 'ivy league', 'prep', 'traditional', 'conservative', 'refined', 'discreet', 'wealth', 'legacy', 'family', 'nobility', 'gentleman', 'lady', 'proper', 'etiquette']
   },
   running: {
     name: 'Running',
     icon: '🏃',
-    color: 'bg-blue-50 border-blue-200',
-    keywords: ['running', 'athletic', 'fitness', 'competition', 'training', 'athlete', 'run']
+    color: 'bg-red-50 border-red-200',
+    keywords: ['running', 'jogging', 'marathon', 'sprint', 'athletics', 'track', 'fitness', 'exercise', 'cardio', 'training', 'race', 'runner', 'sports', 'endurance', 'workout']
   },
-  general: {
-    name: 'General',
-    icon: '📷',
-    color: 'bg-gray-50 border-gray-200',
-    keywords: ['general', 'miscellaneous', 'various', 'diverse', 'mixed', 'assorted']
+  surrealism: {
+    name: 'Surrealism',
+    icon: '🌌',
+    color: 'bg-indigo-50 border-indigo-200',
+    keywords: ['surrealism', 'surreal', 'dreamlike', 'fantasy', 'abstract', 'imaginative', 'otherworldly', 'magical', 'mystical', 'dream', 'fantasy', 'unreal', 'bizarre', 'strange']
+  },
+  fall_evening: {
+    name: 'Fall Evening',
+    icon: '🍂',
+    color: 'bg-orange-50 border-orange-200',
+    keywords: ['fall evening', 'autumn evening', 'fall', 'autumn', 'evening', 'cozy', 'warm', 'golden hour', 'leaves', 'harvest', 'seasonal', 'comfortable', 'relaxing']
+  },
+  summer_lake: {
+    name: 'Summer Lake',
+    icon: '🏞️',
+    color: 'bg-blue-50 border-blue-200',
+    keywords: ['summer lake', 'lake', 'summer', 'water', 'outdoors', 'nature', 'swimming', 'boating', 'fishing', 'recreation', 'vacation', 'relaxation', 'scenic']
+  },
+  school: {
+    name: 'School',
+    icon: '🎓',
+    color: 'bg-green-50 border-green-200',
+    keywords: ['school', 'education', 'learning', 'classroom', 'student', 'teacher', 'academic', 'study', 'university', 'college', 'campus', 'lecture', 'homework']
+  },
+  gym: {
+    name: 'Gym',
+    icon: '💪',
+    color: 'bg-red-50 border-red-200',
+    keywords: ['gym', 'fitness', 'workout', 'exercise', 'training', 'muscle', 'strength', 'health', 'sports', 'athletic', 'fitness center', 'weightlifting', 'cardio']
+  },
+  books: {
+    name: 'Books',
+    icon: '📚',
+    color: 'bg-yellow-50 border-yellow-200',
+    keywords: ['books', 'reading', 'literature', 'library', 'bookstore', 'novel', 'story', 'knowledge', 'learning', 'education', 'literary', 'author', 'writing']
   }
 };
 

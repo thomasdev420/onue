@@ -7,7 +7,6 @@ import { UNIFIED_CATEGORIES, getCategoryKeywords } from '../shared/constants/ima
 import { getModelConfig } from '../utils/modelSelection.js';
 import { getIntelligenceMode } from './userSettingsService.js';
 import { visualAnalysisService } from './visualAnalysisService.js';
-import { creditService } from './creditService.js';
 
 // Lazy initialization to avoid build-time errors
 let openai = null;
@@ -23,472 +22,14 @@ function getOpenAI() {
   return openai;
 }
 
-// Stock photo categories with keywords
-const STOCK_PHOTO_CATEGORIES = Object.fromEntries(
-  Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => [key, value.keywords])
-);
-
 /**
- * Unified Content Engine - Single service for generating complete slide content
- * Combines text generation and image selection into one streamlined process
+ * Unified Content Engine - Streamlined service for generating complete slide content
+ * Combines text generation and image selection into one efficient process
  */
 export class UnifiedContentEngine {
   constructor() {
-    this.cache = new Map();
+    this.usedImages = new Set();
     this.categoryCache = new Map();
-    this.usedImages = new Set(); // Simplified to single tracking like the old code
-    this.rateLimitStatus = { isLimited: false, lastCheck: 0, retryAfter: 0 };
-  }
-
-  /**
-   * AI-powered category detection using ChatGPT 4o
-   * Analyzes user prompt and intelligently selects the most suitable categories
-   * @param {string} prompt - User prompt
-   * @param {Object} businessContext - Business context for better analysis
-   * @returns {Promise<Array>} Array of detected categories
-   */
-  async detectCategoriesFromPrompt(prompt, businessContext = {}, intelligenceMode = 'normal') {
-    try {
-      const openaiClient = getOpenAI();
-      
-      // Build context for better category analysis
-      let contextInfo = '';
-      if (businessContext?.companyName) {
-        contextInfo += `Company: ${businessContext.companyName}\n`;
-      }
-      if (businessContext?.businessType) {
-        contextInfo += `Business Type: ${businessContext.businessType}\n`;
-      }
-      if (businessContext?.productInfo) {
-        contextInfo += `Product: ${businessContext.productInfo}\n`;
-      }
-      
-      const systemPrompt = `You are an expert at analyzing content and selecting the most appropriate image categories for visual content creation.
-
-CRITICAL RULE: You MUST select ONLY ONE category per generation. Never select multiple categories.
-
-Available image categories:
-${Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => 
-  `- ${key}: ${value.name} (${value.keywords.join(', ')})`
-).join('\n')}
-
-TASK: Analyze the user's prompt and select the SINGLE most appropriate image category that would best represent the visual style and theme of the content they want to create.
-
-ANALYSIS GUIDELINES:
-
-1. Select ONLY ONE category - the most dominant and relevant category
-2. Consider the business context if provided
-3. Never use the same image twice in the same slide generation
-4. Pick the category that best represents the overall theme, not multiple categories
-5. Available image categories: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}
-
-RESPONSE FORMAT: Return ONLY a JSON object with a "categories" array containing EXACTLY ONE category key.
-Example: {"categories": ["business"]}
-
-EXAMPLES (SINGLE CATEGORY ONLY):
-User prompt: "Create slides about startup funding and investment strategies"
-Business context: Technology startup
-Response: {"categories": ["finance"]}
-
-User prompt: "Make motivational content about fitness and health"
-Response: {"categories": ["health"]}
-
-User prompt: "Design slides about luxury travel destinations"
-Response: {"categories": ["luxury"]}
-
-User prompt: "Create content about team collaboration in modern offices"
-Response: {"categories": ["business"]}`;
-
-      const userPrompt = `${contextInfo ? `Context:\n${contextInfo}\n` : ''}User prompt: "${prompt}"
-
-Select the most appropriate image categories:`;
-
-      // Get model configuration based on intelligence mode
-      const modelConfig = getModelConfig(intelligenceMode, prompt, businessContext, 'category');
-      apiLogger.debug(`Using model config for category detection (${intelligenceMode} mode):`, {
-        model: modelConfig.model,
-        temperature: modelConfig.temperature,
-        max_tokens: modelConfig.max_tokens
-      });
-      
-      const completion = await openaiClient.chat.completions.create({
-        model: modelConfig.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: modelConfig.max_tokens,
-        temperature: modelConfig.temperature,
-        top_p: modelConfig.top_p,
-        frequency_penalty: modelConfig.frequency_penalty,
-        presence_penalty: modelConfig.presence_penalty,
-        response_format: { type: 'json_object' }
-      });
-
-      const response = completion.choices[0]?.message?.content;
-      if (!response) {
-        throw new Error('No response from AI category analysis');
-      }
-
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(response);
-      } catch (parseError) {
-        apiLogger.warn('Failed to parse AI category response, falling back to keyword detection:', parseError.message);
-        return this.detectCategoriesFromPromptFallback(prompt);
-      }
-
-      // Extract categories from the response
-      let detectedCategories = [];
-      if (Array.isArray(parsedResponse.categories)) {
-        detectedCategories = parsedResponse.categories;
-      } else if (Array.isArray(parsedResponse)) {
-        detectedCategories = parsedResponse;
-      } else {
-        // Try to find categories in the response object
-        detectedCategories = Object.values(parsedResponse).filter(val => 
-          Array.isArray(val) && val.every(cat => typeof cat === 'string')
-        ).flat();
-      }
-
-      // Validate that all detected categories exist in our unified categories
-      const validCategories = detectedCategories.filter(category => 
-        UNIFIED_CATEGORIES.hasOwnProperty(category)
-      );
-
-      if (validCategories.length === 0) {
-        apiLogger.warn('No valid categories detected by AI, falling back to keyword detection');
-        return this.detectCategoriesFromPromptFallback(prompt);
-      }
-
-      // ENFORCE SINGLE CATEGORY RULE - return only the first (most relevant) category
-      const singleCategory = [validCategories[0]];
-      apiLogger.info(`🎯 AI detected categories: ${validCategories.join(', ')}, using SINGLE category: ${singleCategory[0]}`);
-      return singleCategory;
-
-    } catch (error) {
-      apiLogger.error('Error in AI category detection, falling back to keyword detection:', error.message);
-      return this.detectCategoriesFromPromptFallback(prompt);
-    }
-  }
-
-  /**
-   * Enhanced AI-powered specific keyword detection for precise image selection
-   * Analyzes user prompt and extracts specific keywords for targeted image selection
-   * @param {string} prompt - User prompt
-   * @param {Object} businessContext - Business context for better analysis
-   * @returns {Promise<Object>} Object with categories and specific keywords
-   */
-  async detectSpecificKeywordsFromPrompt(prompt, businessContext = {}, intelligenceMode = 'normal') {
-    try {
-      const openaiClient = getOpenAI();
-      
-      // Build context for better keyword analysis
-      let contextInfo = '';
-      if (businessContext?.companyName) {
-        contextInfo += `Company: ${businessContext.companyName}\n`;
-      }
-      if (businessContext?.businessType) {
-        contextInfo += `Business Type: ${businessContext.businessType}\n`;
-      }
-      if (businessContext?.productInfo) {
-        contextInfo += `Product: ${businessContext.productInfo}\n`;
-      }
-      
-      const systemPrompt = `You are an expert at analyzing content and extracting specific keywords for precise image selection.
-
-CRITICAL RULE: You MUST select ONLY ONE category per generation. Never select multiple categories.
-
-TASK: Analyze the user's prompt and extract:
-1. The SINGLE most appropriate image category (from the available categories)
-2. Specific keywords that should be present in the selected images for maximum relevance
-
-AVAILABLE IMAGE CATEGORIES:
-${Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => 
-  `- ${key}: ${value.name} (${value.keywords.join(', ')})`
-).join('\n')}
-
-ANALYSIS GUIDELINES:
-1. Select ONLY ONE category - the most dominant and relevant category
-2. Extract 5-8 specific keywords that should appear in image titles or descriptions
-3. Focus on visual elements, objects, scenes, or concepts mentioned in the prompt
-4. Consider the business context for more targeted keyword selection
-5. Keywords should be specific enough to find relevant images but not so specific that no images match
-6. IMPORTANT: Pick the category that best represents the overall theme, not multiple categories
-7. AVOID generic categories like "general" - pick the most specific relevant category
-8. Think about what visual elements would best represent the content theme
-
-RESPONSE FORMAT: Return ONLY a JSON object with:
-{
-  "category": "single_selected_category_key",
-  "specificKeywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5", "keyword6", "keyword7", "keyword8"]
-}
-
-EXAMPLES (SINGLE CATEGORY ONLY):
-User prompt: "Create slides about startup funding and investment strategies"
-Response: {
-  "category": "finance",
-  "specificKeywords": ["investment", "funding", "startup", "money", "business", "entrepreneur", "growth", "success"]
-}
-
-User prompt: "Make motivational content about fitness and health"
-Response: {
-  "category": "health",
-  "specificKeywords": ["fitness", "workout", "healthy", "exercise", "wellness", "athlete", "strength", "motivation"]
-}
-
-User prompt: "Design slides about luxury travel destinations"
-Response: {
-  "category": "luxury",
-  "specificKeywords": ["luxury", "travel", "destination", "premium", "exclusive", "resort", "vacation", "paradise"]
-}
-
-User prompt: "Create content about team collaboration in modern offices"
-Response: {
-  "category": "business",
-  "specificKeywords": ["team", "collaboration", "office", "meeting", "workplace", "professional", "partnership", "success"]
-}
-
-User prompt: "Create slides about nature and environmental conservation"
-Response: {
-  "category": "nature",
-  "specificKeywords": ["nature", "environment", "conservation", "wildlife", "outdoor", "forest", "sustainability", "green"]
-}
-
-User prompt: "Create slides about personality types and psychology"
-Response: {
-  "category": "abstract",
-  "specificKeywords": ["psychology", "personality", "mind", "thinking", "brain", "analysis", "understanding", "behavior"]
-}
-
-User prompt: "Create slides about romantic relationships and love"
-Response: {
-  "category": "lifestyle",
-  "specificKeywords": ["love", "romance", "relationship", "couple", "heart", "emotion", "connection", "intimacy"]
-}`;
-
-      const userPrompt = `${contextInfo ? `Context:\n${contextInfo}\n` : ''}User prompt: "${prompt}"
-
-Extract the most appropriate category and specific keywords:`;
-
-      // Get model configuration based on intelligence mode
-      const modelConfig = getModelConfig(intelligenceMode, prompt, businessContext, 'keyword');
-      apiLogger.debug(`Using model config for keyword detection (${intelligenceMode} mode):`, {
-        model: modelConfig.model,
-        temperature: modelConfig.temperature,
-        max_tokens: modelConfig.max_tokens
-      });
-      
-      const completion = await openaiClient.chat.completions.create({
-        model: modelConfig.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: modelConfig.max_tokens,
-        temperature: modelConfig.temperature,
-        top_p: modelConfig.top_p,
-        frequency_penalty: modelConfig.frequency_penalty,
-        presence_penalty: modelConfig.presence_penalty,
-        response_format: { type: 'json_object' }
-      });
-
-      const response = completion.choices[0]?.message?.content;
-      if (!response) {
-        throw new Error('No response from AI keyword analysis');
-      }
-
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(response);
-      } catch (parseError) {
-        apiLogger.warn('Failed to parse AI keyword response, falling back to category detection:', parseError.message);
-        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext, intelligenceMode);
-        return {
-          category: categories[0] || 'business',
-          specificKeywords: []
-        };
-      }
-
-      // Validate the response structure and ensure SINGLE category
-      if (!parsedResponse.category || !UNIFIED_CATEGORIES.hasOwnProperty(parsedResponse.category)) {
-        apiLogger.warn('Invalid category in AI response, falling back to category detection');
-        const categories = await this.detectCategoriesFromPrompt(prompt, businessContext, intelligenceMode);
-        return {
-          category: categories[0] || 'business', // Ensure only ONE category
-          specificKeywords: parsedResponse.specificKeywords || []
-        };
-      }
-
-      // ENFORCE SINGLE CATEGORY RULE
-      const selectedCategory = parsedResponse.category;
-      apiLogger.info(`🎯 SINGLE CATEGORY SELECTED: ${selectedCategory} for entire generation`);
-      
-      // Validate that we're not getting multiple categories
-      if (Array.isArray(selectedCategory)) {
-        apiLogger.warn(`⚠️ AI returned multiple categories, using only the first: ${selectedCategory[0]}`);
-        parsedResponse.category = selectedCategory[0];
-      }
-
-      // Validate and clean specific keywords
-      const specificKeywords = Array.isArray(parsedResponse.specificKeywords) 
-        ? parsedResponse.specificKeywords.filter(keyword => typeof keyword === 'string' && keyword.trim().length > 0)
-        : [];
-
-      apiLogger.debug(`AI detected category: ${parsedResponse.category}, specific keywords: ${specificKeywords.join(', ')}`);
-      
-      return {
-        category: parsedResponse.category,
-        specificKeywords: specificKeywords
-      };
-
-    } catch (error) {
-      apiLogger.error('Error in AI specific keyword detection, falling back to category detection:', error.message);
-      const categories = await this.detectCategoriesFromPrompt(prompt, businessContext, intelligenceMode);
-      return {
-        category: categories[0] || 'business',
-        specificKeywords: []
-      };
-    }
-  }
-
-  /**
-   * Fallback method using the original keyword-based detection
-   * @param {string} prompt - User prompt
-   * @returns {Array} Array of detected categories
-   */
-  detectCategoriesFromPromptFallback(prompt) {
-    const lowerPrompt = prompt.toLowerCase();
-    const detectedCategories = [];
-    
-    for (const [category, categoryData] of Object.entries(UNIFIED_CATEGORIES)) {
-      for (const keyword of categoryData.keywords) {
-        if (lowerPrompt.includes(keyword.toLowerCase())) {
-          detectedCategories.push(category);
-          break; // Found one keyword for this category, move to next
-        }
-      }
-    }
-    
-    // ENFORCE SINGLE CATEGORY RULE - return only the first (most relevant) category
-    const singleCategory = detectedCategories.length > 0 ? [detectedCategories[0]] : ['business'];
-    apiLogger.debug(`Fallback detected categories: ${detectedCategories.join(', ')}, using SINGLE category: ${singleCategory[0]}`);
-    return singleCategory;
-  }
-
-  /**
-   * Intelligent semantic fallback for image selection
-   * Uses AI to determine the most relevant image category when specific keywords don't match
-   * @param {string} prompt - Original user prompt
-   * @param {Array} specificKeywords - Keywords that didn't find matches
-   * @param {Object} businessContext - Business context
-   * @returns {Promise<string>} Fallback category
-   */
-  async getIntelligentFallbackCategory(prompt, specificKeywords, businessContext = {}, intelligenceMode = 'normal') {
-    try {
-      apiLogger.debug(`Using AI for intelligent fallback analysis...`);
-      
-      const openaiClient = getOpenAI();
-      
-      // Build context for better reasoning
-      let contextInfo = '';
-      if (businessContext?.companyName) {
-        contextInfo += `Company: ${businessContext.companyName}\n`;
-      }
-      if (businessContext?.businessType) {
-        contextInfo += `Business Type: ${businessContext.businessType}\n`;
-      }
-      
-      const systemPrompt = `You are an expert at analyzing content and determining the most appropriate image categories for visual content creation.
-
-TASK: The user requested images for specific keywords that don't exist in our image database. Your job is to analyze the context and determine what category of images would best represent the theme, mood, or concept of their request.
-
-AVAILABLE IMAGE CATEGORIES:
-${Object.entries(UNIFIED_CATEGORIES).map(([key, value]) => 
-  `- ${key}: ${value.name} (${value.keywords.join(', ')})`
-).join('\n')}
-
-ANALYSIS GUIDELINES:
-1. Use your vast contextual knowledge about people, places, concepts, and cultural references
-2. Think about what the user is trying to convey or represent visually
-3. Consider the broader theme, mood, or concept behind their request
-4. Select the category that would best visually represent their content
-5. Consider emotional resonance, cultural associations, and visual symbolism
-6. Be dynamic and creative in your reasoning - don't rely on rigid rules
-
-EXAMPLES OF INTELLIGENT REASONING:
-- "iman gadzhi" → luxury (wealth, entrepreneurship, luxury lifestyle, success)
-- "elon musk" → technology (innovation, space, electric cars, future)
-- "kylie jenner" → luxury (fashion, wealth, lifestyle, influence)
-- "cristiano ronaldo" → sports (athleticism, success, fitness, competition)
-- "tesla" → technology (electric cars, innovation, sustainability, future)
-- "meditation" → lifestyle (wellness, peace, mindfulness, personal growth)
-- "startup funding" → finance (investment, money, business growth, opportunity)
-- "sustainable living" → nature (environment, green living, eco-friendly)
-- "urban nightlife" → urban (city, night, entertainment, metropolitan)
-- "family bonding" → family (relationships, love, togetherness, connection)
-
-RESPONSE FORMAT: Return ONLY the category key (e.g., "luxury", "technology", "business").
-
-AVAILABLE CATEGORIES: ${Object.keys(UNIFIED_CATEGORIES).join(', ')}`;
-
-      const userPrompt = `${contextInfo ? `Context:\n${contextInfo}\n` : ''}User prompt: "${prompt}"
-Specific keywords that didn't find matches: ${specificKeywords.join(', ')}
-
-What category would best represent the theme or concept of this content?`;
-
-      // Get model configuration based on intelligence mode
-      const modelConfig = getModelConfig(intelligenceMode, prompt, businessContext, 'category');
-      apiLogger.debug(`Using model config for intelligent fallback (${intelligenceMode} mode):`, {
-        model: modelConfig.model,
-        temperature: modelConfig.temperature,
-        max_tokens: modelConfig.max_tokens
-      });
-      
-      const completion = await openaiClient.chat.completions.create({
-        model: modelConfig.model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        max_tokens: modelConfig.max_tokens,
-        temperature: modelConfig.temperature,
-        top_p: modelConfig.top_p,
-        frequency_penalty: modelConfig.frequency_penalty,
-        presence_penalty: modelConfig.presence_penalty,
-      });
-
-      const response = completion.choices[0]?.message?.content?.trim().toLowerCase();
-      if (!response) {
-        throw new Error('No response from AI fallback analysis');
-      }
-
-      // Clean the response and validate it's a valid category
-      const cleanResponse = response.replace(/[^a-z_]/g, '');
-      
-      // Check if the response is a valid category
-      if (UNIFIED_CATEGORIES.hasOwnProperty(cleanResponse)) {
-        apiLogger.debug(`AI fallback selected category: ${cleanResponse} for keywords: ${specificKeywords.join(', ')}`);
-        return cleanResponse;
-      }
-
-      // If the response isn't a valid category, try to find the closest match
-      const validCategories = Object.keys(UNIFIED_CATEGORIES);
-      for (const category of validCategories) {
-        if (cleanResponse.includes(category) || category.includes(cleanResponse)) {
-          apiLogger.debug(`AI fallback matched category: ${category} for response: ${cleanResponse}`);
-          return category;
-        }
-      }
-
-      // If still no match, return business as default
-      apiLogger.warn(`Could not determine fallback category from AI response: "${response}". Using business as default.`);
-      return 'business';
-
-    } catch (error) {
-      apiLogger.error('Error in intelligent fallback category detection:', error.message);
-      return 'business'; // Default fallback
-    }
   }
 
   /**
@@ -499,15 +40,16 @@ What category would best represent the theme or concept of this content?`;
    * @param {Object} params.businessContext - Business context
    * @param {Object} params.userInfo - User information
    * @param {Array} params.existingSlides - Existing slides for context
+   * @param {string} params.selectedCategory - User-selected category
+   * @param {string} params.mode - Content mode (slides, text, videos, etc.)
    * @returns {Promise<Array>} Complete slides with text and images
    */
-  async generateCompleteSlides({ prompt, slideCount = 5, businessContext, userInfo, existingSlides = [] }) {
+  async generateCompleteSlides({ prompt, slideCount = 5, businessContext, userInfo, existingSlides = [], selectedCategory, mode = 'slides' }) {
     // Skip credit checks for vaporware - allow all functionality
-    // TODO: Re-enable credit checks when moving to production
     apiLogger.info('Skipping credit checks for vaporware development');
 
     // Get user's intelligence mode setting
-    let intelligenceMode = 'normal'; // Default fallback
+    let intelligenceMode = 'normal';
     if (userInfo?.email) {
       try {
         intelligenceMode = await getIntelligenceMode(userInfo.email);
@@ -516,31 +58,42 @@ What category would best represent the theme or concept of this content?`;
         apiLogger.warn(`Failed to get intelligence mode for user ${userInfo.email}, using default:`, error.message);
       }
     }
+
     try {
       apiLogger.debug(`Generating ${slideCount} complete slides for prompt: "${prompt}"`);
       
       // Clear used images tracking and cache for new generation
       this.usedImages.clear();
-      this.cache.clear();
-      this.categoryCache.clear(); // Also clear category cache to get fresh images
+      this.categoryCache.clear();
       apiLogger.info('🧹 Cleared all caches for fresh image selection');
       
-      // Detect the MOST DOMINANT category and specific keywords from user prompt using AI
-      apiLogger.debug(`Starting AI-powered category and keyword detection for prompt: "${prompt}" (${intelligenceMode} mode)`);
-      const keywordAnalysis = await this.detectSpecificKeywordsFromPrompt(prompt, businessContext, intelligenceMode);
-      const dominantCategory = keywordAnalysis.category;
-      const allowedCategories = [dominantCategory]; // Use ONLY the dominant category - NO MIXING
-      const specificKeywords = keywordAnalysis.specificKeywords;
-      apiLogger.debug(`AI detection complete. DOMINANT Category: ${dominantCategory}, Specific keywords: ${specificKeywords.join(', ')}`);
-      apiLogger.info(`🎯 Using SINGLE dominant category: ${dominantCategory} for entire generation`);
+      // Determine dominant category
+      let dominantCategory;
+      let specificKeywords;
+      
+      // For text mode, don't use image categories
+      if (mode === 'text') {
+        dominantCategory = null;
+        specificKeywords = [];
+        apiLogger.info(`🎯 Text mode detected - no image categories will be used`);
+      } else if (selectedCategory && UNIFIED_CATEGORIES[selectedCategory]) {
+        dominantCategory = selectedCategory;
+        specificKeywords = UNIFIED_CATEGORIES[selectedCategory].keywords;
+        apiLogger.info(`🎯 Using user-selected category: ${selectedCategory} for entire generation`);
+      } else {
+        dominantCategory = 'pool';
+        specificKeywords = UNIFIED_CATEGORIES['pool'].keywords;
+        apiLogger.info(`🎯 Using default pool category for entire generation`);
+      }
       
       // Build context-aware prompt
       const context = { businessContext, userInfo };
       let systemPrompt = buildContextAwarePrompt(context, prompt);
       
-      // Add specific handling for quotes (romantic, stoic, motivational, etc.)
+      // Add specific handling for quotes
       if (prompt.toLowerCase().includes('romantic') || prompt.toLowerCase().includes('quote') || prompt.toLowerCase().includes('stoic') || prompt.toLowerCase().includes('philosophy')) {
-        systemPrompt += `\n\nSPECIAL INSTRUCTIONS FOR QUOTES:\n- When creating quote slides, use the ACTUAL QUOTE TEXT in the "content" field\n- Do NOT include JSON metadata, position data, or structural information in the quote text\n- The quote should be clean, readable text that users can understand\n- Include the author attribution as a separate text element if needed\n- Focus on the emotional impact and readability of the quote\n- For stoic quotes, use famous stoic philosophers like Seneca, Epictetus, Marcus Aurelius, etc.\n- Each quote slide should contain the full quote, not just the author name\n\nEXAMPLE FOR STOIC QUOTES:\n✅ GOOD: "The happiness of your life depends upon the quality of your thoughts."\n✅ GOOD: "Waste no more time arguing about what a good man should be. Be one."\n✅ GOOD: "It is not death that a man should fear, but he should fear never beginning to live."\n❌ BAD: "— Seneca"\n❌ BAD: "— Epictetus"\n❌ BAD: "— Marcus Aurelius"\n\nEXAMPLE FORMAT FOR QUOTE SLIDES:\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "4 powerful stoic quotes",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "creativity",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "The happiness of your life depends upon the quality of your thoughts.",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "— Marcus Aurelius",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "creativity",\n  "ratio": "9:16"\n}]\n`;
+        systemPrompt += `\n\nSPECIAL INSTRUCTIONS FOR QUOTES:\n- When creating quote slides, use the ACTUAL QUOTE TEXT in the "content" field\n- Do NOT include JSON metadata, position data, or structural information in the quote text\n- The quote should be clean, readable text that users can understand\n- Include the author attribution as a separate text element if needed\n- Focus on the emotional impact and readability of the quote\n- For stoic quotes, use famous stoic philosophers like Seneca, Epictetus, Marcus Aurelius, etc.\n- Each quote slide should contain the full quote, not just the author name
+- NEVER include the phrase "slide content" or any positioning language in your content\n\nEXAMPLE FOR STOIC QUOTES:\n✅ GOOD: "The happiness of your life depends upon the quality of your thoughts."\n✅ GOOD: "Waste no more time arguing about what a good man should be. Be one."\n✅ GOOD: "It is not death that a man should fear, but he should fear never beginning to live."\n❌ BAD: "— Seneca"\n❌ BAD: "— Epictetus"\n❌ BAD: "— Marcus Aurelius"\n\nEXAMPLE FORMAT FOR QUOTE SLIDES:\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "4 powerful stoic quotes"\n  }],\n  "imageCategory": "creativity",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "The happiness of your life depends upon the quality of your thoughts."\n  }, {\n    "id": "text-2-2",\n    "content": "— Marcus Aurelius"\n  }],\n  "imageCategory": "creativity",\n  "ratio": "9:16"\n}]\n`;
       }
       
       // Add existing slides context if available
@@ -550,7 +103,6 @@ What category would best represent the theme or concept of this content?`;
           return `Slide ${index + 1}: ${slideTexts}`;
         }).join('\n');
         
-        // Add existing slides context (the detection logic is now handled in the main system prompt)
         systemPrompt += `\n\nEXISTING SLIDES CONTEXT:\n${existingSlidesContext}\n\nIMPORTANT: The user already has slides with the content above. Please create new slides that are related to and build upon this existing content. Maintain the same theme, style, and flow.`;
       }
       
@@ -562,26 +114,196 @@ What category would best represent the theme or concept of this content?`;
           systemPrompt += memoryContext;
         }
       }
-      
-      // Enhanced system prompt for unified generation
-      const isMoreSlidesRequest = existingSlides && existingSlides.length > 0 && (
-        prompt.toLowerCase().includes('more') || 
-        prompt.toLowerCase().includes('additional') || 
-        prompt.toLowerCase().includes('continue') || 
-        prompt.toLowerCase().includes('add') ||
-        prompt.toLowerCase().includes('extra')
-      );
-      
-      if (isMoreSlidesRequest) {
-        // For "more slides" requests, generate ONLY content slides (no intro slide)
-        systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides.\n\nCRITICAL: This is a request to ADD MORE slides to existing content. Create EXACTLY ${slideCount} CONTENT slides (NO intro slide):\n- Each slide contains one valuable, informative fact\n- These slides will be ADDED to existing slides, so NO intro slide needed\n- Use the same style and theme as the existing slides\n\nCRITICAL CATEGORY RULE: Use ONLY ONE imageCategory for ALL slides. Do NOT mix different categories. Pick the most appropriate single category and use it for every slide.\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each slide MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: "The average person spends 2.5 hours daily on social media, equivalent to 38 days per year"\n✅ GOOD: "Compound interest can turn $10,000 into $100,000 in 25 years at 9% return"\n✅ GOOD: "Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers"\n❌ BAD: "Social media is important for business"\n❌ BAD: "Investing is good for your future"\n❌ BAD: "Reading books helps you grow"\n\nEXAMPLE FORMAT FOR ADDITIONAL SLIDES:\nuser prompt: "add 2 more slides"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "New valuable fact or insight here",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "business",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "Another valuable fact or insight here",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "business",\n  "ratio": "9:16"\n}]\n\nCRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, markdown formatting, or other content outside the JSON array. The response must be parseable by JSON.parse().`;
-      } else {
-        // For new slide sets, include intro slide
-        const contentSlides = slideCount - 1; // Number of actual content slides (excluding intro)
-        systemPrompt += `\n\nYou are a professional content creator specializing in engaging social media slides.\n\nCreate EXACTLY ${slideCount} slides in total:\n- The first slide is ALWAYS an introduction/title slide.\n- The remaining ${contentSlides} slides each contain one valuable, informative fact.\n\nCRITICAL SLIDE COUNTING RULE:\nWhen user asks for "N slides about X", create:\n- Slide 1: Introduction saying "${contentSlides} [topic] about X" (NOT "N slides about X")\n- Slides 2-${slideCount}: ${contentSlides} actual content slides\n\nCRITICAL CATEGORY RULE: Use ONLY ONE imageCategory for ALL slides. Do NOT mix different categories. Pick the most appropriate single category and use it for every slide.\n\nEXAMPLES:\n- User asks "5 slides about fitness" → Intro says "4 incredible facts about fitness" + 4 content slides\n- User asks "3 slides about money" → Intro says "2 powerful insights about money" + 2 content slides\n- User asks "6 slides about success" → Intro says "5 proven strategies for success" + 5 content slides\n\nCRITICAL CONTENT REQUIREMENTS:\n1. Each valuable slide (slides 2 to ${slideCount}) MUST contain 70-175 characters of valuable, educational content\n2. Include specific facts, statistics, actionable tips, or insightful observations\n3. Make each valuable slide self-contained with enough information to be valuable\n4. Use clear, engaging language that educates and informs\n5. Focus on providing real value, not generic statements\n6. Each valuable slide should teach something specific or provide actionable insights\n\nCONTENT EXAMPLES:\n✅ GOOD: "The average person spends 2.5 hours daily on social media, equivalent to 38 days per year"\n✅ GOOD: "Compound interest can turn $10,000 into $100,000 in 25 years at 9% return"\n✅ GOOD: "Reading 20 pages daily equals 30 books per year, putting you in the top 1% of readers"\n❌ BAD: "Social media is important for business"\n❌ BAD: "Investing is good for your future"\n❌ BAD: "Reading books helps you grow"\n\nEXAMPLE FORMAT ONE:\nuser prompt: "5 slides about Haile Gebrselassie"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "4 incredible facts about Haile Gebrselassie",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "Fact 1 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-3-1",\n    "content": "Fact 2 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-4-1",\n    "content": "Fact 3 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-5-1",\n    "content": "Fact 4 ...",\n    "position": {"x": 50, "y": 35}\n  }],\n  "imageCategory": "sports",\n  "ratio": "9:16"\n}]\n\nEXAMPLE FORMAT TWO:\nuser prompt: "6 slides about things people learn too late in life"\n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "5 things people learn too late in life",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "1. your body is not invisible",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "the choices you make in your 20s and 30s will affect the quality of life in your 50s and beyond",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{   \n    "id": "text-3-1",\n    "content": "2. discipline beats motivation",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-3-2",\n    "content": "motivation is temporary but showing up even when you don't feel like it is what makes real progress",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-4-1",\n    "content": "3. comparison steals progress",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-4-2",\n    "content": "the only person you should be competing against is the person you were yesterday",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-5-1",\n    "content": "4. consistency over intensity",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-5-2",\n    "content": "making small progress consistently is better than the occasional all out effort",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-6-1",\n    "content": "5. time is the only true currency",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-6-2",\n    "content": "money can be made, but time once gone, is gone",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "lifestyle",\n  "ratio": "9:16"\n}]\n\nEXAMPLE FORMAT THREE:\nuser prompt: "3 slides about personality types that match with intjs" \n\n[{\n  "texts": [{\n    "id": "text-1-1",\n    "content": "2 personality types that perfectly match with intjs",\n    "position": {"x": 50, "y": 40}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-2-1",\n    "content": "1. enfp, the perfect contrast",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-2-2",\n    "content": "enfps bring emotional warmth, adaptability, and endless curiosity. They pull intjs out of their heads and into the moment, making strategy feel alive and human.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}, {\n  "texts": [{\n    "id": "text-3-1",\n    "content": "2. infj, the intuitive equal",\n    "position": {"x": 50, "y": 35}\n  }, {\n    "id": "text-3-2",\n    "content": "Both are future-focused and value deep meaning. While intjs bring vision and systems, infjs add emotional intelligence and insight that makes the plan more human-centered.",\n    "position": {"x": 50, "y": 50}\n  }],\n  "imageCategory": "abstract",\n  "ratio": "9:16"\n}]\n\nNotice: The first slide is always an introduction and the remaining slides contain the valuable content. The intro slide text states the correct number of content slides (N-1), not the total number of slides (N). Content slides can have multiple text elements with different positioning for better visual hierarchy.
 
-CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, markdown formatting, or other content outside the JSON array. The response must be parseable by JSON.parse().`;
+      // Add creative variation to prevent repetitive outputs
+      const variationStyles = [
+        'Focus on practical tips and actionable advice',
+        'Emphasize surprising facts and statistics',
+        'Highlight common mistakes and how to avoid them',
+        'Share expert insights and professional perspectives',
+        'Include step-by-step guidance and processes',
+        'Present both benefits and challenges',
+        'Focus on modern trends and current best practices',
+        'Emphasize cost-effective and budget-friendly approaches',
+        'Highlight time-saving techniques and efficiency tips',
+        'Include both beginner and advanced level insights'
+      ];
+      
+      // Use timestamp and prompt hash for consistent but varied randomization
+      const promptHash = prompt.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0);
+      const timeSeed = Date.now() % 1000;
+      const randomIndex = (promptHash + timeSeed) % variationStyles.length;
+      const randomStyle = variationStyles[randomIndex];
+      
+      systemPrompt += `\n\nCREATIVE APPROACH: ${randomStyle}\n\n`;
+      
+      // Add category override if user selected a specific category (not for text mode)
+      if (mode !== 'text' && selectedCategory && UNIFIED_CATEGORIES[selectedCategory]) {
+        systemPrompt += `\n\nUSER-SELECTED IMAGE CATEGORY: ${UNIFIED_CATEGORIES[selectedCategory].name}\nUse ONLY this category for all slides: ${selectedCategory}\n`;
       }
+      
+      // Enhanced instructions for more specific, unique content
+      systemPrompt += `\n\nYou are a creative content creator who specializes in making engaging, specific, and memorable content. 
+
+IMPORTANT: If the user's prompt is vague or unclear, DO NOT return raw JSON structure. Instead, create meaningful, specific content based on the prompt. For example:
+- If they say "make slides about otters" → create specific slides about otter facts, behaviors, habitats, etc.
+- If they say "create content about business" → create specific slides about business tips, strategies, insights, etc.
+- If they say "make something about life" → create specific slides about life lessons, wisdom, experiences, etc.
+
+Create EXACTLY ${slideCount} slides about the user's topic.
+
+CONTENT CREATION GUIDELINES:
+1. Create EXACTLY ${slideCount} slides - no more, no less
+2. Each slide should be SPECIFIC and UNIQUE - avoid generic statements
+3. Include concrete details, specific examples, or surprising insights
+4. Use vivid, descriptive language that paints a picture
+5. Make each slide memorable and shareable
+6. Include specific numbers, statistics, or actionable tips when relevant
+7. Use storytelling elements and emotional hooks
+8. Avoid clichés and overused phrases
+9. Make content feel personal and relatable
+10. Include unexpected angles or perspectives on the topic
+
+CREATIVITY RULES:
+- Think like a viral content creator, not a textbook writer
+- Use specific examples rather than general statements
+- Include surprising facts or counterintuitive insights
+- Make each slide feel like it has a unique "hook"
+- Use sensory details and vivid descriptions
+- Include specific scenarios or situations
+- Avoid generic advice - be specific and actionable
+- Use analogies and metaphors when helpful
+- Include specific timeframes, locations, or contexts
+- Make content feel fresh and original
+
+TECHNICAL RULES:
+- NEVER use hyphens (-), semicolons (;), or colons (:) in any text content
+- MUST return a JSON array with exactly ${slideCount} objects
+- ALWAYS start with an engaging intro slide
+- NEVER include raw prompt text or JSON metadata in the content field
+- Write clean, readable content that users can understand
+- NEVER include the words "Here are" or "slides that" in your content
+- NEVER include JSON structure examples in your content
+- NEVER include the phrase "slide content" in your content
+- NEVER include any positioning or structural language in your content
+- NEVER include JSON syntax like {"texts": [{"id": "text-1-1", "content": "..."}]} in the content field
+- The content field should contain ONLY the actual text, not JSON structure
+- NEVER include quotes, brackets, or JSON formatting in the content field
+- CRITICAL: The "content" field should contain ONLY the actual slide text, nothing else
+- NEVER include JSON structure like "texts": [{"id": "text-2-1", "content": "..."}] in the content field
+- NEVER include any JSON keys like "id", "content", "texts", "imageCategory", "ratio" in the content field
+- The content field should be clean text like "Law 1: Never outshine the master" - NOT JSON like '{"texts": [{"id": "text-1-1", "content": "..."}]}'
+
+CONTENT STYLE EXAMPLES:
+✅ SPECIFIC: "75% of people check their phone within 5 minutes of waking up"
+✅ SPECIFIC: "The average person spends 4 hours daily on social media"
+✅ SPECIFIC: "Coffee consumption increases productivity by 23%"
+✅ SPECIFIC: "Walking 10,000 steps burns 400 calories"
+❌ GENERIC: "Exercise is good for you"
+❌ GENERIC: "Eat healthy food"
+❌ GENERIC: "Get enough sleep"
+
+TEXT POSITIONING RULES:
+- NEVER include position data in your JSON response
+- The system will automatically position all text elements
+- Focus ONLY on creating the content, not positioning
+- Each text object should have: id, content (and the system will add position automatically)
+- Do NOT specify x or y coordinates in your response
+- The system handles all positioning to prevent overlaps and ensure readability
+
+RETURN FORMAT:
+Return ONLY a JSON array with ${slideCount} objects, each containing:
+- texts: array of text objects with id and content (position will be added automatically)
+- imageCategory: "${dominantCategory}"
+- ratio: "9:16"
+
+COMPREHENSIVE EXAMPLE FORMAT:
+user prompt: "make 6 slides about things people learn too late in life"
+
+[{
+  "texts": [{
+    "id": "text-1-1",
+    "content": "6 things people learn too late in life"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}, {
+  "texts": [{
+    "id": "text-2-1",
+    "content": "1. your body is not invisible"
+  }, {
+    "id": "text-2-2",
+    "content": "the choices you make in your 20s and 30s will affect the quality of life in your 50s and beyond"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}, {
+  "texts": [{   
+    "id": "text-3-1",
+    "content": "2. discipline beats motivation"
+  }, {
+    "id": "text-3-2",
+    "content": "motivation is temporary but showing up even when you don't feel like it is what makes real progress"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}, {
+  "texts": [{
+    "id": "text-4-1",
+    "content": "3. comparison steals progress"
+  }, {
+    "id": "text-4-2",
+    "content": "the only person you should be competing against is the person you were yesterday"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}, {
+  "texts": [{
+    "id": "text-5-1",
+    "content": "4. consistency over intensity"
+  }, {
+    "id": "text-5-2",
+    "content": "making small progress consistently is better than the occasional all out effort"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}, {
+  "texts": [{
+    "id": "text-6-1",
+    "content": "5. your habits shape your future"
+  }, {
+    "id": "text-6-2",
+    "content": "small daily habits compound both negatively and positively"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}, {
+  "texts": [{
+    "id": "text-7-1",
+    "content": "6. time is the only true currency"
+  }, {
+    "id": "text-7-2",
+    "content": "money can be made, but time once gone, is gone"
+  }],
+  "imageCategory": "${dominantCategory}",
+  "ratio": "9:16"
+}]
+
+CRITICAL: The "content" field should contain ONLY the actual slide text, nothing else. Do NOT include JSON structure, position data, or any metadata in the content field.
+
+IMPORTANT: The content field should be clean text like "1. your body is not invisible" - NOT JSON like '{"texts": [{"id": "text-1-1", "content": "..."}]}'.
+
+SPECIFIC EXAMPLES OF WHAT NOT TO DO:
+❌ WRONG: "content": "{"texts": [{"id": "text-2-1", "content": "Law 1: Never outshine the master"}]}"
+❌ WRONG: "content": "texts: [{id: text-2-1, content: Law 1: Never outshine the master}]"
+❌ WRONG: "content": "{"id": "text-2-1", "content": "Law 1: Never outshine the master"}"
+
+✅ CORRECT: "content": "Law 1: Never outshine the master"
+✅ CORRECT: "content": "1. your body is not invisible"
+✅ CORRECT: "content": "the choices you make in your 20s and 30s will affect the quality of life in your 50s and beyond"`;
 
       // Generate content using OpenAI with model selection based on intelligence mode
       const openaiClient = getOpenAI();
@@ -615,21 +337,104 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         
       } catch (e) {
         apiLogger.error('Failed to parse AI response:', e);
-        // Fallback parsing logic
-        slides = this.parseFallbackResponse(completion.choices[0].message.content, slideCount, allowedCategories);
+        apiLogger.debug('Raw AI response:', completion.choices[0].message.content);
+        
+        // Check if the response is just raw JSON structure
+        const rawResponse = completion.choices[0].message.content;
+        if (rawResponse.includes('"texts":') && rawResponse.includes('"content":') && rawResponse.includes('"imageCategory":')) {
+          apiLogger.warn('AI returned raw JSON structure instead of meaningful content. Attempting to extract content...');
+          
+          // Try to extract meaningful content from the raw JSON
+          const contentMatches = rawResponse.match(/"content":\s*"([^"]+)"/g);
+          if (contentMatches && contentMatches.length > 0) {
+            const extractedContent = contentMatches.map(match => {
+              const content = match.match(/"content":\s*"([^"]+)"/);
+              return content ? content[1] : 'Content';
+            }).filter(content => content.length > 3);
+            
+            if (extractedContent.length > 0) {
+              slides = extractedContent.slice(0, slideCount).map((content, index) => ({
+                id: `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`,
+                texts: [{
+                  id: `text-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`,
+                  content: content
+                }],
+                imageCategory: dominantCategory,
+                ratio: '9:16'
+              }));
+            } else {
+              // Fallback parsing logic
+              slides = this.parseFallbackResponse(completion.choices[0].message.content, slideCount, dominantCategory);
+            }
+          } else {
+            // Fallback parsing logic
+            slides = this.parseFallbackResponse(completion.choices[0].message.content, slideCount, dominantCategory);
+          }
+        } else {
+          // Fallback parsing logic
+          slides = this.parseFallbackResponse(completion.choices[0].message.content, slideCount, dominantCategory);
+        }
+        
+        // Ensure we have the right number of slides after fallback
+        if (slides.length !== slideCount) {
+          apiLogger.warn(`Fallback parsing resulted in ${slides.length} slides, need ${slideCount}. Creating additional slides...`);
+          while (slides.length < slideCount) {
+            const newSlide = {
+              id: `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${slides.length}`,
+              texts: [{
+                id: `text-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${slides.length}`,
+                content: `Additional content about ${prompt}`
+              }],
+              imageCategory: dominantCategory,
+              ratio: '9:16'
+            };
+            slides.push(newSlide);
+          }
+        }
       }
 
-      // Validate and enhance slides with proper unique IDs
+      // Import smart positioning utilities
+      const { calculateOptimalPosition } = await import('../utils/textPositioning.js');
+      
+      // Validate and enhance slides with proper unique IDs and smart positioning
       slides = slides.map((slide, idx) => {
         const slideId = slide.id || `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${idx}`;
+        const slideRatio = slide.ratio || '9:16';
+        
+        // Apply smart positioning to each text element
+        const positionedTexts = [];
+        for (let textIdx = 0; textIdx < (slide.texts || []).length; textIdx++) {
+          const text = slide.texts[textIdx];
+          
+          // If the AI provided position data, validate it; otherwise calculate optimal position
+          let position;
+          if (text.position && typeof text.position.x === 'number' && typeof text.position.y === 'number') {
+            // AI provided position - validate and correct if needed
+            position = {
+              x: Math.max(5, Math.min(95, text.position.x)),
+              y: Math.max(35, Math.min(95, text.position.y)) // Prevent text in top 30%
+            };
+          } else {
+            // No position provided - calculate optimal position
+            position = calculateOptimalPosition(
+              positionedTexts, // Consider all previously positioned texts
+              slideRatio,
+              textIdx
+            );
+          }
+          
+          positionedTexts.push({
+            ...text,
+            id: text.id || `text-${slideId}-${textIdx}`,
+            position: position
+          });
+        }
+        
         return {
           id: slideId,
-          texts: (slide.texts || []).map((text, textIdx) => ({
-            ...text,
-            id: text.id || `text-${slideId}-${textIdx}`
-          })),
-          imageCategory: slide.imageCategory || 'business',
-          ratio: slide.ratio || '9:16'
+          texts: positionedTexts,
+          imageCategory: slide.imageCategory || dominantCategory,
+          ratio: slideRatio
         };
       });
 
@@ -646,22 +451,47 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
       // Ensure we have the exact number of slides requested
       apiLogger.debug(`AI generated ${slides.length} slides, requested ${slideCount}`);
       if (slides.length !== slideCount) {
-        apiLogger.warn(`Generated ${slides.length} slides, expected ${slideCount}. Adjusting...`);
-        if (slides.length < slideCount) {
-          // Instead of generating placeholder slides, just use what we have
-          // This prevents the creation of generic "Additional content" slides
-          apiLogger.debug(`Using ${slides.length} slides instead of requested ${slideCount} to avoid placeholder content`);
-        } else {
-          // Trim to requested number
+        apiLogger.warn(`AI generated ${slides.length} slides but requested ${slideCount}. Attempting to fix...`);
+        
+        // Try to fix by duplicating or splitting slides
+        if (slides.length === 0) {
+          // No slides generated, create basic slides
+          slides = Array.from({ length: slideCount }, (_, index) => ({
+            id: `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`,
+            texts: [{
+              id: `text-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`,
+              content: `Content about ${prompt}`
+            }],
+            imageCategory: dominantCategory,
+            ratio: '9:16'
+          }));
+        } else if (slides.length < slideCount) {
+          // Not enough slides, duplicate the last slide to reach the count
+          const lastSlide = slides[slides.length - 1];
+          while (slides.length < slideCount) {
+            const newSlide = {
+              ...lastSlide,
+              id: `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${slides.length}`,
+              texts: lastSlide.texts.map((text, textIndex) => ({
+                ...text,
+                id: `text-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${slides.length}-${textIndex}`,
+                content: `${text.content} (continued)`
+              }))
+            };
+            slides.push(newSlide);
+          }
+        } else if (slides.length > slideCount) {
+          // Too many slides, truncate to the requested count
           slides = slides.slice(0, slideCount);
-          apiLogger.debug(`Trimmed to ${slideCount} slides`);
         }
+        
+        apiLogger.info(`Fixed slide count: now have ${slides.length} slides`);
       }
 
       // Apply smart text positioning and add images - process in parallel for speed
       const completeSlides = await Promise.all(
         slides.map((slide, i) => 
-          this.enhanceSlideWithImage(slide, i, prompt, allowedCategories, specificKeywords, businessContext, intelligenceMode)
+          this.enhanceSlideWithImage(slide, i, prompt, dominantCategory, specificKeywords, businessContext, intelligenceMode)
         )
       );
 
@@ -674,18 +504,10 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         }
       }
 
-      // Skip credit consumption for vaporware - allow all functionality
-      // TODO: Re-enable credit consumption when moving to production
-      apiLogger.info('Skipping credit consumption for vaporware development');
-
       apiLogger.debug(`Successfully generated ${completeSlides.length} complete slides using SINGLE dominant category: ${dominantCategory}`);
       return completeSlides;
 
     } catch (error) {
-      // Skip credit consumption for vaporware - allow all functionality
-      // TODO: Re-enable credit consumption when moving to production
-      apiLogger.info('Skipping credit consumption for failed generation (vaporware mode)');
-      
       apiLogger.error('Error in unified content generation:', error);
       throw error;
     }
@@ -696,15 +518,15 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
    * @param {Object} slide - Slide object
    * @param {number} slideIndex - Slide index
    * @param {string} prompt - Original prompt
-   * @param {Array} allowedCategories - Categories allowed for this generation
+   * @param {string} dominantCategory - Dominant category for all slides
    * @param {Array} specificKeywords - Specific keywords for precise image selection
    * @param {Object} businessContext - Business context for intelligent fallback
+   * @param {string} intelligenceMode - Intelligence mode
    * @returns {Promise<Object>} Enhanced slide with image
    */
-  async enhanceSlideWithImage(slide, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
+  async enhanceSlideWithImage(slide, slideIndex, prompt, dominantCategory, specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
     try {
       // STRICT category enforcement - use ONLY the dominant category
-      const dominantCategory = allowedCategories[0]; // Always use the first (dominant) category
       let imageCategory = slide.imageCategory || dominantCategory;
       
       // Force override to dominant category - NO MIXING ALLOWED
@@ -720,7 +542,6 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         imageCategory,
         slideIndex,
         prompt,
-        allowedCategories,
         specificKeywords,
         businessContext,
         intelligenceMode
@@ -733,7 +554,7 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         texts: slide.texts.map(text => ({
           ...text,
           style: {
-            fontSize: '16px',
+            fontSize: '18px',
             color: 'white',
             fontWeight: 'normal',
             textShadow: '2px 2px 4px rgba(0,0,0,0.8)',
@@ -749,280 +570,47 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
   }
 
   /**
-   * Dynamic image selection that bypasses rigid category system
-   * Uses AI to find the best images for any topic by analyzing the entire image database
-   * @param {string} prompt - User prompt
-   * @param {Array} specificKeywords - Specific keywords to match
-   * @param {number} slideIndex - Slide index
-   * @param {Object} businessContext - Business context
-   * @param {string} intelligenceMode - Intelligence mode
-   * @returns {Promise<Object|null>} Best matching image
-   */
-  async selectImageDynamically(prompt, specificKeywords, slideIndex, businessContext = {}, intelligenceMode = 'normal', dominantCategory = null) {
-    try {
-      apiLogger.info(`🚀 Using DYNAMIC image selection for slide ${slideIndex} - prompt: "${prompt}" - DOMINANT CATEGORY: ${dominantCategory}`);
-      
-      // CONTENT-AWARE KEYWORD GENERATION: Generate slide-specific keywords for better relevance
-      const slideSpecificKeywords = await this.generateSlideSpecificKeywords(prompt, specificKeywords, slideIndex, intelligenceMode);
-      const allKeywords = [...new Set([...specificKeywords, ...slideSpecificKeywords])];
-      
-      apiLogger.info(`🔍 Content-aware keywords for slide ${slideIndex}: ${allKeywords.join(', ')}`);
-      
-      // STEP 1: STRICT CATEGORY ENFORCEMENT - Only search within the dominant category
-      if (!dominantCategory) {
-        apiLogger.error(`❌ No dominant category provided for slide ${slideIndex}`);
-        return null;
-      }
-      
-      apiLogger.info(`🎯 STRICT CATEGORY ENFORCEMENT: Only searching within category "${dominantCategory}" for slide ${slideIndex}`);
-      
-      // Step 2: Search ONLY within the dominant category with these keywords
-      let images = await this.queryImagesByCategoryAndKeywords(dominantCategory, allKeywords);
-      
-      if (!images || images.length === 0) {
-        apiLogger.warn(`❌ No images found in category "${dominantCategory}" with content-aware keywords: ${allKeywords.join(', ')}`);
-        // Fallback to broader search within the SAME category
-        const fallbackKeywords = this.getFallbackKeywords(prompt, slideIndex);
-        images = await this.queryImagesByCategoryAndKeywords(dominantCategory, fallbackKeywords);
-        
-        if (!images || images.length === 0) {
-          apiLogger.error(`❌ No images found in category "${dominantCategory}" even with fallback keywords`);
-          return null;
-        }
-      }
-      
-      // Continue with existing logic...
-      const availableImages = images.filter(img => !this.usedImages.has(img.id));
-      apiLogger.info(`🔍 Dynamic search found ${images.length} total images, ${availableImages.length} available (not used)`);
-      
-      // NEW: INTELLIGENT CATEGORY EXPANSION
-      // If we don't have enough available images, expand search to other relevant categories
-      if (availableImages.length === 0) {
-        apiLogger.warn(`⚠️ No available images in dominant category "${dominantCategory}", expanding search to other categories`);
-        
-        // Get relevant categories based on keywords
-        const relevantCategories = this.getRelevantCategoriesForKeywords(allKeywords, dominantCategory);
-        apiLogger.info(`🔍 Expanding search to relevant categories: ${relevantCategories.join(', ')}`);
-        
-        let expandedImages = [];
-        for (const category of relevantCategories) {
-          if (category === dominantCategory) continue; // Skip the dominant category since we already searched it
-          
-          apiLogger.info(`🔍 Searching category "${category}" for slide ${slideIndex}`);
-          const categoryImages = await this.queryImagesByCategoryAndKeywords(category, allKeywords);
-          
-          if (categoryImages && categoryImages.length > 0) {
-            const categoryAvailableImages = categoryImages.filter(img => !this.usedImages.has(img.id));
-            if (categoryAvailableImages.length > 0) {
-              apiLogger.info(`✅ Found ${categoryAvailableImages.length} available images in category "${category}"`);
-              expandedImages.push(...categoryAvailableImages);
-            }
-          }
-        }
-        
-        // If we found images in other categories, use them
-        if (expandedImages.length > 0) {
-          apiLogger.info(`🎯 Using ${expandedImages.length} images from expanded category search for slide ${slideIndex}`);
-          images = expandedImages;
-        } else {
-          // If still no images, try broader keyword search across all categories
-          apiLogger.warn(`⚠️ No images found in relevant categories, trying broader keyword search`);
-          const broaderImages = await this.queryImagesByKeywords(allKeywords);
-          if (broaderImages && broaderImages.length > 0) {
-            const broaderAvailableImages = broaderImages.filter(img => !this.usedImages.has(img.id));
-            if (broaderAvailableImages.length > 0) {
-              apiLogger.info(`✅ Found ${broaderAvailableImages.length} images with broader keyword search`);
-              images = broaderAvailableImages;
-            }
-          }
-        }
-      } else {
-        images = availableImages;
-      }
-      
-      // If we still don't have enough images, try to find more before resetting
-      if (images.length === 0) {
-        apiLogger.warn(`⚠️ No available images, attempting to find more before reset`);
-        
-        // Get more images from the database within the SAME category
-        const moreImages = await this.findMoreImagesByCategory(dominantCategory, allKeywords);
-        if (moreImages && moreImages.length > 0) {
-          const newAvailableImages = moreImages.filter(img => !this.usedImages.has(img.id));
-          if (newAvailableImages.length > 0) {
-            apiLogger.info(`🔍 Found ${newAvailableImages.length} additional unused images`);
-            images = newAvailableImages;
-          } else {
-            // If we still don't have enough, then reset
-            const usedPercentage = this.usedImages.size / Math.max(images.length + moreImages.length, 1);
-            if (usedPercentage > 0.8) {
-              apiLogger.warn(`⚠️ Used ${Math.round(usedPercentage * 100)}% of all available images. Resetting selection.`);
-              this.usedImages.clear();
-              const freshImages = [...images, ...moreImages].filter(img => !this.usedImages.has(img.id));
-              if (freshImages.length === 0) {
-                apiLogger.error(`❌ No fresh images available after reset`);
-                return null;
-              }
-              images = freshImages;
-              apiLogger.info(`🔄 Reset complete. Now have ${images.length} fresh images available.`);
-            } else {
-              // More intelligent reset logic for small image sets
-              const totalImages = images.length + moreImages.length;
-              const shouldReset = this.shouldResetImageSelection(totalImages, usedPercentage);
-              
-              if (shouldReset) {
-                apiLogger.warn(`🔄 Resetting image selection due to limited variety (${totalImages} total images, ${Math.round(usedPercentage * 100)}% used)`);
-                this.usedImages.clear();
-                const freshImages = [...images, ...moreImages].filter(img => !this.usedImages.has(img.id));
-                if (freshImages.length === 0) {
-                  apiLogger.error(`❌ No fresh images available after reset`);
-                  return null;
-                }
-                images = freshImages;
-                apiLogger.info(`🔄 Reset complete. Now have ${images.length} fresh images available.`);
-              } else {
-                apiLogger.warn(`⚠️ No available images but only ${Math.round(usedPercentage * 100)}% used. Using random selection.`);
-                const allImages = [...images, ...moreImages];
-                const randomImage = allImages[Math.floor(Math.random() * allImages.length)];
-                apiLogger.warn(`🔄 Reusing image: "${randomImage.title}" (ID: ${randomImage.id}) for slide ${slideIndex}`);
-                return randomImage;
-              }
-            }
-          }
-        } else {
-          // If we can't find more images, reset if we've used most of what we have
-          const usedPercentage = this.usedImages.size / Math.max(images.length, 1);
-          if (usedPercentage > 0.8) {
-            apiLogger.warn(`⚠️ Used ${Math.round(usedPercentage * 100)}% of images. Resetting selection.`);
-            this.usedImages.clear();
-            const freshImages = images.filter(img => !this.usedImages.has(img.id));
-            if (freshImages.length === 0) {
-              apiLogger.error(`❌ No fresh images available after reset`);
-              return null;
-            }
-            images = freshImages;
-            apiLogger.info(`🔄 Reset complete. Now have ${images.length} fresh images available.`);
-          } else {
-            // More intelligent reset logic for small image sets
-            const shouldReset = this.shouldResetImageSelection(images.length, usedPercentage);
-            
-            if (shouldReset) {
-              apiLogger.warn(`🔄 Resetting image selection due to limited variety (${images.length} total images, ${Math.round(usedPercentage * 100)}% used)`);
-              this.usedImages.clear();
-              const freshImages = images.filter(img => !this.usedImages.has(img.id));
-              if (freshImages.length === 0) {
-                apiLogger.error(`❌ No fresh images available after reset`);
-                return null;
-              }
-              images = freshImages;
-              apiLogger.info(`🔄 Reset complete. Now have ${images.length} fresh images available.`);
-            } else {
-              apiLogger.warn(`⚠️ No available images but only ${Math.round(usedPercentage * 100)}% used. Using random selection.`);
-              const randomImage = images[Math.floor(Math.random() * images.length)];
-              apiLogger.warn(`🔄 Reusing image: "${randomImage.title}" (ID: ${randomImage.id}) for slide ${slideIndex}`);
-              return randomImage;
-            }
-          }
-        }
-      }
-      
-      // Step 3: Select the best image using visual analysis
-      const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(images, allKeywords, slideIndex, prompt, intelligenceMode);
-      
-      if (selectedImage) {
-        this.usedImages.add(selectedImage.id);
-        apiLogger.info(`✅ Dynamic selection found image: "${selectedImage.title}" for slide ${slideIndex}`);
-        return selectedImage;
-      }
-
-      return null;
-
-    } catch (error) {
-      apiLogger.error(`Error in dynamic image selection for slide ${slideIndex}:`, error);
-      return null;
-    }
-  }
-
-  /**
    * Select image for a specific slide with enhanced visual analysis and intelligent fallback
    * @param {string} imageCategory - Image category
    * @param {number} slideIndex - Slide index
    * @param {string} prompt - Original prompt
-   * @param {Array} allowedCategories - Categories allowed for this generation
    * @param {Array} specificKeywords - Specific keywords to match for precise selection
    * @param {Object} businessContext - Business context for intelligent fallback
+   * @param {string} intelligenceMode - Intelligence mode
    * @returns {Promise<Object|null>} Selected image
    */
-  async selectImageForSlide(imageCategory, slideIndex, prompt, allowedCategories = ['business'], specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
+  async selectImageForSlide(imageCategory, slideIndex, prompt, specificKeywords = [], businessContext = {}, intelligenceMode = 'normal') {
     try {
-      // Use dynamic image selection instead of rigid category system
-      apiLogger.info(`🎯 Using dynamic image selection for slide ${slideIndex}`);
-      
-      const dynamicSelectedImage = await this.selectImageDynamically(
-        prompt, 
-        specificKeywords, 
-        slideIndex, 
-        businessContext, 
-        intelligenceMode,
-        imageCategory // Pass the dominant category
-      );
-      
-      if (dynamicSelectedImage) {
-        apiLogger.info(`✅ Dynamic selection found image: "${dynamicSelectedImage.title}" for slide ${slideIndex}`);
-        return dynamicSelectedImage;
-      }
-      
-      // Fallback to category-based selection if dynamic selection fails
-      apiLogger.warn(`❌ Dynamic selection failed, falling back to category-based selection for slide ${slideIndex}`);
-      
-      // STRICT category enforcement - use ONLY the dominant category
-      const dominantCategory = allowedCategories[0]; // Always use the first (dominant) category
-      if (imageCategory !== dominantCategory) {
-        apiLogger.warn(`🔄 Forcing category change from "${imageCategory}" to dominant category "${dominantCategory}" for slide ${slideIndex}`);
-        imageCategory = dominantCategory;
-      }
-      
-      apiLogger.info(`🎯 Using dominant category "${dominantCategory}" for slide ${slideIndex}`);
+      apiLogger.info(`🎯 Using streamlined image selection for slide ${slideIndex}`);
       
       // Get images for the category
       const categoryKeywords = getCategoryKeywords(imageCategory) || getCategoryKeywords('business');
       
       // Combine category keywords with specific keywords for more precise selection
       const allKeywords = [...new Set([...categoryKeywords, ...specificKeywords])];
-      let images = await this.queryImagesByKeywords(allKeywords);
+      let images = await this.queryImagesByCategoryAndKeywords(imageCategory, allKeywords);
       
-      // If no images found and we have specific keywords, try intelligent fallback within dominant category
-      if ((!images || images.length === 0) && specificKeywords.length > 0) {
-        apiLogger.info(`🎯 No images found for specific keywords: ${specificKeywords.join(', ')}. Using intelligent fallback within dominant category...`);
+      // If no images found, try with broader category keywords
+      if (!images || images.length === 0) {
+        apiLogger.info(`🎯 No images found for specific keywords: ${specificKeywords.join(', ')}. Trying broader category search...`);
         
-        // Use intelligent fallback but respect the dominant category
-        const fallbackCategory = await this.getIntelligentFallbackCategory(prompt, specificKeywords, businessContext, intelligenceMode);
-        apiLogger.info(`🧠 Intelligent fallback selected category: ${fallbackCategory} for prompt: "${prompt}"`);
-        
-        // BUT enforce dominant category - no mixing allowed
-        if (fallbackCategory !== dominantCategory) {
-          apiLogger.warn(`🔄 Intelligent fallback wanted "${fallbackCategory}" but enforcing dominant category "${dominantCategory}"`);
-        }
-        
-        // Get images from the dominant category (not fallback)
-        const dominantKeywords = getCategoryKeywords(dominantCategory) || getCategoryKeywords('business');
-        images = await this.queryImagesByKeywords(dominantKeywords);
+        // Get images from the category with broader keywords
+        const dominantKeywords = getCategoryKeywords(imageCategory) || getCategoryKeywords('business');
+        images = await this.queryImagesByCategoryAndKeywords(imageCategory, dominantKeywords);
         
         if (images && images.length > 0) {
-          apiLogger.info(`✅ Found ${images.length} images using dominant category: ${dominantCategory}`);
+          apiLogger.info(`✅ Found ${images.length} images using category: ${imageCategory}`);
         } else {
-          apiLogger.warn(`❌ No images found even with dominant category: ${dominantCategory}`);
+          apiLogger.warn(`❌ No images found even with category: ${imageCategory}`);
           return null;
         }
-      } else if (!images || images.length === 0) {
-        apiLogger.warn(`No images found for dominant category: ${dominantCategory}`);
-        return null;
       }
 
-      // Filter out already used images FIRST - this is critical to prevent duplicates
+      // Filter out already used images
       const availableImages = images.filter(img => !this.usedImages.has(img.id));
       
       if (availableImages.length === 0) {
-        // Only reset if we've used more than 80% of available images to prevent premature resets
+        // Reset if we've used more than 80% of available images
         const usedPercentage = this.usedImages.size / images.length;
         if (usedPercentage > 0.8) {
           apiLogger.warn(`Used ${usedPercentage * 100}% of images in category "${imageCategory}". Resetting selection.`);
@@ -1031,21 +619,20 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
           // Get fresh available images after reset
           const freshAvailableImages = images.filter(img => !this.usedImages.has(img.id));
           if (freshAvailableImages.length > 0) {
-            const categorySelectedImage = await this.selectBestMatchingImageWithVisualAnalysis(freshAvailableImages, specificKeywords, slideIndex, prompt);
-            this.usedImages.add(categorySelectedImage.id);
-            apiLogger.debug(`Selected image ${categorySelectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
-            return categorySelectedImage;
+            const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(freshAvailableImages, specificKeywords, slideIndex, prompt, intelligenceMode);
+            this.usedImages.add(selectedImage.id);
+            apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (after reset)`);
+            return selectedImage;
           }
         }
         
-        // If we can't reset or still no available images, pick a random image from all images
-        // But still avoid duplicates by checking if it's already used
+        // If we can't reset or still no available images, pick a random image
         const unusedImages = images.filter(img => !this.usedImages.has(img.id));
         if (unusedImages.length > 0) {
-          const categorySelectedImage = await this.selectBestMatchingImageWithVisualAnalysis(unusedImages, specificKeywords, slideIndex, prompt);
-          this.usedImages.add(categorySelectedImage.id);
-          apiLogger.debug(`Selected image ${categorySelectedImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
-          return categorySelectedImage;
+          const selectedImage = await this.selectBestMatchingImageWithVisualAnalysis(unusedImages, specificKeywords, slideIndex, prompt, intelligenceMode);
+          this.usedImages.add(selectedImage.id);
+          apiLogger.debug(`Selected image ${selectedImage.id} for slide ${slideIndex} in category ${imageCategory} (fallback)`);
+          return selectedImage;
         } else {
           // If all images are used, we have no choice but to reuse one
           const randomImage = images[Math.floor(Math.random() * images.length)];
@@ -1063,6 +650,77 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
     } catch (error) {
       apiLogger.error('Error selecting image for slide:', error);
       return null;
+    }
+  }
+
+  /**
+   * Select the best matching image using visual analysis and keyword matching
+   * @param {Array} availableImages - Array of available images
+   * @param {Array} specificKeywords - Specific keywords to match
+   * @param {number} slideIndex - Slide index for logging
+   * @param {string} prompt - Original user prompt for visual analysis
+   * @param {string} intelligenceMode - Intelligence mode
+   * @returns {Promise<Object>} Best matching image
+   */
+  async selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt, intelligenceMode = 'normal') {
+    try {
+      // SPEED OPTIMIZATION: Reduce images analyzed based on intelligence mode
+      const maxImagesToAnalyze = intelligenceMode === 'max' ? 8 : 4;
+      
+      // Randomly sample images to avoid always analyzing the same ones
+      const imagesToAnalyze = this.getRandomSample(availableImages, maxImagesToAnalyze);
+      
+      apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex} (${intelligenceMode} mode) - SPEED OPTIMIZED`);
+      
+      // SPEED OPTIMIZATION: Use keyword-based selection first for speed
+      if (intelligenceMode === 'normal') {
+        // First, try keyword-based selection for quick results
+        const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
+        
+        // If we have a good keyword match (score > 0), use it
+        const keywordScore = this.calculateKeywordScore(keywordBasedImage, specificKeywords);
+        if (keywordScore > 0) {
+          apiLogger.debug(`✅ Using keyword-based selection for slide ${slideIndex}: "${keywordBasedImage.title}" (score: ${keywordScore}) - SPEED OPTIMIZED`);
+          return keywordBasedImage;
+        }
+        
+        // If no good keyword matches, use visual analysis
+        apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
+      }
+      
+      // Analyze images with visual AI
+      const imageUrls = imagesToAnalyze.map(img => img.image_url);
+      const visualAnalyses = await visualAnalysisService.analyzeImageBatch(imageUrls, prompt, intelligenceMode);
+      
+      if (visualAnalyses.length === 0) {
+        apiLogger.warn(`❌ Visual analysis failed, falling back to keyword-based selection for slide ${slideIndex}`);
+        return this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
+      }
+      
+      // Find the image with the highest relevance score
+      const bestVisualMatch = visualAnalyses[0];
+      const selectedImage = imagesToAnalyze.find(img => img.image_url === bestVisualMatch.imageUrl);
+      
+      if (selectedImage) {
+        apiLogger.info(`🎨 Visual analysis selected image for slide ${slideIndex}: "${selectedImage.title}" (relevance: ${bestVisualMatch.relevanceScore}/100)`);
+        apiLogger.debug(`📝 Visual analysis: ${bestVisualMatch.description}`);
+        
+        // Log if the image has low relevance
+        if (bestVisualMatch.relevanceScore < 70) {
+          apiLogger.warn(`⚠️ Low relevance image selected (${bestVisualMatch.relevanceScore}/100): "${selectedImage.title}" for prompt: "${prompt}"`);
+        }
+        
+        return selectedImage;
+      }
+      
+      // Fallback to random selection if visual analysis fails
+      apiLogger.warn(`❌ Visual analysis failed to find matching image, using random selection for slide ${slideIndex}`);
+      return availableImages[Math.floor(Math.random() * availableImages.length)];
+      
+    } catch (error) {
+      apiLogger.error(`Error in visual analysis for slide ${slideIndex}:`, error);
+      // Fallback to keyword-based selection
+      return this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
     }
   }
 
@@ -1123,92 +781,6 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
   }
 
   /**
-   * Select the best matching image using visual analysis and keyword matching
-   * @param {Array} availableImages - Array of available images
-   * @param {Array} specificKeywords - Specific keywords to match
-   * @param {number} slideIndex - Slide index for logging
-   * @param {string} prompt - Original user prompt for visual analysis
-   * @returns {Promise<Object>} Best matching image
-   */
-  async selectBestMatchingImageWithVisualAnalysis(availableImages, specificKeywords, slideIndex, prompt, intelligenceMode = 'normal') {
-    try {
-      // SPEED OPTIMIZATION: Reduce images analyzed based on intelligence mode
-      const maxImagesToAnalyze = intelligenceMode === 'max' ? 8 : 4; // Reduced from 15/8 to 8/4
-      
-      // Randomly sample images to avoid always analyzing the same ones
-      const imagesToAnalyze = this.getRandomSample(availableImages, maxImagesToAnalyze);
-      
-      apiLogger.info(`🔍 Analyzing ${imagesToAnalyze.length} images with visual AI for slide ${slideIndex} (${intelligenceMode} mode) - SPEED OPTIMIZED`);
-      
-      // SPEED OPTIMIZATION: Use keyword-based selection first for speed
-      // For normal mode, try keyword-based selection first, then fall back to visual analysis
-      if (intelligenceMode === 'normal') {
-        // First, try keyword-based selection for quick results
-        const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
-        
-        // If we have a good keyword match (score > 0), use it
-        const keywordScore = this.calculateKeywordScore(keywordBasedImage, specificKeywords);
-        if (keywordScore > 0) {
-          apiLogger.debug(`✅ Using keyword-based selection for slide ${slideIndex}: "${keywordBasedImage.title}" (score: ${keywordScore}) - SPEED OPTIMIZED`);
-          return keywordBasedImage;
-        }
-        
-        // If no good keyword matches, use visual analysis
-        apiLogger.info(`🎯 No good keyword matches, using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
-      } else if (intelligenceMode === 'max') {
-        // Max mode: Always use visual analysis for best quality
-        apiLogger.info(`🎯 Using visual analysis for slide ${slideIndex} (${intelligenceMode} mode) - MAX QUALITY`);
-      } else {
-        // Normal mode: Always use visual analysis for better image selection
-        apiLogger.info(`🎯 Using visual analysis for slide ${slideIndex} (${intelligenceMode} mode)`);
-      }
-      
-      // SPEED OPTIMIZATION: Check if we're rate limited and use fast fallback
-      const isRateLimited = this.checkRateLimitStatus();
-      
-      if (isRateLimited) {
-        apiLogger.warn(`⚡ Rate limit detected - using FAST MODE (keyword-based selection only) for slide ${slideIndex}`);
-        const keywordBasedImage = this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
-        return keywordBasedImage;
-      }
-      
-      // Analyze images with visual AI
-      const imageUrls = imagesToAnalyze.map(img => img.image_url);
-      const visualAnalyses = await visualAnalysisService.analyzeImageBatch(imageUrls, prompt, intelligenceMode);
-      
-      if (visualAnalyses.length === 0) {
-        apiLogger.warn(`❌ Visual analysis failed, falling back to keyword-based selection for slide ${slideIndex}`);
-        return this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
-      }
-      
-      // Find the image with the highest relevance score
-      const bestVisualMatch = visualAnalyses[0];
-      const selectedImage = imagesToAnalyze.find(img => img.image_url === bestVisualMatch.imageUrl);
-      
-      if (selectedImage) {
-        apiLogger.info(`🎨 Visual analysis selected image for slide ${slideIndex}: "${selectedImage.title}" (relevance: ${bestVisualMatch.relevanceScore}/100)`);
-        apiLogger.debug(`📝 Visual analysis: ${bestVisualMatch.description}`);
-        
-        // Log if the image has low relevance
-        if (bestVisualMatch.relevanceScore < 70) {
-          apiLogger.warn(`⚠️ Low relevance image selected (${bestVisualMatch.relevanceScore}/100): "${selectedImage.title}" for prompt: "${prompt}"`);
-        }
-        
-        return selectedImage;
-      }
-      
-      // Fallback to random selection if visual analysis fails
-      apiLogger.warn(`❌ Visual analysis failed to find matching image, using random selection for slide ${slideIndex}`);
-      return availableImages[Math.floor(Math.random() * availableImages.length)];
-      
-    } catch (error) {
-      apiLogger.error(`Error in visual analysis for slide ${slideIndex}:`, error);
-      // Fallback to keyword-based selection
-      return this.selectBestMatchingImage(availableImages, specificKeywords, slideIndex);
-    }
-  }
-
-  /**
    * Get a random sample of images to avoid analyzing the same ones repeatedly
    * @param {Array} images - Array of available images
    * @param {number} sampleSize - Number of images to sample
@@ -1261,100 +833,6 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
   }
 
   /**
-   * Query images by keywords with caching and intelligent expansion
-   * @param {Array<string>} keywords - Search keywords
-   * @returns {Promise<Array>} Matching images
-   */
-  async queryImagesByKeywords(keywords) {
-    const cacheKey = keywords.join(',');
-    
-    if (this.categoryCache.has(cacheKey)) {
-      return this.categoryCache.get(cacheKey);
-    }
-
-    try {
-      const supabase = getSupabase();
-      
-      // Step 1: Try exact keyword matches first
-      let { data: images, error } = await supabase
-        .from('images')
-        .select('id, title, image_url, category, keywords, description')
-        .or(keywords.map(keyword => `title.ilike.%${keyword}%`).join(','))
-        .limit(100);
-
-      if (error) {
-        apiLogger.error('Supabase error:', error);
-        return [];
-      }
-
-      // Step 2: If we don't have enough images, expand the search intelligently
-      if (!images || images.length < 10) {
-        apiLogger.info(`🔍 Only found ${images?.length || 0} images, expanding search intelligently`);
-        
-        // Get all images for broader search
-        const { data: allImages, error: allError } = await supabase
-          .from('images')
-          .select('id, title, image_url, category, keywords, description')
-          .limit(1000);
-        
-        if (allError) {
-          apiLogger.error('Error fetching all images for expansion:', allError);
-          return images || [];
-        }
-
-        // Create expanded keywords based on context
-        const expandedKeywords = this.getExpandedKeywords(keywords);
-        
-        // Filter images using expanded keywords
-        const expandedImages = allImages.filter(img => {
-          try {
-            const title = img.title?.toLowerCase() || '';
-            const category = img.category?.toLowerCase() || '';
-            
-            // Handle keywords as array or string
-            let keywordsText = '';
-            if (Array.isArray(img.keywords)) {
-              keywordsText = img.keywords.join(' ').toLowerCase();
-            } else if (typeof img.keywords === 'string') {
-              keywordsText = img.keywords.toLowerCase();
-            }
-            
-            const description = img.description?.toLowerCase() || '';
-            
-            // Check if any expanded keyword appears in any field
-            return expandedKeywords.some(expandedKeyword => {
-              const searchTerm = expandedKeyword.toLowerCase();
-              return title.includes(searchTerm) || 
-                     category.includes(searchTerm) || 
-                     keywordsText.includes(searchTerm) || 
-                     description.includes(searchTerm);
-            });
-          } catch (error) {
-            apiLogger.error('Error filtering expanded image:', error, img);
-            return false;
-          }
-        });
-
-        // Combine and remove duplicates
-        const combinedImages = [...(images || []), ...expandedImages];
-        const uniqueImages = combinedImages.filter((img, index, self) => 
-          index === self.findIndex(t => t.id === img.id)
-        );
-        
-        apiLogger.info(`🔍 Expanded search found ${uniqueImages.length} total images`);
-        this.categoryCache.set(cacheKey, uniqueImages);
-        return uniqueImages;
-      }
-
-      this.categoryCache.set(cacheKey, images || []);
-      return images || [];
-    } catch (error) {
-      apiLogger.error('Error querying images:', error);
-      return [];
-    }
-  }
-
-  /**
    * Query images by category AND keywords - STRICT CATEGORY ENFORCEMENT
    * @param {string} category - The dominant category to search within
    * @param {Array} keywords - Keywords to match within the category
@@ -1386,7 +864,7 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         return [];
       }
 
-      // SIMPLE: Just get all images in the category, then filter by keywords in JavaScript
+      // Get all images in the category, then filter by keywords in JavaScript
       let { data: images, error } = await supabase
         .from('images')
         .select('id, title, image_url, category, keywords, description')
@@ -1398,7 +876,7 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         return [];
       }
 
-      // SIMPLE: Filter images by keywords in JavaScript (handles array keywords properly)
+      // Filter images by keywords in JavaScript (handles array keywords properly)
       if (images && images.length > 0) {
         const filteredImages = images.filter(img => {
           try {
@@ -1430,49 +908,6 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
         return filteredImages;
       }
 
-      // If we don't have enough images, try broader keyword search within the same category
-      if (!images || images.length < 5) {
-        apiLogger.info(`🔍 Only found ${images?.length || 0} images in category "${category}", trying broader search within category`);
-        
-        const { data: categoryImages, error: categoryError } = await supabase
-          .from('images')
-          .select('id, title, image_url, category, keywords, description')
-          .eq('category', category) // Still enforce category
-          .limit(200);
-        
-        if (categoryError) {
-          apiLogger.error('Error fetching category images for expansion:', categoryError);
-          return images || [];
-        }
-
-        // Filter by expanded keywords within the category
-        const expandedKeywords = this.getExpandedKeywords(searchTerms);
-        const expandedImages = categoryImages.filter(img => {
-          try {
-            const title = img.title?.toLowerCase() || '';
-            const keywordsText = Array.isArray(img.keywords) ? img.keywords.join(' ').toLowerCase() : (img.keywords?.toLowerCase() || '');
-            const description = img.description?.toLowerCase() || '';
-            
-            return expandedKeywords.some(expandedKeyword => {
-              const searchTerm = expandedKeyword.toLowerCase();
-              return title.includes(searchTerm) || keywordsText.includes(searchTerm) || description.includes(searchTerm);
-            });
-          } catch (error) {
-            return false;
-          }
-        });
-
-        // Combine and remove duplicates
-        const combinedImages = [...(images || []), ...expandedImages];
-        const uniqueImages = combinedImages.filter((img, index, self) => 
-          index === self.findIndex(t => t.id === img.id)
-        );
-        
-        apiLogger.info(`🎯 Found ${uniqueImages.length} total images in category "${category}" for keywords: ${searchTerms.join(', ')}`);
-        this.categoryCache.set(cacheKey, uniqueImages);
-        return uniqueImages;
-      }
-
       apiLogger.info(`🎯 Found ${images?.length || 0} images in category "${category}" for keywords: ${searchTerms.join(', ')}`);
       this.categoryCache.set(cacheKey, images || []);
       return images || [];
@@ -1483,190 +918,13 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
   }
 
   /**
-   * Find more images by category - STRICT CATEGORY ENFORCEMENT
-   * @param {string} category - The dominant category to search within
-   * @param {Array} keywords - Keywords to match within the category
-   * @returns {Promise<Array>} Additional matching images
-   */
-  async findMoreImagesByCategory(category, keywords) {
-    try {
-      if (!category) {
-        apiLogger.error('No category provided for findMoreImagesByCategory');
-        return [];
-      }
-
-      const supabase = getSupabase();
-      const broadKeywords = this.getBroadKeywords(keywords);
-      
-      // SIMPLE: Just get all images in the category
-      const { data: images, error } = await supabase
-        .from('images')
-        .select('id, title, image_url, category, keywords, description')
-        .eq('category', category) // STRICT: Only images in this category
-        .limit(100);
-
-      if (error) {
-        apiLogger.error(`Error finding more images in category "${category}":`, error);
-        return [];
-      }
-
-      apiLogger.info(`🔍 Found ${images?.length || 0} additional images in category "${category}"`);
-      return images || [];
-    } catch (error) {
-      apiLogger.error('Error in findMoreImagesByCategory:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get expanded keywords for broader image search
-   * @param {Array} originalKeywords - Original search keywords
-   * @returns {Array} Expanded keywords for broader search
-   */
-  getExpandedKeywords(originalKeywords) {
-    const expandedKeywords = [...originalKeywords];
-    
-    // Add category-based expansions
-    originalKeywords.forEach(keyword => {
-      const lowerKeyword = keyword.toLowerCase();
-      
-      // Nature-related expansions
-      if (['nature', 'environment', 'landscape', 'sustainable', 'green'].includes(lowerKeyword)) {
-        expandedKeywords.push('forest', 'rainforest', 'jungle', 'wilderness', 'mountain', 'lake', 'river', 'ocean', 'beach', 'trees', 'plants', 'wildlife', 'outdoor', 'scenic', 'natural', 'environmental', 'ecology', 'conservation', 'biodiversity', 'ecosystem', 'flora', 'fauna', 'botanical', 'garden', 'park', 'reserve', 'sanctuary');
-      }
-      
-      // Business-related expansions
-      if (['business', 'office', 'meeting', 'corporate', 'professional', 'work', 'team', 'collaboration', 'success', 'growth', 'money', 'investment'].includes(lowerKeyword)) {
-        expandedKeywords.push('entrepreneur', 'startup', 'finance', 'technology', 'innovation', 'strategy', 'leadership', 'management', 'productivity', 'efficiency', 'partnership', 'networking', 'conference', 'presentation', 'boardroom', 'workspace', 'modern', 'contemporary', 'professional', 'executive');
-      }
-      
-      // Historical/philosophical expansions
-      if (['marcus', 'aurelius', 'philosophy', 'stoicism', 'roman', 'emperor', 'ancient', 'classical', 'statue', 'marble', 'sculpture', 'bust', 'portrait', 'historical', 'antiquity', 'meditation', 'wisdom'].includes(lowerKeyword)) {
-        expandedKeywords.push('greek', 'thinker', 'contemplation', 'stoic', 'philosopher', 'classical', 'thinker', 'man', 'person', 'figure', 'art', 'culture', 'history', 'antique', 'vintage', 'heritage', 'tradition', 'legacy', 'monument', 'architecture', 'civilization', 'empire', 'kingdom', 'dynasty');
-      }
-      
-      // Technology-related expansions
-      if (['technology', 'innovation', 'digital', 'modern', 'future', 'ai', 'artificial', 'intelligence', 'automation', 'robotics'].includes(lowerKeyword)) {
-        expandedKeywords.push('computer', 'laptop', 'smartphone', 'device', 'gadget', 'app', 'software', 'hardware', 'network', 'data', 'analytics', 'cloud', 'virtual', 'augmented', 'reality', 'cyber', 'tech', 'startup', 'innovation', 'research', 'laboratory', 'scientist', 'engineer', 'developer');
-      }
-      
-      // Lifestyle/health expansions
-      if (['lifestyle', 'health', 'fitness', 'wellness', 'wellbeing', 'mindfulness', 'meditation', 'yoga', 'exercise', 'workout'].includes(lowerKeyword)) {
-        expandedKeywords.push('healthy', 'active', 'vitality', 'energy', 'balance', 'harmony', 'peace', 'tranquility', 'serenity', 'calm', 'relaxation', 'stress', 'relief', 'therapy', 'healing', 'recovery', 'renewal', 'transformation', 'growth', 'development', 'personal', 'self', 'care', 'nurture');
-      }
-      
-      // Abstract/conceptual expansions
-      if (['abstract', 'concept', 'idea', 'thought', 'mind', 'brain', 'intelligence', 'creativity', 'imagination', 'inspiration'].includes(lowerKeyword)) {
-        expandedKeywords.push('artistic', 'creative', 'design', 'pattern', 'texture', 'color', 'shape', 'form', 'composition', 'aesthetic', 'beautiful', 'elegant', 'sophisticated', 'modern', 'contemporary', 'minimalist', 'geometric', 'organic', 'fluid', 'dynamic', 'energetic', 'vibrant', 'bold', 'subtle');
-      }
-    });
-    
-    // Add general high-quality image keywords
-    expandedKeywords.push('high', 'quality', 'professional', 'premium', 'excellent', 'outstanding', 'amazing', 'beautiful', 'stunning', 'gorgeous', 'magnificent', 'spectacular', 'impressive', 'remarkable', 'extraordinary', 'exceptional', 'superior', 'top', 'grade', 'award', 'winning');
-    
-    // Remove duplicates and return
-    return [...new Set(expandedKeywords)];
-  }
-
-  /**
-   * Find more images from the database when we run out
-   * @param {Array} keywords - Search keywords
-   * @returns {Promise<Array>} Additional images
-   */
-  async findMoreImages(keywords) {
-    try {
-      const supabase = getSupabase();
-      
-      // Get all images from the database
-      const { data: allImages, error } = await supabase
-        .from('images')
-        .select('id, title, image_url, category, keywords, description')
-        .limit(2000);
-      
-      if (error || !allImages || allImages.length === 0) {
-        apiLogger.error('Error fetching all images for expansion:', error);
-        return [];
-      }
-
-      // Create very broad keywords for maximum coverage
-      const broadKeywords = this.getBroadKeywords(keywords);
-      
-      // Filter images using broad keywords
-      const broadImages = allImages.filter(img => {
-        try {
-          const title = img.title?.toLowerCase() || '';
-          const category = img.category?.toLowerCase() || '';
-          
-          // Handle keywords as array or string
-          let keywordsText = '';
-          if (Array.isArray(img.keywords)) {
-            keywordsText = img.keywords.join(' ').toLowerCase();
-          } else if (typeof img.keywords === 'string') {
-            keywordsText = img.keywords.toLowerCase();
-          }
-          
-          const description = img.description?.toLowerCase() || '';
-          
-          // Check if any broad keyword appears in any field
-          return broadKeywords.some(broadKeyword => {
-            const searchTerm = broadKeyword.toLowerCase();
-            return title.includes(searchTerm) || 
-                   category.includes(searchTerm) || 
-                   keywordsText.includes(searchTerm) || 
-                   description.includes(searchTerm);
-          });
-        } catch (error) {
-          apiLogger.error('Error filtering broad image:', error, img);
-          return false;
-        }
-      });
-
-      apiLogger.info(`🔍 Found ${broadImages.length} additional images using broad search`);
-      return broadImages;
-    } catch (error) {
-      apiLogger.error('Error finding more images:', error);
-      return [];
-    }
-  }
-
-  /**
-   * Get very broad keywords for maximum image coverage
-   * @param {Array} originalKeywords - Original search keywords
-   * @returns {Array} Very broad keywords
-   */
-  getBroadKeywords(originalKeywords) {
-    const broadKeywords = [];
-    
-    // Add very general categories that could work for most content
-    broadKeywords.push('people', 'person', 'human', 'man', 'woman', 'individual', 'group', 'team', 'crowd', 'audience');
-    broadKeywords.push('business', 'office', 'work', 'professional', 'corporate', 'meeting', 'presentation', 'conference');
-    broadKeywords.push('nature', 'outdoor', 'landscape', 'scenic', 'natural', 'environmental', 'green', 'blue', 'sky', 'earth');
-    broadKeywords.push('technology', 'digital', 'modern', 'contemporary', 'innovation', 'future', 'advanced', 'sophisticated');
-    broadKeywords.push('abstract', 'artistic', 'creative', 'design', 'pattern', 'texture', 'color', 'shape', 'form');
-    broadKeywords.push('lifestyle', 'health', 'wellness', 'fitness', 'active', 'vitality', 'energy', 'balance', 'harmony');
-    broadKeywords.push('luxury', 'premium', 'exclusive', 'high-end', 'sophisticated', 'elegant', 'refined', 'quality');
-    broadKeywords.push('urban', 'city', 'metropolitan', 'architecture', 'building', 'street', 'road', 'transportation');
-    broadKeywords.push('education', 'learning', 'knowledge', 'wisdom', 'intelligence', 'brain', 'mind', 'thinking');
-    broadKeywords.push('success', 'achievement', 'accomplishment', 'victory', 'winning', 'triumph', 'excellence');
-    
-    // Add quality indicators
-    broadKeywords.push('high', 'quality', 'professional', 'premium', 'excellent', 'outstanding', 'amazing', 'beautiful', 'stunning', 'gorgeous', 'magnificent', 'spectacular', 'impressive', 'remarkable', 'extraordinary', 'exceptional', 'superior', 'top', 'grade', 'award', 'winning');
-    
-    // Add the original keywords
-    broadKeywords.push(...originalKeywords);
-    
-    // Remove duplicates and return
-    return [...new Set(broadKeywords)];
-  }
-
-  /**
    * Parse fallback response when JSON parsing fails
    * @param {string} content - AI response content
    * @param {number} slideCount - Expected slide count
-   * @param {Array} allowedCategories - Categories allowed for this generation
+   * @param {string} dominantCategory - Dominant category
    * @returns {Array} Parsed slides
    */
-  parseFallbackResponse(content, slideCount, allowedCategories = ['business']) {
+  parseFallbackResponse(content, slideCount, dominantCategory = 'business') {
     let splitSlides = [];
     
     // Try multiple patterns to split slides
@@ -1688,8 +946,6 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
       }
     }
     
-    const defaultCategory = allowedCategories[0] || 'business';
-    
     if (splitSlides.length > 1) {
       return splitSlides.slice(0, slideCount).map((text, index) => {
         const slideId = `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`;
@@ -1697,10 +953,9 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
           id: slideId,
           texts: [{ 
             id: `text-${slideId}-0`,
-            content: text, 
-            position: { x: 50, y: 60 } 
+            content: text
           }],
-          imageCategory: defaultCategory
+          imageCategory: dominantCategory
         };
       });
     } else {
@@ -1713,12 +968,11 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
           const slideId = `slide-${Date.now()}-${Math.floor(Math.random() * 1000000)}-${index}`;
           return {
             id: slideId,
-            texts: [{ 
-              id: `text-${slideId}-0`,
-              content: sentence.trim(), 
-              position: { x: 50, y: 60 } 
-            }],
-            imageCategory: defaultCategory
+                      texts: [{ 
+            id: `text-${slideId}-0`,
+            content: sentence.trim()
+          }],
+            imageCategory: dominantCategory
           };
         });
       } else {
@@ -1737,10 +991,9 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
             id: slideId,
             texts: [{ 
               id: `text-${slideId}-0`,
-              content: slideText, 
-              position: { x: 50, y: 60 } 
+              content: slideText
             }],
-            imageCategory: defaultCategory
+            imageCategory: dominantCategory
           });
         }
         return slides;
@@ -1749,7 +1002,7 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
   }
 
   /**
-   * Clean slide content to remove JSON metadata that might be mixed in
+   * Clean slide content to remove JSON metadata and forbidden characters
    * @param {Array} slides - Array of slide objects
    * @returns {Array} Cleaned slides
    */
@@ -1760,6 +1013,17 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
           if (text.content) {
             // Remove JSON metadata patterns that might be mixed into content
             let cleanedContent = text.content;
+            
+            // Remove raw prompt text patterns
+            cleanedContent = cleanedContent.replace(/Here are \d+ slides that delve into.*?maintaining an emotive and factual approach:/gi, '');
+            cleanedContent = cleanedContent.replace(/Here are \d+ slides about.*?with an intro slide and a conclusion slide/gi, '');
+            cleanedContent = cleanedContent.replace(/Here are \d+ slides.*?slides:/gi, '');
+            cleanedContent = cleanedContent.replace(/Here are \d+ slides.*?slides/gi, '');
+            cleanedContent = cleanedContent.replace(/Five Memorable Date Ideas.*?Create lasting memories with your girlfriend/gi, '');
+            cleanedContent = cleanedContent.replace(/Create lasting memories with your girlfriend/gi, '');
+            cleanedContent = cleanedContent.replace(/maintaining an emotive and factual approach/gi, '');
+            cleanedContent = cleanedContent.replace(/Create lasting memories/gi, '');
+            cleanedContent = cleanedContent.replace(/lasting memories/gi, '');
             
             // Remove JSON object patterns like {"position": {"x": 50, "y": 35}}
             cleanedContent = cleanedContent.replace(/\{\s*"[^"]*"\s*:\s*\{[^}]*\}\s*\}/g, '');
@@ -1785,11 +1049,84 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
             // Remove any remaining JSON-like patterns
             cleanedContent = cleanedContent.replace(/\{\s*"[^"]*"\s*:\s*[^}]*\}/g, '');
             
+            // Remove any remaining JSON array brackets
+            cleanedContent = cleanedContent.replace(/\[\s*\{/g, '').replace(/\}\s*\]/g, '');
+            
+            // Remove complete JSON objects that might be mixed into content
+            cleanedContent = cleanedContent.replace(/\{\s*"texts"\s*:\s*\[[^\]]*\]\s*,\s*"imageCategory"\s*:[^}]*\}/g, '');
+            cleanedContent = cleanedContent.replace(/\{\s*"id"\s*:\s*"[^"]*"\s*,\s*"content"\s*:\s*"[^"]*"\s*\}/g, '');
+            
+            // Remove the specific pattern you mentioned: [{"texts": [{"id": "text-1-1", "content": "..."}]}]
+            cleanedContent = cleanedContent.replace(/\[\s*\{\s*"texts"\s*:\s*\[\s*\{\s*"id"\s*:\s*"[^"]*"\s*,\s*"content"\s*:\s*"[^"]*"\s*\}\s*\]\s*\}\s*\]/g, '');
+            
+            // Remove any remaining JSON array patterns with texts
+            cleanedContent = cleanedContent.replace(/\[\s*\{\s*"texts"\s*:\s*\[[^\]]*\]\s*\}\s*\]/g, '');
+            
+            // Remove JSON array patterns
+            cleanedContent = cleanedContent.replace(/\[\s*\{[^}]*\}\s*\]/g, '');
+            
+            // Remove specific patterns that might be causing the issue
+            cleanedContent = cleanedContent.replace(/"texts":\s*\[[^\]]*\]/g, '');
+            cleanedContent = cleanedContent.replace(/"id":\s*"[^"]*"/g, '');
+            cleanedContent = cleanedContent.replace(/"content":\s*"[^"]*"/g, '');
+            cleanedContent = cleanedContent.replace(/"imageCategory":\s*"[^"]*"/g, '');
+            cleanedContent = cleanedContent.replace(/"ratio":\s*"[^"]*"/g, '');
+            
+            // Remove the specific pattern from the user's example
+            cleanedContent = cleanedContent.replace(/\{\s*"id":\s*"text-[^"]*",\s*"content":\s*"[^"]*"\s*\}/g, '');
+            cleanedContent = cleanedContent.replace(/"texts":\s*\[\s*\{\s*"id":\s*"text-[^"]*",\s*"content":\s*"[^"]*"\s*\}\s*\]/g, '');
+            
             // Clean up extra whitespace and commas
             cleanedContent = cleanedContent.replace(/\s*,\s*/g, ' ').replace(/\s+/g, ' ').trim();
             
             // Remove any leading/trailing quotes that might be left
             cleanedContent = cleanedContent.replace(/^["']+|["']+$/g, '');
+            
+            // Remove forbidden characters: hyphens, semicolons, and colons
+            cleanedContent = cleanedContent.replace(/[-;:]/g, '');
+            
+            // Clean up any double spaces that might result from character removal
+            cleanedContent = cleanedContent.replace(/\s+/g, ' ').trim();
+            
+            // If content is empty after cleaning, provide a fallback
+            if (!cleanedContent || cleanedContent.length < 3) {
+              cleanedContent = 'Content';
+            }
+            
+            // Remove "slide content" phrases that might slip through
+            cleanedContent = cleanedContent.replace(/slide content/gi, '');
+            cleanedContent = cleanedContent.replace(/slide text/gi, '');
+            cleanedContent = cleanedContent.replace(/slide information/gi, '');
+            cleanedContent = cleanedContent.replace(/slide data/gi, '');
+            
+            // Additional check: if content still contains problematic patterns, replace with generic content
+            if (cleanedContent.includes('Here are') || 
+                cleanedContent.includes('slides that') || 
+                cleanedContent.includes('maintaining an') ||
+                cleanedContent.includes('Create lasting') ||
+                cleanedContent.includes('lasting memories') ||
+                cleanedContent.includes('slide content') ||
+                cleanedContent.includes('slide text') ||
+                cleanedContent.includes('"texts"') ||
+                cleanedContent.includes('"imageCategory"') ||
+                cleanedContent.includes('"ratio"') ||
+                cleanedContent.includes('"id"') ||
+                cleanedContent.includes('"content"') ||
+                cleanedContent.includes('{"texts":') ||
+                cleanedContent.includes('"text-1-1"') ||
+                cleanedContent.includes('"text-2-1"') ||
+                cleanedContent.includes('"text-3-1"') ||
+                cleanedContent.includes('text-') ||
+                cleanedContent.includes('"id":') ||
+                cleanedContent.includes('"content":') ||
+                cleanedContent.includes('"imageCategory":') ||
+                cleanedContent.includes('"ratio":') ||
+                cleanedContent.includes('{') ||
+                cleanedContent.includes('}') ||
+                cleanedContent.includes('[') ||
+                cleanedContent.includes(']')) {
+              cleanedContent = 'Content';
+            }
             
             text.content = cleanedContent;
           }
@@ -1800,244 +1137,14 @@ CRITICAL: Return ONLY valid JSON array. Do not include any explanatory text, mar
     });
   }
 
-
-  /**
-   * Generate slide-specific keywords for better image relevance
-   * @param {string} prompt - Original prompt
-   * @param {Array} specificKeywords - Base keywords
-   * @param {number} slideIndex - Slide index
-   * @param {string} intelligenceMode - Intelligence mode
-   * @returns {Promise<Array>} Slide-specific keywords
-   */
-  async generateSlideSpecificKeywords(prompt, specificKeywords, slideIndex, intelligenceMode = 'normal') {
-    try {
-      // For speed, use simple keyword expansion instead of AI
-      const expandedKeywords = [];
-      
-      // Add slide-specific variations
-      if (slideIndex === 0) {
-        // Intro slide - add presentation/overview keywords
-        expandedKeywords.push('presentation', 'overview', 'introduction', 'title');
-      } else {
-        // Content slides - add content-specific keywords
-        expandedKeywords.push('content', 'information', 'fact', 'detail', 'insight');
-      }
-      
-      // Add visual keywords based on base keywords
-      specificKeywords.forEach(keyword => {
-        const visualVariations = this.getVisualVariations(keyword);
-        expandedKeywords.push(...visualVariations);
-      });
-      
-      return [...new Set(expandedKeywords)].slice(0, 5); // Limit to 5 additional keywords
-    } catch (error) {
-      apiLogger.warn(`Error generating slide-specific keywords: ${error.message}`);
-      return [];
-    }
-  }
-
-  /**
-   * Get visual variations of a keyword
-   * @param {string} keyword - Base keyword
-   * @returns {Array} Visual variations
-   */
-  getVisualVariations(keyword) {
-    const variations = {
-      'business': ['professional', 'corporate', 'office', 'meeting', 'team'],
-      'finance': ['money', 'investment', 'wealth', 'success', 'growth'],
-      'health': ['fitness', 'wellness', 'exercise', 'athlete', 'strength'],
-      'technology': ['digital', 'innovation', 'future', 'modern', 'tech'],
-      'lifestyle': ['life', 'living', 'daily', 'routine', 'personal'],
-      'nature': ['outdoor', 'environment', 'natural', 'green', 'wildlife'],
-      'luxury': ['premium', 'exclusive', 'elegant', 'sophisticated', 'high-end'],
-      'abstract': ['concept', 'idea', 'thought', 'mind', 'creative'],
-      'sports': ['athletic', 'competition', 'performance', 'energy', 'movement'],
-      'family': ['relationship', 'love', 'connection', 'together', 'bond'],
-      'urban': ['city', 'metropolitan', 'modern', 'contemporary', 'street'],
-      'travel': ['journey', 'adventure', 'exploration', 'destination', 'experience']
-    };
-    
-    return variations[keyword] || [keyword];
-  }
-
-  /**
-   * Get fallback keywords when specific keywords don't find matches
-   * @param {string} prompt - Original prompt
-   * @param {number} slideIndex - Slide index
-   * @returns {Array} Fallback keywords
-   */
-  getFallbackKeywords(prompt, slideIndex) {
-    const lowerPrompt = prompt.toLowerCase();
-    
-    // Determine fallback category based on prompt content
-    if (lowerPrompt.includes('business') || lowerPrompt.includes('work') || lowerPrompt.includes('professional')) {
-      return ['business', 'professional', 'office', 'team', 'meeting'];
-    } else if (lowerPrompt.includes('health') || lowerPrompt.includes('fitness') || lowerPrompt.includes('wellness')) {
-      return ['health', 'fitness', 'wellness', 'exercise', 'lifestyle'];
-    } else if (lowerPrompt.includes('finance') || lowerPrompt.includes('money') || lowerPrompt.includes('investment')) {
-      return ['finance', 'money', 'business', 'success', 'growth'];
-    } else if (lowerPrompt.includes('technology') || lowerPrompt.includes('digital') || lowerPrompt.includes('innovation')) {
-      return ['technology', 'digital', 'modern', 'future', 'innovation'];
-    } else if (lowerPrompt.includes('nature') || lowerPrompt.includes('environment') || lowerPrompt.includes('outdoor')) {
-      return ['nature', 'outdoor', 'environment', 'natural', 'green'];
-    } else if (lowerPrompt.includes('luxury') || lowerPrompt.includes('premium') || lowerPrompt.includes('exclusive')) {
-      return ['luxury', 'premium', 'exclusive', 'elegant', 'sophisticated'];
-    } else {
-      // Default fallback
-      return ['people', 'lifestyle', 'modern', 'professional', 'success'];
-    }
-  }
-
   /**
    * Clear cache (useful for testing or memory management)
    */
   clearCache() {
-    this.cache.clear();
     this.categoryCache.clear();
     this.usedImages.clear();
   }
-
-  /**
-   * Check if we're currently rate limited
-   * @returns {boolean} True if rate limited
-   */
-  checkRateLimitStatus() {
-    const now = Date.now();
-    
-    // Check if we're still within the rate limit window
-    if (this.rateLimitStatus.isLimited && now < this.rateLimitStatus.lastCheck + this.rateLimitStatus.retryAfter) {
-      return true;
-    }
-    
-    // Reset if we're past the retry time
-    if (this.rateLimitStatus.isLimited && now >= this.rateLimitStatus.lastCheck + this.rateLimitStatus.retryAfter) {
-      this.rateLimitStatus.isLimited = false;
-      this.rateLimitStatus.retryAfter = 0;
-    }
-    
-    return false;
-  }
-
-  /**
-   * Update rate limit status when we hit a rate limit
-   * @param {number} retryAfter - Retry after time in milliseconds
-   */
-  updateRateLimitStatus(retryAfter) {
-    this.rateLimitStatus.isLimited = true;
-    this.rateLimitStatus.lastCheck = Date.now();
-    this.rateLimitStatus.retryAfter = retryAfter;
-    apiLogger.warn(`⚠️ Rate limit status updated: retry after ${retryAfter}ms`);
-  }
-
-  /**
-   * Get relevant categories based on keywords
-   * @param {Array} keywords - Keywords to match
-   * @param {string} dominantCategory - Dominant category to exclude
-   * @returns {Array} Relevant categories ordered by relevance
-   */
-  getRelevantCategoriesForKeywords(keywords, dominantCategory) {
-    const keywordString = keywords.join(' ').toLowerCase();
-    const categoryScores = [];
-    
-    // Score each category based on keyword overlap
-    for (const [category, categoryData] of Object.entries(UNIFIED_CATEGORIES)) {
-      if (category === dominantCategory) continue;
-      
-      const categoryKeywords = categoryData.keywords.join(' ').toLowerCase();
-      let score = 0;
-      
-      // Check for keyword matches
-      for (const keyword of keywords) {
-        const lowerKeyword = keyword.toLowerCase();
-        if (categoryKeywords.includes(lowerKeyword)) {
-          score += 2; // Direct keyword match
-        }
-        // Check for semantic similarity (e.g., "planes" matches "travel", "aviation" matches "transportation")
-        if (this.hasSemanticOverlap(lowerKeyword, categoryKeywords)) {
-          score += 1; // Semantic match
-        }
-      }
-      
-      if (score > 0) {
-        categoryScores.push({ category, score });
-      }
-    }
-    
-    // Sort by score (highest first) and return category names
-    categoryScores.sort((a, b) => b.score - a.score);
-    const relevantCategories = categoryScores.map(item => item.category);
-    
-    // Add some fallback categories if we don't have enough relevant ones
-    const fallbackCategories = ['technology', 'business', 'general'];
-    for (const fallback of fallbackCategories) {
-      if (!relevantCategories.includes(fallback) && fallback !== dominantCategory) {
-        relevantCategories.push(fallback);
-      }
-    }
-    
-    apiLogger.info(`🎯 Relevant categories for keywords [${keywords.join(', ')}]: ${relevantCategories.slice(0, 5).join(', ')}`);
-    return relevantCategories;
-  }
-  
-  /**
-   * Check for semantic overlap between keywords and category keywords
-   * @param {string} keyword - Single keyword
-   * @param {string} categoryKeywords - Category keywords as string
-   * @returns {boolean} True if there's semantic overlap
-   */
-  hasSemanticOverlap(keyword, categoryKeywords) {
-    // Define semantic relationships
-    const semanticGroups = {
-      'planes': ['travel', 'transportation', 'aviation', 'flight'],
-      'aviation': ['travel', 'transportation', 'planes', 'flight'],
-      'aircraft': ['travel', 'transportation', 'planes', 'aviation'],
-      'flight': ['travel', 'transportation', 'planes', 'aviation'],
-      'cars': ['transportation', 'travel', 'automotive'],
-      'automotive': ['transportation', 'travel', 'cars'],
-      'technology': ['tech', 'digital', 'computer', 'innovation'],
-      'business': ['corporate', 'professional', 'office', 'work'],
-      'health': ['fitness', 'wellness', 'medical', 'healthcare'],
-      'sports': ['athletic', 'fitness', 'competition', 'training'],
-      'food': ['dining', 'restaurant', 'culinary', 'cuisine'],
-      'fashion': ['style', 'clothing', 'apparel', 'trendy'],
-      'luxury': ['premium', 'exclusive', 'high-end', 'sophisticated'],
-      'nature': ['outdoor', 'landscape', 'environmental', 'green'],
-      'urban': ['city', 'metropolitan', 'architecture', 'skyline'],
-      'industrial': ['manufacturing', 'factory', 'production', 'machinery']
-    };
-    
-    // Check if the keyword has semantic relationships
-    for (const [groupKeyword, relatedKeywords] of Object.entries(semanticGroups)) {
-      if (keyword.includes(groupKeyword) || groupKeyword.includes(keyword)) {
-        return relatedKeywords.some(related => categoryKeywords.includes(related));
-      }
-    }
-    
-    return false;
-  }
-  
-  /**
-   * Determine if image selection should be reset based on available images and usage
-   * @param {number} totalImages - Total number of available images
-   * @param {number} usedPercentage - Percentage of images already used
-   * @returns {boolean} True if selection should be reset
-   */
-  shouldResetImageSelection(totalImages, usedPercentage) {
-    // For very small image sets (1-3 images), reset more aggressively
-    if (totalImages <= 3) {
-      return usedPercentage > 0.5; // Reset if more than 50% used
-    }
-    
-    // For small image sets (4-10 images), reset when 70% used
-    if (totalImages <= 10) {
-      return usedPercentage > 0.7;
-    }
-    
-    // For larger image sets, use the original 80% threshold
-    return usedPercentage > 0.8;
-  }
-
 }
 
 // Export singleton instance
-export const unifiedContentEngine = new UnifiedContentEngine(); 
+export const unifiedContentEngine = new UnifiedContentEngine();

@@ -9,8 +9,7 @@ import { getUserSettings, updateIntelligenceMode, updateAutomationMode } from '.
 export function useUserSettings() {
   const { data: session, status } = useSession();
   const [settings, setSettings] = useState({
-    intelligence_mode: 'normal',
-    automation_mode: 'balance'
+    intelligence_mode: 'normal'
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -73,44 +72,14 @@ export function useUserSettings() {
     }
   }, [session?.user?.email, status]);
 
-  // Update automation mode
-  const updateAutomationModeSetting = useCallback(async (mode) => {
-    if (status !== 'authenticated' || !session?.user?.email) {
-      setError('You must be logged in to update settings');
-      return;
-    }
 
-    if (!['automated', 'balance', 'manual'].includes(mode)) {
-      setError('Invalid automation mode');
-      return;
-    }
-
-    try {
-      setSaveStatus('saving');
-      setError(null);
-      
-      const updatedSettings = await updateAutomationMode(session.user.email, mode);
-      setSettings(updatedSettings);
-      setSaveStatus('saved');
-      
-      // Reset status after 2 seconds
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
-      console.error('Error updating automation mode:', error);
-      setError(`Failed to update automation mode: ${error.message}`);
-      setSaveStatus('error');
-    }
-  }, [session?.user?.email, status]);
 
   // Get current intelligence mode
   const getIntelligenceMode = useCallback(() => {
     return settings.intelligence_mode || 'normal';
   }, [settings.intelligence_mode]);
 
-  // Get current automation mode
-  const getAutomationMode = useCallback(() => {
-    return settings.automation_mode || 'balance';
-  }, [settings.automation_mode]);
+
 
   // Check if intelligence mode is max
   const isMaxIntelligence = useCallback(() => {
@@ -120,10 +89,8 @@ export function useUserSettings() {
   return {
     settings,
     intelligenceMode: getIntelligenceMode(),
-    automationMode: getAutomationMode(),
     isMaxIntelligence: isMaxIntelligence(),
     updateIntelligenceMode: updateIntelligenceModeSetting,
-    updateAutomationMode: updateAutomationModeSetting,
     isLoading,
     error,
     saveStatus,

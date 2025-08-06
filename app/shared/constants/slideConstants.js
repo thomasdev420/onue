@@ -4,7 +4,7 @@
 
 export const SLIDE_CONFIG = {
   DEFAULT_RATIO: '9:16',
-  AVAILABLE_RATIOS: ['9:16', '16:9', '1:1', '4:5'],
+  AVAILABLE_RATIOS: ['9:16', '4:5', '1:1'],
   MAX_SLIDES: 50,
   MIN_SLIDES: 1,
   DEFAULT_TEXT_POSITION: { x: 50, y: 50 },

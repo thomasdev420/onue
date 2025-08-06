@@ -96,7 +96,7 @@ export default function MonthlyCalendar() {
           <ChevronLeft size={20} />
           <span>Previous Month</span>
         </button>
-        <h2 className="text-xl font-semibold">
+        <h2 className="text-xl font-semibold text-gray-900">
           {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </h2>
         <button

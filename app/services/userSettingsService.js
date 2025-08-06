@@ -48,8 +48,7 @@ async function createDefaultSettings(userId) {
     const supabase = getSupabase();
     const defaultSettings = {
       user_id: userId,
-      intelligence_mode: 'normal',
-      automation_mode: 'balance'
+      intelligence_mode: 'normal'
     };
 
     const { data, error } = await supabase
@@ -115,19 +114,7 @@ export async function updateIntelligenceMode(userId, mode) {
   return await updateUserSettings(userId, { intelligence_mode: mode });
 }
 
-/**
- * Update automation mode specifically
- * @param {string} userId - User's email
- * @param {string} mode - Automation mode ('automated', 'balance', or 'manual')
- * @returns {Promise<Object>} Updated settings object
- */
-export async function updateAutomationMode(userId, mode) {
-  if (!['automated', 'balance', 'manual'].includes(mode)) {
-    throw new Error('Automation mode must be "automated", "balance", or "manual"');
-  }
 
-  return await updateUserSettings(userId, { automation_mode: mode });
-}
 
 /**
  * Get intelligence mode for a user
@@ -144,17 +131,4 @@ export async function getIntelligenceMode(userId) {
   }
 }
 
-/**
- * Get automation mode for a user
- * @param {string} userId - User's email
- * @returns {Promise<string>} Automation mode ('automated', 'balance', or 'manual')
- */
-export async function getAutomationMode(userId) {
-  try {
-    const settings = await getUserSettings(userId);
-    return settings.automation_mode || 'balance';
-  } catch (error) {
-    console.error('Error getting automation mode:', error);
-    return 'balance'; // Default fallback
-  }
-} 
+ 

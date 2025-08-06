@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { useSession } from 'next-auth/react';
+import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 
 // Table component for analytics accounts
 function AccountAnalyticsModal({ open, onClose, account }) {
@@ -179,96 +181,75 @@ function AccountsTable({ data, onRowClick, isCollapsed }) {
   );
 }
 
-const mockAccounts = [
-  {
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    name: 'Study with Lily',
-    handle: '@studywithlily',
-    platform: 'tiktok',
-    type: 'Done For You',
-    status: '1 / 7 days',
-    statusType: 'progress',
-    followers: 0,
-    trend: null,
-    views: 0,
-  },
-  {
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    name: "Jake's Grind Time",
-    handle: '@jakesgrindtime',
-    platform: 'tiktok',
-    type: 'Done For You',
-    status: '3 / 7 days',
-    statusType: 'progress',
-    followers: 0,
-    trend: null,
-    views: 0,
-  },
-  {
-    avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
-    name: 'Mindful Emily',
-    handle: '@mindfulemily',
-    platform: 'tiktok',
-    type: 'Done For You',
-    status: 'Ready',
-    statusType: 'ready',
-    followers: 134000,
-    trend: 'up',
-    views: 4300000,
-  },
-  {
-    avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-    name: 'Study with Kevin',
-    handle: '@studywithkevin',
-    platform: 'tiktok',
-    type: 'Imported',
-    status: 'Ready',
-    statusType: 'ready',
-    followers: 98000,
-    trend: 'up',
-    views: 3200000,
-  },
-  {
-    avatar: 'https://randomuser.me/api/portraits/women/12.jpg',
-    name: 'Maya Does Focus',
-    handle: '@mayadoesfocus',
-    platform: 'tiktok',
-    type: 'Done For You',
-    status: 'Ready',
-    statusType: 'ready',
-    followers: 156000,
-    trend: 'up',
-    views: 5200000,
-  },
-  {
-    avatar: 'https://randomuser.me/api/portraits/men/12.jpg',
-    name: "Austin's Big Brain",
-    handle: '@austinsbigbrain',
-    platform: 'tiktok',
-    type: 'Imported',
-    status: 'Ready',
-    statusType: 'ready',
-    followers: 189000,
-    trend: 'up',
-    views: 6500000,
-  },
-  {
-    avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
-    name: 'Study with Sarah',
-    handle: '@studywithsarah',
-    platform: 'tiktok',
-    type: 'Done For You',
-    status: 'Ready',
-    statusType: 'ready',
-    followers: 245000,
-    trend: 'up',
-    views: 8900000,
-  },
-];
-
-export default function Analytics({ accounts = mockAccounts, isCollapsed }) {
+export default function Analytics({ isCollapsed }) {
+  const { data: session, status } = useSession();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [userAccounts, setUserAccounts] = useState([]);
+  const [businessContext, setBusinessContext] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch business context and create user accounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Get business context
+        const context = await getCurrentUserBusinessContext();
+        setBusinessContext(context);
+        
+        // Create user accounts based on session and business context
+        const accounts = [];
+        
+        if (session?.user) {
+          // Main user account
+          accounts.push({
+            avatar: session.user.image || '/default-profile.png',
+            name: session.user.name || 'Your Account',
+            handle: `@${session.user.email?.split('@')[0] || 'user'}`,
+            platform: 'tiktok',
+            type: 'Done For You',
+            status: 'Ready',
+            statusType: 'ready',
+            followers: null, // Will be added shortly
+            trend: null,
+            views: null, // Will be added shortly
+          });
+          
+          // Business account if business context exists
+          if (context?.companyName && context.companyName !== 'Your Business') {
+            accounts.push({
+              avatar: '/default-profile.png',
+              name: context.companyName,
+              handle: `@${context.companyName.toLowerCase().replace(/\s+/g, '')}`,
+              platform: 'tiktok',
+              type: 'Done For You',
+              status: 'Ready',
+              statusType: 'ready',
+              followers: null, // Will be added shortly
+              trend: null,
+              views: null, // Will be added shortly
+            });
+          }
+        }
+        
+        setUserAccounts(accounts);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // Fallback to empty accounts
+        setUserAccounts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (status === 'authenticated' || process.env.NODE_ENV === 'development') {
+      fetchUserData();
+    } else {
+      setIsLoading(false);
+    }
+  }, [session, status]);
 
   const handleRowClick = (account) => {
     setSelectedAccount(account);
@@ -280,13 +261,39 @@ export default function Analytics({ accounts = mockAccounts, isCollapsed }) {
     setSelectedAccount(null);
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-4 md:p-8 bg-[#FAF9F6] font-inter">
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-8 tracking-tight">Analytics</h1>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your analytics...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-4 md:p-8 bg-[#FAF9F6] font-inter">
       <h1 className="text-3xl font-extrabold text-gray-800 mb-8 tracking-tight">Analytics</h1>
       <section className="space-y-4 max-w-6xl mx-auto">
         {/* Dashboard Table Section */}
         <div className="mt-10">
-          <AccountsTable data={accounts} onRowClick={handleRowClick} isCollapsed={isCollapsed} />
+          {userAccounts.length > 0 ? (
+            <AccountsTable data={userAccounts} onRowClick={handleRowClick} isCollapsed={isCollapsed} />
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-gray-500 mb-4">
+                <svg width="64" height="64" fill="none" viewBox="0 0 24 24" className="mx-auto mb-4">
+                  <path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">No Analytics Data Yet</h3>
+                <p className="text-gray-500">Your account analytics will appear here once you start creating content.</p>
+              </div>
+            </div>
+          )}
         </div>
         <AccountAnalyticsModal open={modalOpen} onClose={handleModalClose} account={selectedAccount} />
       </section>

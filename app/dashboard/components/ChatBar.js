@@ -160,134 +160,8 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
     }
 
     try {
-      // Detect content creation intent
-      const lowerMessage = userMessage.toLowerCase();
-      const isSlideRequest = lowerMessage.includes('slide') || lowerMessage.includes('carousel') || lowerMessage.includes('presentation') || lowerMessage.includes('deck') || lowerMessage.includes('fact') || lowerMessage.includes('reason') || lowerMessage.includes('tip') || lowerMessage.includes('secret') || lowerMessage.includes('idea') || lowerMessage.includes('lesson') || lowerMessage.includes('way') || lowerMessage.includes('method') || lowerMessage.includes('strategy') || lowerMessage.includes('thing') || lowerMessage.includes('step');
-      const isVideoRequest = lowerMessage.includes('video') || lowerMessage.includes('reel') || lowerMessage.includes('tiktok') || lowerMessage.includes('short');
-      const isTextRequest = lowerMessage.includes('text') || lowerMessage.includes('post') || lowerMessage.includes('caption') || lowerMessage.includes('copy') || lowerMessage.includes('content') || lowerMessage.includes('write');
-      const isImageRequest = lowerMessage.includes('image') || lowerMessage.includes('avatar') || lowerMessage.includes('picture') || lowerMessage.includes('photo') || lowerMessage.includes('visual');
-
-      if (isSlideRequest || isVideoRequest || isTextRequest || isImageRequest) {
-        // Determine which page to redirect to
-        let contentType = 'slides';
-        let apiUrl = '/api/generate-slides';
-        let redirectUrl = '/dashboard/slides';
-        if (isVideoRequest) {
-          contentType = 'videos';
-          apiUrl = '/api/generate-slides'; // Use same API for now
-          redirectUrl = '/dashboard/videos';
-        } else if (isTextRequest) {
-          contentType = 'text';
-          apiUrl = '/api/generate-slides'; // Use same API for now
-          redirectUrl = '/dashboard/text';
-        } else if (isImageRequest) {
-          contentType = 'images';
-          apiUrl = '/api/generate-slides'; // Use same API for now
-          redirectUrl = '/dashboard/images';
-        }
-        
-        // Extract slide count from user message or use default
-        let finalSlideCount = 5; // Default to 5 slides
-        
-        // Try multiple patterns to extract slide count
-        let slideCountMatch = userMessage.match(/(\d+)\s*(?:slides?|slide)/i);
-        if (slideCountMatch) {
-          const requestedCount = parseInt(slideCountMatch[1]);
-          if (requestedCount >= 1 && requestedCount <= 10) {
-            finalSlideCount = requestedCount;
-          }
-        } else {
-          // Try to extract numbers for prompts like '3 facts', '5 reasons', etc.
-          const genericCountMatch = userMessage.match(/(\d+)\s*(?:facts?|reasons?|tips?|secrets?|ideas?|lessons?|ways|methods|strategies|things|steps)/i);
-          if (genericCountMatch) {
-            const requestedCount = parseInt(genericCountMatch[1]);
-            if (requestedCount >= 1 && requestedCount <= 10) {
-              finalSlideCount = requestedCount + 1; // +1 for intro slide
-            }
-          }
-        }
-        
-        // Generate content using unified content engine
-        console.log('ChatBar: Generating content with params:', {
-          prompt: userMessage,
-          slideCount: finalSlideCount,
-          contentType,
-          apiUrl
-        });
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            prompt: userMessage,
-            slideCount: finalSlideCount,
-            businessContext: businessContext,
-            userInfo: {
-              name: effectiveSession?.user?.name,
-              email: effectiveSession?.user?.email
-            },
-            forceGenerate: true // Use unified content engine
-          }),
-        });
-        
-        console.log('ChatBar: API response status:', response.status);
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('ChatBar: API error:', errorData);
-          throw new Error(errorData.error || `Failed to generate ${contentType}`);
-        }
-        
-        const data = await response.json();
-        console.log('ChatBar: API response data:', data);
-        
-        // Store the result for the content page to pick up
-        try {
-          if (contentType === 'slides') {
-            localStorage.setItem('aiGeneratedSlides', JSON.stringify(data.slides));
-            console.log('ChatBar: Stored slides in localStorage');
-          } else if (contentType === 'videos') {
-            localStorage.setItem('aiGeneratedVideos', JSON.stringify(data.slides));
-            console.log('ChatBar: Stored videos in localStorage');
-          } else if (contentType === 'text') {
-            localStorage.setItem('aiGeneratedTexts', JSON.stringify(data.slides));
-            console.log('ChatBar: Stored texts in localStorage');
-          } else if (contentType === 'images') {
-            localStorage.setItem('aiGeneratedImages', JSON.stringify(data.slides));
-            console.log('ChatBar: Stored images in localStorage');
-          }
-        } catch (storageError) {
-          console.error('ChatBar: localStorage error:', storageError);
-          // Continue with redirect even if localStorage fails
-        }
-        
-        // Show success message and redirect to content page
-        const aiMessage = {
-          id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
-          type: 'ai',
-          content: `I've created your ${contentType} based on your request. Redirecting you to view them...`,
-          timestamp: new Date(),
-          isContentReady: true
-        };
-        setChatHistory(prev => [...prev, aiMessage]);
-        setPendingContent({ type: contentType, url: redirectUrl });
-        setIsGenerating(false);
-        
-        console.log('ChatBar: Content generated successfully, redirecting to:', redirectUrl);
-        console.log('ChatBar: Stored data in localStorage for:', contentType);
-        
-        // Automatically redirect after a short delay to ensure localStorage is set
-        setTimeout(() => {
-          console.log('ChatBar: Executing redirect to:', redirectUrl);
-          // Double-check that localStorage was set
-          const storedData = localStorage.getItem(`aiGenerated${contentType.charAt(0).toUpperCase() + contentType.slice(1)}`);
-          console.log('ChatBar: Verification - stored data exists:', !!storedData);
-          router.push(redirectUrl);
-          setPendingContent(null);
-        }, 2000);
-        
-        return;
-      }
+      // Use chat API for all conversations - no automatic content creation
+      // Let the AI have natural conversations about slides, videos, etc.
 
       // For general questions, use the chat API
       const response = await fetch('/api/ai-chat', {
@@ -515,7 +389,7 @@ export default function ChatBar({ actions = [], docked = false, onMessageSubmit 
               onKeyPress={handleKeyPress}
               className="min-h-[40px] max-h-32 resize-none bg-transparent outline-none text-base text-gray-900 placeholder-gray-400 border-none flex-1"
               placeholder={effectiveStatus === 'authenticated' 
-                ? "What should we create today?..."
+                ? "Let's get you some users."
                 : "Please sign in to start creating content"
               }
               disabled={isGenerating || effectiveStatus !== 'authenticated'}

@@ -42,7 +42,7 @@ export function useSlideManagement({ slides, setSlides, activeSlideIndex, setAct
 
   const changeRatio = useCallback((slideIndex) => {
     const currentRatio = slides[slideIndex].ratio;
-    const ratios = ['16:9', '4:3', '1:1', '9:16'];
+    const ratios = ['9:16', '4:5', '1:1'];
     const currentIndex = ratios.indexOf(currentRatio);
     const nextIndex = (currentIndex + 1) % ratios.length;
     updateSlide(slideIndex, { ratio: ratios[nextIndex] });
@@ -50,6 +50,21 @@ export function useSlideManagement({ slides, setSlides, activeSlideIndex, setAct
 
   const handleSelectImageForSlide = useCallback((image) => {
     console.log('handleSelectImageForSlide called with:', image);
+    
+    // Handle color backgrounds
+    if (image.type === 'color') {
+      console.log('Updating slide with color background:', image);
+      updateSlide(activeSlideIndex, { 
+        image: null, 
+        backgroundColor: image.hex,
+        colorName: image.name,
+        ratio: '9:16' 
+      });
+      console.log('Color background update completed');
+      return;
+    }
+    
+    // Handle regular images
     const imageToUse = { ...image, image_url: image.image_url || image.url };
     console.log('Updating slide with image:', imageToUse);
     updateSlide(activeSlideIndex, { image: imageToUse, ratio: '9:16' });

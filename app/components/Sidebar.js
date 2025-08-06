@@ -5,8 +5,7 @@ import Link from "next/link";
 import Image from 'next/image';
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload, Shield } from 'lucide-react';
-import ModeToggle from '../dashboard/components/ModeToggle';
+import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Wand2, Menu, Sparkles, PartyPopper, Upload, Shield, Search } from 'lucide-react';
 import SidebarCreditDisplay from './SidebarCreditDisplay';
 
 export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5FD' }) {
@@ -14,43 +13,9 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5
   const user = session?.user;
   const pathname = usePathname();
   const router = useRouter();
-  const [mode, setMode] = React.useState('slides');
-  const [showModeModal, setShowModeModal] = React.useState(false);
-
-  // Sync mode with current pathname
-  React.useEffect(() => {
-    if (pathname.includes('/dashboard/videos')) {
-      setMode('videos');
-    } else if (pathname.includes('/dashboard/text')) {
-      setMode('text');
-    } else if (pathname.includes('/dashboard/images')) {
-      setMode('avatars');
-    } else if (pathname.includes('/dashboard/slides')) {
-      setMode('slides');
-    }
-  }, [pathname]);
-
   const handleRevokeDevAccess = () => {
     localStorage.removeItem("devAccessGranted");
     router.push('/');
-  };
-
-  // Handle mode navigation
-  const handleModeChange = (newMode) => {
-    setShowModeModal(false);
-    setMode(newMode);
-    
-    const routeMap = {
-      videos: '/dashboard/videos',
-      text: '/dashboard/text',
-      avatars: '/dashboard/images',
-      slides: '/dashboard/slides',
-    };
-    
-    const targetRoute = routeMap[newMode];
-    if (targetRoute) {
-      router.push(targetRoute);
-    }
   };
 
   return (
@@ -97,9 +62,10 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5
           <nav className="mt-2 px-4 flex-1">
             <ul className="space-y-1 text-sm">
               <SidebarLink href="/dashboard" icon={<Home size={18} />} label="Home" currentPath={pathname} isCollapsed={isCollapsed} />
-              <SidebarLink href="/dashboard/slides" icon={<Video size={18} />} label="Content Generator" currentPath={pathname} isCollapsed={isCollapsed} pageColor={pageColor} setShowModeModal={setShowModeModal} isContentPage={pathname.includes('/dashboard/slides') || pathname.includes('/dashboard/videos') || pathname.includes('/dashboard/images') || pathname.includes('/dashboard/text')} />
-              <SidebarLink href="/dashboard/bulk-upload" icon={<Upload size={18} />} label="Bulk Upload" currentPath={pathname} isCollapsed={isCollapsed} />
-              <SidebarLink href="/dashboard/schedule" icon={<Calendar size={18} />} label="Schedule" currentPath={pathname} isCollapsed={isCollapsed} />
+              <SidebarLink href="/dashboard/research" icon={<Search size={18} />} label="Research" currentPath={pathname} isCollapsed={isCollapsed} />
+              <SidebarLink href="/dashboard/slides" icon={<Video size={18} />} label="Content Generator" currentPath={pathname} isCollapsed={isCollapsed} />
+              <SidebarLink href="/dashboard/bulk-upload" icon={<Upload size={18} />} label="Media" currentPath={pathname} isCollapsed={isCollapsed} />
+              <SidebarLink href="/dashboard/accounts" icon={<User size={18} />} label="Accounts" currentPath={pathname} isCollapsed={isCollapsed} />
               <SidebarLink href="/dashboard/analytics" icon={<Megaphone size={18} />} label="Analytics" currentPath={pathname} isCollapsed={isCollapsed} />
               <div className="mt-4"></div>
               <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} support />
@@ -211,44 +177,19 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#93C5
         </div>
       </aside>
 
-      {/* ModeToggle Modal */}
-      {showModeModal && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: 'rgba(0,0,0,0.25)',
-            backdropFilter: 'blur(10px)',
-            zIndex: 1200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-          onClick={() => setShowModeModal(false)}
-        >
-          <div
-            style={{ position: 'relative' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <ModeToggle value={mode} onChange={handleModeChange} />
-          </div>
-        </div>
-      )}
+
     </>
   );
 }
 
-function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, settings, pageColor, setShowModeModal, isContentPage }) {
+function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, settings }) {
   // Special logic for Content Generator: active on any content page
   const isContentGenerator = label === "Content Generator";
   const isContentActive = isContentGenerator && (
     currentPath.startsWith('/dashboard/slides') ||
     currentPath.startsWith('/dashboard/videos') ||
     currentPath.startsWith('/dashboard/images') ||
-    currentPath.startsWith('/dashboard/text')
+    currentPath.startsWith('/dashboard/meme')
   );
 
   const isActive = isContentActive || (
@@ -268,7 +209,7 @@ function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, set
   // For Content Generator, determine the correct href based on current path
   const getContentGeneratorHref = () => {
     if (currentPath.includes('/dashboard/videos')) return '/dashboard/videos';
-    if (currentPath.includes('/dashboard/text')) return '/dashboard/text';
+    if (currentPath.includes('/dashboard/meme')) return '/dashboard/meme';
     if (currentPath.includes('/dashboard/images')) return '/dashboard/images';
     if (currentPath.includes('/dashboard/slides')) return '/dashboard/slides';
     return '/dashboard/slides'; // default fallback
@@ -281,44 +222,7 @@ function SidebarLink({ href, icon, label, currentPath, isCollapsed, support, set
       <Link href={finalHref}>
         <span className={linkClass}>
           {icon}
-          {!isCollapsed && (
-            <div className="flex items-center justify-between w-full">
-              <span>{label}</span>
-              {isContentGenerator && isContentPage && (
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowModeModal(true);
-                  }}
-                  style={{
-                    background: pageColor,
-                    border: 'none',
-                    borderRadius: '9999px',
-                    boxShadow: `0 2px 8px 0 ${pageColor}22, 0 0 0 1px ${pageColor}11`,
-                    color: '#fff',
-                    minWidth: 36,
-                    height: 20,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s ease',
-                    outline: 'none',
-                    borderWidth: 0,
-                    marginLeft: '8px',
-                    cursor: 'pointer',
-                    fontSize: 11,
-                    fontWeight: 500,
-                    padding: '0 10px',
-                    letterSpacing: '0.04em',
-                  }}
-                  aria-label="Switch content type"
-                >
-                  mode
-                </button>
-              )}
-            </div>
-          )}
+          {!isCollapsed && <span>{label}</span>}
         </span>
       </Link>
     </li>

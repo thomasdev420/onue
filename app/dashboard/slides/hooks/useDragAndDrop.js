@@ -58,19 +58,16 @@ export function useDragAndDrop({ slides, activeSlideIndex, onSlideUpdate, imageC
     let newY = initialTextPos.y + percentDy;
     
     if (elementWidth > 0 && elementHeight > 0) {
-      const halfWidthPercent = (elementWidth / imageContainerRect.width) * 50;
-      const halfHeightPercent = (elementHeight / imageContainerRect.height) * 50;
-      
-      // Magnetic snapping to vertical center (50%)
+      // Magnetic snapping to vertical center (50%) - optional for better alignment
       const snapThreshold = 5; // 5% threshold
       
       if (Math.abs(newX - 50) < snapThreshold) {
         newX = 50;
       }
       
-      // Clamp position within the container bounds (0-100%)
-      newX = Math.max(halfWidthPercent, Math.min(newX, 100 - halfWidthPercent));
-      newY = Math.max(halfHeightPercent, Math.min(newY, 100 - halfHeightPercent));
+      // Allow full range of movement (0-100%) - users can move text anywhere
+      newX = Math.max(0, Math.min(newX, 100));
+      newY = Math.max(0, Math.min(newY, 100));
     }
     
     const newTexts = slides[activeSlideIndex].texts.map((text, i) => 

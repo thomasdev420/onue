@@ -7,18 +7,19 @@ import { usePersistence } from '../../services/persistenceService';
 import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 import SaveStatusIndicator from '../../components/SaveStatusIndicator';
 import SlideCanvas from '../slides/components/SlideCanvas';
-import ContentModal from '../slides/components/ContentModal';
+import ColorBackgroundModal from '../slides/components/ColorBackgroundModal';
 import PromptModal from '../slides/components/PromptModal';
+import BottomSections from '../slides/components/BottomSections';
 import { useSlideManagement } from '../slides/hooks/useSlideManagement';
 import { useSlideNavigation } from '../slides/hooks/useSlideNavigation';
 import { validateSlide } from '../../utils/validation';
 import MonthlyCalendar from '../schedule/components/MonthlyCalendar';
-import ModeToggle from '../components/ModeToggle';
+import ModeToggle from '../components/ModeToggle.jsx';
 import { useRouter, usePathname } from 'next/navigation';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-export default function TextEditor() {
+export default function MemeEditor() {
   const { data: session, status } = useSession();
   const effectiveStatus = isDev ? 'authenticated' : status;
   const effectiveSession = useMemo(() => {
@@ -32,7 +33,7 @@ export default function TextEditor() {
   const [isLoading, setIsLoading] = useState(true);
   const [contentType, setContentType] = useState('stock');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isContentModalOpen, setIsContentModalOpen] = useState(false);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const [error, setError] = useState(null);
   const [businessContext, setBusinessContext] = useState(null);
@@ -40,14 +41,14 @@ export default function TextEditor() {
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [scheduledDate, setScheduledDate] = useState(null);
   const pathname = usePathname();
-  const [mode, setMode] = useState('text');
+  const [mode, setMode] = useState('meme');
   
   // Determine current mode based on route
   useEffect(() => {
     if (pathname.includes('/dashboard/videos')) {
       setMode('videos');
-    } else if (pathname.includes('/dashboard/text')) {
-      setMode('text');
+    } else if (pathname.includes('/dashboard/meme')) {
+      setMode('meme');
     } else if (pathname.includes('/dashboard/images')) {
       setMode('avatars');
     } else if (pathname.includes('/dashboard/slides')) {
@@ -60,40 +61,40 @@ export default function TextEditor() {
 
 
 
-  // Use persistence hook for texts - INDEPENDENT from slides
-  const defaultTexts = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
+  // Use persistence hook for memes - INDEPENDENT from slides
+  const defaultMemes = [{ id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`, image: null, texts: [], ratio: '9:16' }];
   const { 
-    data: texts, 
-    updateData: setTexts, 
-    resetData: resetTexts,
+    data: memes, 
+    updateData: setMemes, 
+    resetData: resetMemes,
     saveStatus, 
-    isLoading: isLoadingTexts 
-  } = usePersistence('texts', defaultTexts);
+    isLoading: isLoadingMemes 
+  } = usePersistence('memes', defaultMemes);
 
   const { data: userImages } = usePersistence('userImages', []);
 
-  // Active text state
-  const [activeTextIndex, setActiveTextIndex] = useState(0);
+  // Active meme state
+  const [activeMemeIndex, setActiveMemeIndex] = useState(0);
 
-  // Custom hooks for text management
+  // Custom hooks for meme management
   const {
-    updateSlide: updateText,
-    addSlide: addText,
-    deleteSlide: deleteText,
+    updateSlide: updateMeme,
+    addSlide: addMeme,
+    deleteSlide: deleteMeme,
     changeRatio,
-    handleSelectImageForSlide: handleSelectImageForText
+    handleSelectImageForSlide: handleSelectImageForMeme
   } = useSlideManagement({
-    slides: texts,
-    setSlides: setTexts,
-    activeSlideIndex: activeTextIndex,
-    setActiveSlideIndex: setActiveTextIndex
+    slides: memes,
+    setSlides: setMemes,
+    activeSlideIndex: activeMemeIndex,
+    setActiveSlideIndex: setActiveMemeIndex
   });
 
   // Navigation hook
   useSlideNavigation({
-    activeSlideIndex: activeTextIndex,
-    setActiveSlideIndex: setActiveTextIndex,
-    slidesLength: texts.length
+    activeSlideIndex: activeMemeIndex,
+    setActiveSlideIndex: setActiveMemeIndex,
+    slidesLength: memes.length
   });
 
   // Fetch images from database
@@ -154,14 +155,14 @@ export default function TextEditor() {
 
   const handleFontSizeIncrease = (slideIndex) => {
     try {
-      const currentSlide = texts[slideIndex];
+      const currentSlide = memes[slideIndex];
       if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
         return;
       }
 
       const updatedTexts = currentSlide.texts.map(text => {
         const currentStyle = text.style || {};
-        const currentFontSize = parseInt(currentStyle.fontSize) || 16;
+        const currentFontSize = parseInt(currentStyle.fontSize) || 14;
         const newFontSize = Math.min(currentFontSize + 2, 48); // Max 48px
         
         return {
@@ -173,7 +174,7 @@ export default function TextEditor() {
         };
       });
 
-      updateText(slideIndex, { texts: updatedTexts });
+      updateMeme(slideIndex, { texts: updatedTexts });
     } catch (error) {
       console.error('Error increasing font size:', error);
       setError('Failed to increase font size. Please try again.');
@@ -182,15 +183,15 @@ export default function TextEditor() {
 
   const handleFontSizeDecrease = (slideIndex) => {
     try {
-      const currentSlide = texts[slideIndex];
+      const currentSlide = memes[slideIndex];
       if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
         return;
       }
 
       const updatedTexts = currentSlide.texts.map(text => {
         const currentStyle = text.style || {};
-        const currentFontSize = parseInt(currentStyle.fontSize) || 16;
-        const newFontSize = Math.max(currentFontSize - 2, 8); // Min 8px
+        const currentFontSize = parseInt(currentStyle.fontSize) || 14;
+        const newFontSize = Math.max(currentFontSize - 2, 6); // Min 6px
         
         return {
           ...text,
@@ -201,10 +202,145 @@ export default function TextEditor() {
         };
       });
 
-      updateText(slideIndex, { texts: updatedTexts });
+      updateMeme(slideIndex, { texts: updatedTexts });
     } catch (error) {
       console.error('Error decreasing font size:', error);
       setError('Failed to decrease font size. Please try again.');
+    }
+  };
+
+  const handleFontChange = (slideIndex, textIndex, fontFamily) => {
+    try {
+      const currentSlide = memes[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              fontFamily: fontFamily
+            }
+          };
+        }
+        return text;
+      });
+
+      updateMeme(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error changing font:', error);
+      setError('Failed to change font. Please try again.');
+    }
+  };
+
+  const handleColorChange = (slideIndex, textIndex, color) => {
+    try {
+      const currentSlide = memes[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              color: color
+            }
+          };
+        }
+        return text;
+      });
+
+      updateMeme(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error changing color:', error);
+      setError('Failed to change color. Please try again.');
+    }
+  };
+
+  const handleBoldToggle = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = memes[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              fontWeight: text.style?.fontWeight === 'bold' ? 'normal' : 'bold'
+            }
+          };
+        }
+        return text;
+      });
+
+      updateMeme(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error toggling bold:', error);
+      setError('Failed to toggle bold. Please try again.');
+    }
+  };
+
+  const handleItalicToggle = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = memes[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              fontStyle: text.style?.fontStyle === 'italic' ? 'normal' : 'italic'
+            }
+          };
+        }
+        return text;
+      });
+
+      updateMeme(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error toggling italic:', error);
+      setError('Failed to toggle italic. Please try again.');
+    }
+  };
+
+  const handleCaptionToggle = (slideIndex, textIndex) => {
+    try {
+      const currentSlide = memes[slideIndex];
+      if (!currentSlide || !currentSlide.texts || currentSlide.texts.length === 0) {
+        return;
+      }
+
+      const updatedTexts = currentSlide.texts.map((text, index) => {
+        if (index === textIndex) {
+          return {
+            ...text,
+            style: {
+              ...text.style,
+              caption: !text.style?.caption
+            }
+          };
+        }
+        return text;
+      });
+
+      updateMeme(slideIndex, { texts: updatedTexts });
+    } catch (error) {
+      console.error('Error toggling caption:', error);
+      setError('Failed to toggle caption. Please try again.');
     }
   };
 
@@ -215,7 +351,7 @@ export default function TextEditor() {
     
     const routeMap = {
       videos: '/dashboard/videos',
-      text: '/dashboard/text',
+      meme: '/dashboard/meme',
       avatars: '/dashboard/images',
       slides: '/dashboard/slides',
     };
@@ -226,13 +362,40 @@ export default function TextEditor() {
     }
   };
 
-  // Add a guard to prevent rendering with invalid text data
-  if (isLoadingTexts || !texts || texts.length === 0) {
+  const handleSlideReorder = (sourceIndex, targetIndex) => {
+    const newMemes = [...memes];
+    const [movedMeme] = newMemes.splice(sourceIndex, 1);
+    newMemes.splice(targetIndex, 0, movedMeme);
+    setMemes(newMemes);
+  };
+
+  const handleMusicSelect = (music) => {
+    console.log('Selected music:', music);
+    // Store selected music in meme data
+    const updatedMemes = memes.map((meme, index) => {
+      if (index === activeMemeIndex) {
+        return {
+          ...meme,
+          selectedMusic: music
+        };
+      }
+      return meme;
+    });
+    setMemes(updatedMemes);
+  };
+
+  const handleUpload = () => {
+    console.log('Upload button clicked');
+    // TODO: Implement upload functionality
+  };
+
+  // Add a guard to prevent rendering with invalid meme data
+  if (isLoadingMemes || !memes || memes.length === 0) {
     return (
       <div className="p-8">
-        <h1 className="text-2xl font-bold text-gray-800 mb-8">Text Editor</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-8">Meme Editor</h1>
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <p className="text-gray-600">Loading your texts...</p>
+          <p className="text-gray-600">Loading your memes...</p>
         </div>
       </div>
     );
@@ -240,13 +403,13 @@ export default function TextEditor() {
 
   const modeLabelMap = {
     videos: 'Videos',
-    text: 'Text',
+    meme: 'Meme',
     avatars: 'Avatars',
     slides: 'Slides',
   };
   const modeColorMap = {
     videos: '#6366F1', // Softer blue
-    text: '#DC2626', // Softer red
+    meme: '#DC2626', // Softer red
     avatars: '#9333EA', // Softer purple
     slides: '#059669', // Softer green
   };
@@ -294,28 +457,24 @@ export default function TextEditor() {
           </div>
         </div>
       )}
-      <ContentModal
-        isOpen={isContentModalOpen}
-        onClose={() => setIsContentModalOpen(false)}
-        onImageSelect={handleSelectImageForText}
-        libraryImages={libraryImages}
-        userImages={userImages}
-        contentType={contentType}
-        setContentType={setContentType}
+      <ColorBackgroundModal
+        isOpen={isColorModalOpen}
+        onClose={() => setIsColorModalOpen(false)}
+        onColorSelect={handleSelectImageForMeme}
       />
       <PromptModal
         isOpen={isPromptModalOpen}
         onClose={() => {
           setIsPromptModalOpen(false);
         }}
-        onSubmit={(generatedTexts) => {
-          setTexts(generatedTexts);
+        onSubmit={(generatedMemes) => {
+          setMemes(generatedMemes);
           setIsPromptModalOpen(false);
         }}
         businessContext={businessContext}
-        existingSlides={texts}
-        mode="texts"
-
+        existingSlides={memes}
+        mode="meme"
+        libraryImages={libraryImages}
       />
       <div style={{ 
         display: "flex", 
@@ -330,18 +489,52 @@ export default function TextEditor() {
           flexDirection: "column",
           position: "relative"
         }}>
+          {/* Creative Mode Button - Positioned at the top of the canvas area */}
+          <div className="flex justify-center mb-4" style={{ position: 'absolute', top: '5px', left: '50%', transform: 'translateX(-50%)', zIndex: 10 }}>
+            <button
+              onClick={() => setShowModeModal(true)}
+              style={{
+                background: `${modeColorMap[mode] || '#DC2626'}20`,
+                border: `1px solid ${modeColorMap[mode] || '#DC2626'}40`,
+                borderRadius: '8px',
+                boxShadow: '0 1px 3px 0 rgba(0,0,0,0.1)',
+                color: modeColorMap[mode] || '#DC2626',
+                minWidth: 80,
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                outline: 'none',
+                cursor: 'pointer',
+                fontSize: 12,
+                fontWeight: 500,
+                padding: '0 12px',
+                letterSpacing: '0.02em',
+              }}
+              aria-label="Switch content type"
+            >
+              {modeLabelMap[mode] || 'Meme'}
+            </button>
+          </div>
           <SlideCanvas
-            slides={texts}
-            activeSlideIndex={activeTextIndex}
-            onSlideSelect={setActiveTextIndex}
-            onSlideUpdate={(slideIndex, updatedSlide) => updateText(slideIndex, updatedSlide)}
-            onAddSlide={addText}
-            onDeleteSlide={deleteText}
+            slides={memes}
+            activeSlideIndex={activeMemeIndex}
+            onSlideSelect={setActiveMemeIndex}
+            onSlideUpdate={(slideIndex, updatedSlide) => updateMeme(slideIndex, updatedSlide)}
+            onAddSlide={addMeme}
+            onDeleteSlide={deleteMeme}
             onRatioChange={(slideIndex) => changeRatio(slideIndex)}
-            onContentModalOpen={() => setIsContentModalOpen(true)}
+            onContentModalOpen={() => setIsColorModalOpen(true)}
             onPromptModalOpen={() => setIsPromptModalOpen(true)}
             onFontSizeIncrease={handleFontSizeIncrease}
             onFontSizeDecrease={handleFontSizeDecrease}
+            onFontChange={handleFontChange}
+            onColorChange={handleColorChange}
+            onBoldToggle={handleBoldToggle}
+            onItalicToggle={handleItalicToggle}
+            onCaptionToggle={handleCaptionToggle}
+            onMusicSelect={handleMusicSelect}
             modeColor={modeColorMap[mode] || '#DC2626'}
           />
         </div>
@@ -361,12 +554,21 @@ export default function TextEditor() {
               setScheduledDate(date);
               setIsScheduleModalOpen(false);
               // Save to localStorage for now
-              localStorage.setItem('scheduledContent', JSON.stringify({ date, texts }));
+              localStorage.setItem('scheduledContent', JSON.stringify({ date, memes }));
               alert(`Content scheduled for ${date.toLocaleDateString()}`);
             }} />
           </div>
         </div>
       )}
+
+      {/* Bottom Sections */}
+      <BottomSections
+        slides={memes}
+        activeSlideIndex={activeMemeIndex}
+        onSlideSelect={setActiveMemeIndex}
+        onSlideReorder={handleSlideReorder}
+      />
+
     </>
   );
 } 

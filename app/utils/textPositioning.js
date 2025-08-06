@@ -1,9 +1,9 @@
 /**
  * Smart text positioning utility to prevent text overlaps
  * 
- * IMPORTANT: AI-generated captions are restricted from appearing in the top 30% of slides
- * (y <= 30). Users can still manually drag text to this area, but AI generation will
- * avoid it to preserve space for user-added content.
+ * IMPORTANT: AI-generated text is restricted to center and above-center positions only
+ * (x = 50, y between 35-65). Users can still manually drag text anywhere, but AI 
+ * generation will stay centered to ensure consistent, professional appearance.
  */
 
 import { isOverlapping } from '../shared/utils/overlapDetection.js';
@@ -12,43 +12,29 @@ import { isOverlapping } from '../shared/utils/overlapDetection.js';
 // Note: Top zones (y <= 30) are excluded to prevent AI-generated captions from appearing
 // in the top 30% of slides, while still allowing manual user positioning
 const POSITIONING_ZONES = {
-  '9:16': { // Vertical/Portrait
+  '9:16': { // Vertical/Portrait - AI text: center and above center only
     zones: [
-      { x: 50, y: 60, name: 'just-below-middle' },
-      { x: 50, y: 65, name: 'lower-middle' },
-      { x: 50, y: 85, name: 'bottom' },
-      { x: 25, y: 50, name: 'left' },
-      { x: 75, y: 50, name: 'right' }
+      { x: 50, y: 40, name: 'center-above-middle' },
+      { x: 50, y: 50, name: 'center-middle' },
+      { x: 50, y: 60, name: 'center-below-middle' }
     ],
-    spacing: 20
+    spacing: 35
   },
-  '16:9': { // Horizontal/Landscape
+  '4:5': { // Portrait/Landscape hybrid - AI text: center and above center only
     zones: [
-      { x: 50, y: 60, name: 'just-below-middle' },
-      { x: 50, y: 80, name: 'bottom' },
-      { x: 20, y: 50, name: 'left' },
-      { x: 80, y: 50, name: 'right' }
+      { x: 50, y: 45, name: 'center-above-middle' },
+      { x: 50, y: 55, name: 'center-middle' },
+      { x: 50, y: 65, name: 'center-below-middle' }
     ],
-    spacing: 25
+    spacing: 35
   },
-  '1:1': { // Square
+  '1:1': { // Square - AI text: center and above center only
     zones: [
-      { x: 50, y: 60, name: 'just-below-middle' },
-      { x: 50, y: 75, name: 'bottom' },
-      { x: 25, y: 50, name: 'left' },
-      { x: 75, y: 50, name: 'right' }
+      { x: 50, y: 45, name: 'center-above-middle' },
+      { x: 50, y: 55, name: 'center-middle' },
+      { x: 50, y: 65, name: 'center-below-middle' }
     ],
-    spacing: 22
-  },
-  '4:3': { // Traditional
-    zones: [
-      { x: 50, y: 60, name: 'just-below-middle' },
-      { x: 50, y: 70, name: 'lower-middle' },
-      { x: 50, y: 90, name: 'bottom' },
-      { x: 20, y: 50, name: 'left' },
-      { x: 80, y: 50, name: 'right' }
-    ],
-    spacing: 23
+    spacing: 28
   }
 };
 
@@ -64,7 +50,7 @@ function isInRestrictedTopArea(position) {
 /**
  * Calculate the optimal position for a new text element
  * @param {Array} existingTexts - Array of existing text elements
- * @param {string} slideRatio - Slide aspect ratio (e.g., '9:16', '16:9')
+ * @param {string} slideRatio - Slide aspect ratio (e.g., '9:16', '4:5')
  * @param {number} textIndex - Index of the new text element
  * @returns {Object} Position object with x and y coordinates
  */
@@ -154,24 +140,25 @@ function createOffsetPosition(existingTexts, slideRatio) {
   const avgY = existingTexts.reduce((sum, text) => sum + text.position.y, 0) / existingTexts.length;
   
   // Create offset based on slide ratio, ensuring we avoid the top 30%
+  // AI text should stay centered, so offset vertically only
   let offsetX, offsetY;
   
   switch (slideRatio) {
-    case '9:16': // Vertical - offset horizontally
-      offsetX = avgX > 50 ? 25 : 75;
-      offsetY = Math.max(35, avgY > 50 ? 50 : 65); // Ensure y >= 35
+    case '9:16': // Vertical - offset vertically only (stay centered)
+      offsetX = 50; // Always center
+      offsetY = Math.max(35, avgY > 50 ? 45 : 55); // Alternate between above and below center
       break;
-    case '16:9': // Horizontal - offset vertically
-      offsetX = 50;
-      offsetY = Math.max(35, avgY > 50 ? 50 : 65); // Ensure y >= 35
+    case '4:5': // Portrait/Landscape hybrid - offset vertically only
+      offsetX = 50; // Always center
+      offsetY = Math.max(35, avgY > 50 ? 45 : 55); // Alternate between above and below center
       break;
-    case '1:1': // Square - offset diagonally
-      offsetX = avgX > 50 ? 25 : 75;
-      offsetY = Math.max(35, avgY > 50 ? 50 : 65); // Ensure y >= 35
+    case '1:1': // Square - offset vertically only
+      offsetX = 50; // Always center
+      offsetY = Math.max(35, avgY > 50 ? 45 : 55); // Alternate between above and below center
       break;
-    default: // Default offset
-      offsetX = avgX > 50 ? 30 : 70;
-      offsetY = Math.max(35, avgY > 50 ? 50 : 65); // Ensure y >= 35
+    default: // Default offset - center only
+      offsetX = 50; // Always center
+      offsetY = Math.max(35, avgY > 50 ? 45 : 55); // Alternate between above and below center
   }
   
   return { x: offsetX, y: offsetY };
@@ -216,7 +203,7 @@ export function addTextWithSmartPositioning(slide, content = 'New Text') {
   const newText = {
     id: `${Date.now()}-${Math.floor(Math.random() * 1000000)}`,
     content,
-    position: calculateOptimalPosition(slide.texts || [], slide.ratio)
+    position: calculateOptimalPosition(slide.texts || [], slide.ratio || '9:16', slide.texts ? slide.texts.length : 0)
   };
   
   const updatedTexts = [...(slide.texts || []), newText];

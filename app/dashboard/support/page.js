@@ -12,10 +12,6 @@ export default function Support() {
 
   const faqs = [
     {
-      question: "Is this just another AI slop generator?",
-      answer: "Absolutely not. Most AI tools churn out generic, lifeless content because they rely solely on automation. Flightmedia is different. We blend advanced AI with content optimization tools and your unique voice, so what you get isn’t just fast, it’s authentically you. Engaging. Real. Memorable."
-    },
-    {
       question: "Can I customize the generated content?",
       answer: "Absolutely! All generated content is fully editable. You can modify text, adjust positioning, change colors, add images, and customize every aspect of your slides and memes using our intuitive drag-and-drop interface."
     },
@@ -37,7 +33,7 @@ export default function Support() {
     },
     {
       question: "What social media platforms are supported?", 
-      answer: "We support all major platforms including TikTok, Instagram, Facebook, Twitter, LinkedIn, and YouTube. Each platform is optimized for the best performance and engagement."
+      answer: "For now we support TikTok, Instagram. Each platform is optimized for the best performance and engagement."
     },
     {
       question: "How do I upgrade my account?",
@@ -55,11 +51,7 @@ export default function Support() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Support Center</h1>
-        <p className="text-gray-600 text-lg">Find answers to common questions and get the help you need</p>
-      </div>
+
 
       {/* FAQ Section */}
       <div className="mb-12">
