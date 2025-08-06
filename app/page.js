@@ -382,7 +382,7 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', marginBottom: '10px', marginTop: '0' }}>
           <div style={{ display: 'inline-block', padding: '2px', borderRadius: '9999px', background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)' }}>
             <span style={{ display: 'inline-block', borderRadius: '9999px', background: '#fef9f6', fontWeight: 'bold', fontSize: '15px', color: '#222', padding: '4px 16px', lineHeight: 1.2 }}>
-              Version 1.3.9
+              Version 1.4.1
             </span>
           </div>
         </div>
