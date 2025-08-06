@@ -28,11 +28,35 @@ export async function GET() {
     let hasCompleted = false;
     if (data?.work_data) {
       const onboardingData = data.work_data;
-      // Check for both website data and personalization data
+      
+      // Check for the actual fields that are saved during onboarding
+      // We consider onboarding complete if we have website data and business info
       hasCompleted = !!(onboardingData.websiteUrl && 
                        onboardingData.extractedData && 
-                       onboardingData.personalizationAnswers &&
-                       onboardingData.selectedVideoFormat);
+                       onboardingData.businessInfo &&
+                       onboardingData.completedAt);
+      
+      // Fallback: if we have any substantial onboarding data, consider it complete
+      // This handles cases where users might have partial data from previous versions
+      if (!hasCompleted && onboardingData.websiteUrl && onboardingData.extractedData) {
+        console.log('🔍 Onboarding Status Check: Using fallback completion for user:', session.user.email);
+        hasCompleted = true;
+      }
+      
+      console.log('🔍 Onboarding Status Check:', {
+        user: session.user.email,
+        hasData: !!data?.work_data,
+        fields: {
+          websiteUrl: !!onboardingData.websiteUrl,
+          extractedData: !!onboardingData.extractedData,
+          businessInfo: !!onboardingData.businessInfo,
+          tiktokSuggestions: !!onboardingData.tiktokSuggestions,
+          completedAt: !!onboardingData.completedAt
+        },
+        hasCompleted
+      });
+    } else {
+      console.log('🔍 Onboarding Status Check: No data found for user:', session.user.email);
     }
     
     return NextResponse.json({ hasCompleted });

@@ -38,6 +38,12 @@ export default function DashboardLayout({ children }) {
             const { hasCompleted } = await response.json();
             setHasCompletedOnboarding(hasCompleted);
             
+            console.log('🔍 Dashboard Onboarding Check:', {
+              user: session.user.email,
+              hasCompleted,
+              willShowOnboarding: !hasCompleted
+            });
+            
             // Show mandatory onboarding only for first-time users
             if (!hasCompleted) {
               setIsFirstTimeUser(true);
