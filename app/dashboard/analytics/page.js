@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useSession } from 'next-auth/react';
-import { getCurrentUserBusinessContext } from '../../services/businessContextService';
 
 // Table component for analytics accounts
 function AccountAnalyticsModal({ open, onClose, account }) {
@@ -113,9 +112,9 @@ function AccountsTable({ data, onRowClick, isCollapsed }) {
       <table className="min-w-full text-sm text-gray-800 font-inter">
         <thead className="bg-gradient-to-r from-orange-50 via-white to-violet-50 sticky top-0 z-10 shadow-sm">
           <tr>
-            <th className="px-6 py-4 text-left font-bold tracking-wide text-gray-700 uppercase text-xs">Account</th>
+            <th className="px-6 py-4 text-left font-bold tracking-wide text-gray-700 uppercase text-xs">TikTok Account</th>
             <th className="px-6 py-4 text-left font-bold tracking-wide text-gray-700 uppercase text-xs">Platform</th>
-            <th className="px-6 py-4 text-left font-bold tracking-wide text-gray-700 uppercase text-xs">Type</th>
+            <th className="px-6 py-4 text-left font-bold tracking-wide text-gray-700 uppercase text-xs">Connection</th>
             <th className="px-6 py-4 text-left font-bold tracking-wide text-gray-700 uppercase text-xs">Status</th>
             <th className="px-6 py-4 text-right font-bold tracking-wide text-gray-700 uppercase text-xs">Followers</th>
             <th className="px-6 py-4 text-right font-bold tracking-wide text-gray-700 uppercase text-xs">Trend</th>
@@ -144,7 +143,7 @@ function AccountsTable({ data, onRowClick, isCollapsed }) {
                 </span>
               </td>
               <td className="px-6 py-4">
-                <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold shadow ${row.type === 'Done For You' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'}`}>{row.type}</span>
+                <span className={`inline-block px-2.5 py-1 rounded-lg text-xs font-semibold shadow ${row.type === 'Connected' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{row.type}</span>
               </td>
               <td className="px-6 py-4">
                 {row.statusType === 'progress' ? (
@@ -155,7 +154,7 @@ function AccountsTable({ data, onRowClick, isCollapsed }) {
                 ) : (
                   <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-lg text-xs font-semibold shadow">
                     <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#22c55e"/></svg>
-                    {row.status}
+                    Active
                   </span>
                 )}
               </td>
@@ -185,67 +184,35 @@ export default function Analytics({ isCollapsed }) {
   const { data: session, status } = useSession();
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [userAccounts, setUserAccounts] = useState([]);
-  const [businessContext, setBusinessContext] = useState(null);
+  const [tiktokAccounts, setTiktokAccounts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch business context and create user accounts
+  // Fetch TikTok accounts
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchTikTokAccounts = async () => {
       try {
         setIsLoading(true);
         
-        // Get business context
-        const context = await getCurrentUserBusinessContext();
-        setBusinessContext(context);
+        // Fetch TikTok accounts from API
+        const response = await fetch('/api/user/tiktok-accounts');
         
-        // Create user accounts based on session and business context
-        const accounts = [];
-        
-        if (session?.user) {
-          // Main user account
-          accounts.push({
-            avatar: session.user.image || '/default-profile.png',
-            name: session.user.name || 'Your Account',
-            handle: `@${session.user.email?.split('@')[0] || 'user'}`,
-            platform: 'tiktok',
-            type: 'Done For You',
-            status: 'Ready',
-            statusType: 'ready',
-            followers: null, // Will be added shortly
-            trend: null,
-            views: null, // Will be added shortly
-          });
-          
-          // Business account if business context exists
-          if (context?.companyName && context.companyName !== 'Your Business') {
-            accounts.push({
-              avatar: '/default-profile.png',
-              name: context.companyName,
-              handle: `@${context.companyName.toLowerCase().replace(/\s+/g, '')}`,
-              platform: 'tiktok',
-              type: 'Done For You',
-              status: 'Ready',
-              statusType: 'ready',
-              followers: null, // Will be added shortly
-              trend: null,
-              views: null, // Will be added shortly
-            });
-          }
+        if (!response.ok) {
+          throw new Error('Failed to fetch TikTok accounts');
         }
         
-        setUserAccounts(accounts);
+        const data = await response.json();
+        setTiktokAccounts(data.accounts || []);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error fetching TikTok accounts:', error);
         // Fallback to empty accounts
-        setUserAccounts([]);
+        setTiktokAccounts([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     if (status === 'authenticated' || process.env.NODE_ENV === 'development') {
-      fetchUserData();
+      fetchTikTokAccounts();
     } else {
       setIsLoading(false);
     }
@@ -264,11 +231,11 @@ export default function Analytics({ isCollapsed }) {
   if (isLoading) {
     return (
       <div className="min-h-screen p-4 md:p-8 bg-[#FAF9F6] font-inter">
-        <h1 className="text-3xl font-extrabold text-gray-800 mb-8 tracking-tight">Analytics</h1>
+        <h1 className="text-3xl font-extrabold text-gray-800 mb-8 tracking-tight">TikTok Analytics</h1>
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading your analytics...</p>
+            <p className="text-gray-600">Loading your TikTok analytics...</p>
           </div>
         </div>
       </div>
@@ -277,20 +244,28 @@ export default function Analytics({ isCollapsed }) {
 
   return (
     <div className="min-h-screen p-4 md:p-8 bg-[#FAF9F6] font-inter">
-      <h1 className="text-3xl font-extrabold text-gray-800 mb-8 tracking-tight">Analytics</h1>
+      <h1 className="text-3xl font-extrabold text-gray-800 mb-8 tracking-tight">TikTok Analytics</h1>
       <section className="space-y-4 max-w-6xl mx-auto">
         {/* Dashboard Table Section */}
         <div className="mt-10">
-          {userAccounts.length > 0 ? (
-            <AccountsTable data={userAccounts} onRowClick={handleRowClick} isCollapsed={isCollapsed} />
+          {tiktokAccounts.length > 0 ? (
+            <AccountsTable data={tiktokAccounts} onRowClick={handleRowClick} isCollapsed={isCollapsed} />
           ) : (
             <div className="text-center py-12">
               <div className="text-gray-500 mb-4">
                 <svg width="64" height="64" fill="none" viewBox="0 0 24 24" className="mx-auto mb-4">
-                  <path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M9.5 2.5v19l7-7h5v-5h-5l-7-7z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">No Analytics Data Yet</h3>
-                <p className="text-gray-500">Your account analytics will appear here once you start creating content.</p>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">No TikTok Accounts Connected</h3>
+                <p className="text-gray-500">Connect your TikTok accounts to view analytics and performance data.</p>
+                <div className="mt-4">
+                  <button className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
+                      <path d="M9.5 2.5v19l7-7h5v-5h-5l-7-7z" fill="currentColor"/>
+                    </svg>
+                    Connect TikTok Account
+                  </button>
+                </div>
               </div>
             </div>
           )}

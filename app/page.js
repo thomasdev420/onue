@@ -507,8 +507,8 @@ export default function Home() {
       <Image
         src="/contentpage.png"
         alt="Running and Fitness Content Creation - Hero Image"
-        width={800}
-        height={400}
+        width={900}
+        height={500}
         className="mx-auto max-w-full h-auto rounded-2xl shadow-lg"
         style={{
           border: '2px solid rgba(147, 197, 253, 0.2)',
@@ -759,7 +759,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Starter</h3>
               <p className="mb-4">
                 <span className="text-gray-800 font-bold text-3xl">
-                  ${isMonthly ? 49 : 39}
+                  ${isMonthly ? 24 : 19}
                 </span>
                 <span className="text-gray-400 text-base ml-1">
                   per {isMonthly ? 'month' : 'year'}
@@ -826,7 +826,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-800 mb-2 mt-8">Pro</h3>
               <p className="mb-4">
                 <span className="text-gray-800 font-bold text-3xl">
-                  ${isMonthly ? 129 : 95}
+                  ${isMonthly ? 62 : 49}
                 </span>
                 <span className="text-gray-400 text-base ml-1">
                   per {isMonthly ? 'month' : 'year'}
@@ -893,7 +893,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Scale</h3>
               <p className="mb-4">
                 <span className="text-gray-800 font-bold text-3xl">
-                  ${isMonthly ? 199 : 149}
+                  ${isMonthly ? 115 : 90}
                 </span>
                 <span className="text-gray-400 text-base ml-1">
                   per {isMonthly ? 'month' : 'year'}
