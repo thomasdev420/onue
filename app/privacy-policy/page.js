@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
         <h2 className="text-xl font-semibold mt-8 mb-2 text-gray-900">7. Data Retention</h2>
         <p className="mb-4">We retain your information as long as needed to provide our Services and meet legal obligations.</p>
         
-        <h2 className="text-xl font-semibold mt-8 mb-2 text-gray-900">8. Children's Privacy</h2>
+        <h2 className="text-xl font-semibold mt-8 mb-2 text-gray-900">8. Children&apos;s Privacy</h2>
         <p className="mb-4">Flightmedia is not intended for children under 13. We do not knowingly collect personal information from children.</p>
         
         <h2 className="text-xl font-semibold mt-8 mb-2 text-gray-900">9. Changes to This Policy</h2>
