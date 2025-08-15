@@ -6,10 +6,7 @@ import FeedbackButton from './FeedbackButton';
 export default function ConditionalFeedbackButton() {
   const pathname = usePathname();
   
-  // Don't show feedback button on the home page when coming soon is active
-  if (pathname === '/') {
-    return null;
-  }
-  
+  // Show feedback button on all pages except when coming soon is active
+  // The coming soon page will handle its own feedback button visibility
   return <FeedbackButton />;
 }

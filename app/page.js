@@ -6,6 +6,7 @@ import { signIn, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import FeedbackButton from "./components/FeedbackButton";
 
 // Landing page
 export default function Home() {
@@ -21,7 +22,30 @@ export default function Home() {
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(true);
-
+  const [devMode, setDevMode] = useState(false);
+  
+  // Developer access - type 'cayla' to toggle landing page view
+  const [typedKeys, setTypedKeys] = useState('');
+  
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const newTypedKeys = typedKeys + e.key.toLowerCase();
+      
+      if (newTypedKeys.includes('cayla')) {
+        setDevMode(prev => !prev);
+        console.log('Dev mode toggled:', !devMode);
+        setTypedKeys(''); // Reset after successful trigger
+      } else if (newTypedKeys.length >= 5) {
+        setTypedKeys(''); // Reset if too long
+      } else {
+        setTypedKeys(newTypedKeys);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [typedKeys, devMode]);
+  
   // Coming soon page stays until manually removed
   // Remove this useEffect when ready to launch
 
@@ -168,8 +192,8 @@ export default function Home() {
     );
   }
 
-  // Coming Soon Page
-  if (showComingSoon) {
+  // Coming Soon Page (unless dev mode is active)
+  if (showComingSoon && !devMode) {
     return (
       <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#FFFFFF' }}>
         {/* Black bordered content area */}
@@ -184,11 +208,18 @@ export default function Home() {
             backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.1) 1px, rgba(255,255,255,0.1) 2px)'
           }}></div>
           
-                    <div className="text-center relative z-10 flex items-center justify-center h-full">
-            <div className="text-6xl font-serif italic text-white">
-              Amply is coming
-            </div>
+                            <div className="text-center relative z-10 flex flex-col items-center justify-center h-full">
+          <div className="text-6xl font-serif italic text-white mb-8">
+            Amply is coming
           </div>
+          
+
+        </div>
+        
+        {/* Feedback Button for Coming Soon Page */}
+        <div className="absolute bottom-8 right-8 z-20">
+          <FeedbackButton />
+        </div>
         </div>
         
         <style jsx>{`
@@ -354,6 +385,11 @@ export default function Home() {
             <span className="text-red-800 font-semibold text-sm font-mono">Clear Access</span>
           </button>
         )}
+        {devMode && (
+          <div className="px-3 py-1.5 rounded-full bg-green-200 border border-green-400">
+            <span className="text-green-800 font-semibold text-sm font-mono">Landing Page View</span>
+          </div>
+        )}
       </div>
 
       {/* Dev Access Modal */}
@@ -432,7 +468,7 @@ export default function Home() {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', marginBottom: '10px', marginTop: '0' }}>
           <div style={{ display: 'inline-block', padding: '2px', borderRadius: '9999px', background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)' }}>
             <span style={{ display: 'inline-block', borderRadius: '9999px', background: '#fef9f6', fontWeight: 'bold', fontSize: '15px', color: '#222', padding: '4px 16px', lineHeight: 1.2 }}>
-              Version 1.4.3
+              Version 1.4.4
             </span>
           </div>
         </div>
