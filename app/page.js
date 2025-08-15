@@ -20,6 +20,10 @@ export default function Home() {
   const [isMonthly, setIsMonthly] = useState(false);
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(true);
+
+  // Coming soon page stays until manually removed
+  // Remove this useEffect when ready to launch
 
   // Enhanced authentication check that works in private windows
   useEffect(() => {
@@ -164,13 +168,59 @@ export default function Home() {
     );
   }
 
+  // Coming Soon Page
+  if (showComingSoon) {
+    return (
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#FFFFFF' }}>
+        {/* Black bordered content area */}
+        <div className="relative w-11/12 max-w-6xl h-[600px] border-4 border-black rounded-3xl overflow-hidden" style={{ 
+          backgroundImage: 'radial-gradient(circle at 30% 20%, #B8D8FF 0%, #A8D0FF 8%, #98C8FF 16%, #88C0FF 24%, #78B8FF 32%, #68B0FF 40%, #58A8FF 48%, #48A0FF 56%, #38A0FF 64%, #28A0FF 72%, #18A0FF 80%, #0A90FF 88%, #0080FF 96%, #0070FF 100%), radial-gradient(circle at 70% 80%, #B8D8FF 0%, #A8D0FF 8%, #98C8FF 16%, #88C0FF 24%, #78B8FF 32%, #68B0FF 40%, #58A8FF 48%, #48A0FF 56%, #38A0FF 64%, #28A0FF 72%, #18A0FF 80%, #0A90FF 88%, #0080FF 96%, #0070FF 100%), linear-gradient(45deg, #B8D8FF 0%, #A8D0FF 10%, #98C8FF 20%, #88C0FF 30%, #78B8FF 40%, #68B0FF 50%, #58A8FF 60%, #48A0FF 70%, #38A0FF 80%, #28A0FF 90%, #18A0FF 100%)',
+          backgroundSize: '200% 200%, 200% 200%, 200% 200%',
+          backgroundPosition: '0% 0%, 100% 100%, 0% 0%',
+          animation: 'gradientFlow 20s ease-in-out infinite'
+        }}>
+          {/* Vertical texture overlay */}
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.1) 1px, rgba(255,255,255,0.1) 2px)'
+          }}></div>
+          
+                    <div className="text-center relative z-10 flex items-center justify-center h-full">
+            <div className="text-6xl font-serif italic text-white">
+              Amply is coming
+            </div>
+          </div>
+        </div>
+        
+        <style jsx>{`
+          @keyframes gradientFlow {
+            0% { 
+              background-position: 0% 0%, 100% 100%, 0% 0%;
+            }
+            25% { 
+              background-position: 100% 0%, 0% 100%, 100% 100%;
+            }
+            50% { 
+              background-position: 100% 100%, 0% 0%, 0% 100%;
+            }
+            75% { 
+              background-position: 0% 100%, 100% 0%, 100% 0%;
+            }
+            100% { 
+              background-position: 0% 0%, 100% 100%, 0% 0%;
+            }
+          }
+        `}</style>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center px-6 py-32 sm:px-20 font-sans text-gray-900 relative" style={{ paddingTop: '120px' }}>
       {/* Floating Pill Navigation Bar */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
         <div className="bg-white/95 backdrop-blur-md border border-gray-200 shadow-lg rounded-full px-8 py-4 flex items-center space-x-8">
           {/* Logo/Brand */}
-          <span className="text-xl font-bold text-gray-800">Flightmedia</span>
+          <span className="text-xl font-bold text-gray-800">Amply</span>
           
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
@@ -614,7 +664,7 @@ export default function Home() {
           className="text-2xl font-bold tracking-tight text-gray-800 leading-relaxed"
           style={{ fontWeight: "700" }}
         >
-          Flightmedia generates and optimizes content that learns what <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>works</span>, so you can post <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>faster</span>, grow <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>consistently</span> and skip the guesswork.
+          Amply generates and optimizes content that learns what <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>works</span>, so you can post <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>faster</span>, grow <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>consistently</span> and skip the guesswork.
         </h2>
       </div>
 
@@ -654,11 +704,11 @@ export default function Home() {
               <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Full creative control</li>
             </ul>
           </div>
-          {/* Flightmedia */}
+          {/* Amply */}
           <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-green-300 rounded-2xl shadow-lg p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-green-400 cursor-pointer relative">
             <span className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm">Best Value</span>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl font-bold text-gray-800">Flightmedia</span>
+              <span className="text-xl font-bold text-gray-800">Amply</span>
             </div>
             <p className="text-gray-700 mb-4">
               Automatically creates & publishes videos to all platforms for a simple monthly subscription.
@@ -675,9 +725,9 @@ export default function Home() {
         <div className="max-w-3xl mx-auto text-center">
           <h3 className="text-lg font-bold text-gray-800 mb-2">What can it do?</h3>
           <p className="text-md text-gray-700 font-medium">
-            <span className="font-bold text-gray-900">Flightmedia automatically creates self-improving content that drives users to your website.</span>
+            <span className="font-bold text-gray-900">Amply automatically creates self-improving content that drives users to your website.</span>
             <br />
-            The differentiating factor between Flightmedia and competitors is that Flightmedia takes the approach of using faceless content to automate videos. While other services require you to upload all of your video & image assets in order to create &quot;AI ads&quot;, Flightmedia believes in organic content with TikTok distribution as a means of getting leads/inbound.
+            The differentiating factor between Amply and competitors is that Amply takes the approach of using faceless content to automate videos. While other services require you to upload all of your video & image assets in order to create &quot;AI ads&quot;, Amply believes in organic content with TikTok distribution as a means of getting leads/inbound.
           </p>
         </div>
       </section>
@@ -706,10 +756,10 @@ export default function Home() {
                 Turns out I wasn&apos;t the only one struggling.
               </p>
               <p>
-                That&apos;s how <strong>Flightmedia</strong> was born.
+                That&apos;s how <strong>Amply</strong> was born.
               </p>
               <p>
-                Today, FlightMedia helps founders auto-create quality content that builds attention, trust and traffic without the cost, burnout or guesswork.
+                Today, Amply helps founders auto-create quality content that builds attention, trust and traffic without the cost, burnout or guesswork.
               </p>
                               <p>
                   I use it every day to grow my own audience and bring in users and now, so can you. 😎
@@ -965,7 +1015,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="absolute bottom-2 left-0 w-full flex flex-col items-center gap-2 text-gray-500 text-sm">
         <div className="flex items-center gap-4">
-          <span>© 2025 Flightmedia. All rights reserved.</span>
+          <span>© 2025 Amply. All rights reserved.</span>
           <a
             href="/privacy-policy"
             className="px-3 py-1 rounded-full bg-white border border-gray-300 text-gray-500 font-semibold hover:bg-blue-50 hover:text-blue-800 transition"

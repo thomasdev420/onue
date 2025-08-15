@@ -2,7 +2,7 @@ import { Geist, Geist_Mono, Inter, Poppins, Roboto, Open_Sans, Montserrat, Ralew
 import "./globals.css";
 import ProductionSessionProvider from "./components/layout/ProductionSessionProvider";
 import ErrorBoundary from "./components/ErrorBoundary";
-import FeedbackButton from "./components/FeedbackButton";
+import ConditionalFeedbackButton from "./components/ConditionalFeedbackButton";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "./api/auth/[...nextauth]/route";
 
@@ -138,7 +138,7 @@ const permanentMarker = Permanent_Marker({
 
 export async function generateMetadata() {
   return {
-    title: "Flightmedia - Content Creation Platform",
+            title: "Amply - Content Creation Platform",
     description: "Create viral, self-improving videos and posts that drive millions of views, boost traffic, and grow your brand automatically.",
     icons: {
       icon: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },
@@ -158,7 +158,7 @@ export default async function RootLayout({ children }) {
         <ErrorBoundary>
           <ProductionSessionProvider session={session}>
             {children}
-            <FeedbackButton />
+            <ConditionalFeedbackButton />
           </ProductionSessionProvider>
         </ErrorBoundary>
       </body>
