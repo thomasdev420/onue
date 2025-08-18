@@ -216,10 +216,7 @@ export default function Home() {
 
         </div>
         
-        {/* Feedback Button for Coming Soon Page */}
-        <div className="absolute bottom-8 right-8 z-20">
-          <FeedbackButton />
-        </div>
+
         </div>
         
         <style jsx>{`
