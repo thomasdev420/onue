@@ -209,8 +209,11 @@ export default function Home() {
           }}></div>
           
                             <div className="text-center relative z-10 flex flex-col items-center justify-center h-full">
-          <div className="text-6xl font-serif italic text-white mb-8">
+          <div className="text-6xl font-serif italic text-white mb-4">
             Amply is coming
+          </div>
+          <div className="font-mono text-lg text-white/80">
+            attention is everything
           </div>
           
 
@@ -370,23 +373,7 @@ export default function Home() {
         >
           <span className="text-gray-800 font-semibold text-sm font-mono">Dev Access</span>
         </button>
-        {devAccessGranted && (
-          <button 
-            onClick={() => {
-              localStorage.removeItem("devAccessGranted");
-              setDevAccessGranted(false);
-              window.location.reload();
-            }}
-            className="px-3 py-1.5 rounded-full bg-red-200 hover:bg-red-300 transition-colors"
-          >
-            <span className="text-red-800 font-semibold text-sm font-mono">Clear Access</span>
-          </button>
-        )}
-        {devMode && (
-          <div className="px-3 py-1.5 rounded-full bg-green-200 border border-green-400">
-            <span className="text-green-800 font-semibold text-sm font-mono">Landing Page View</span>
-          </div>
-        )}
+
       </div>
 
       {/* Dev Access Modal */}
