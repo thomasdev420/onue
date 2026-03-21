@@ -4,7 +4,7 @@ import ProductionSessionProvider from "./components/layout/ProductionSessionProv
 import ErrorBoundary from "./components/ErrorBoundary";
 import ConditionalFeedbackButton from "./components/ConditionalFeedbackButton";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "./api/auth/[...nextauth]/route";
+import { authOptions } from "./lib/authOptions";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -138,8 +138,8 @@ const permanentMarker = Permanent_Marker({
 
 export async function generateMetadata() {
   return {
-            title: "Amply - Content Creation Platform",
-    description: "Create viral, self-improving videos and posts that drive millions of views, boost traffic, and grow your brand automatically.",
+            title: "Amply: The one AI agents choose",
+    description: "Turn your product into the one AI agents choose. Win discovery on Google, ChatGPT, Perplexity, and Claude with Amply.",
     icons: {
       icon: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },
       apple: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },
@@ -149,8 +149,12 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  // Fetch session on server side to prevent hydration mismatch
-  const session = await getServerSession(authOptions);
+  let session = null;
+  try {
+    session = await getServerSession(authOptions);
+  } catch (err) {
+    console.error("[RootLayout] getServerSession failed:", err?.message || err);
+  }
   
   return (
     <html lang="en">

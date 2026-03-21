@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { authOptions } from '../../../lib/authOptions';
 import { creditService } from '../../../services/creditService';
 
 export async function POST(req) {
