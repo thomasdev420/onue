@@ -3,10 +3,11 @@
 import Link from "next/link";
 import { Lightbulb, Rocket, Users, X } from "lucide-react";
 import { signIn, useSession } from "next-auth/react";
-import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import FeedbackButton from "./components/FeedbackButton";
+import MarketGrowthHeroChart from "./components/MarketGrowthHeroChart";
+import DistributionMoatDiagram from "./components/DistributionMoatDiagram";
 
 // Landing page
 export default function Home() {
@@ -19,35 +20,7 @@ export default function Home() {
   const [devAccessGranted, setDevAccessGranted] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isMonthly, setIsMonthly] = useState(false);
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [isLoaded, setIsLoaded] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(true);
-  const [devMode, setDevMode] = useState(false);
-  
-  // Developer access - type 'cayla' to toggle landing page view
-  const [typedKeys, setTypedKeys] = useState('');
-  
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const newTypedKeys = typedKeys + e.key.toLowerCase();
-      
-      if (newTypedKeys.includes('cayla')) {
-        setDevMode(prev => !prev);
-        console.log('Dev mode toggled:', !devMode);
-        setTypedKeys(''); // Reset after successful trigger
-      } else if (newTypedKeys.length >= 5) {
-        setTypedKeys(''); // Reset if too long
-      } else {
-        setTypedKeys(newTypedKeys);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [typedKeys, devMode]);
-  
-  // Coming soon page stays until manually removed
-  // Remove this useEffect when ready to launch
 
   // Enhanced authentication check that works in private windows
   useEffect(() => {
@@ -134,37 +107,6 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Countdown timer logic
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const endOfWeek = new Date();
-      
-      // Set to end of current week (Sunday 23:59:59)
-      endOfWeek.setDate(now.getDate() + (7 - now.getDay()));
-      endOfWeek.setHours(23, 59, 59, 999);
-      
-      const difference = endOfWeek - now;
-      
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-        
-        setCountdown({ days, hours, minutes, seconds });
-        console.log('Countdown updated:', { days, hours, minutes, seconds });
-      } else {
-        setCountdown({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   // Handle Google sign-in with direct redirect to dashboard (like Dev Access)
   const handleGoogleSignIn = async () => {
     try {
@@ -192,61 +134,14 @@ export default function Home() {
     );
   }
 
-  // Coming Soon Page (unless dev mode is active)
-  if (showComingSoon && !devMode) {
-    return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ backgroundColor: '#FFFFFF' }}>
-        {/* Black bordered content area */}
-        <div className="relative w-11/12 max-w-6xl h-[600px] border-4 border-black rounded-3xl overflow-hidden" style={{ 
-          backgroundImage: 'radial-gradient(circle at 30% 20%, #B8D8FF 0%, #A8D0FF 8%, #98C8FF 16%, #88C0FF 24%, #78B8FF 32%, #68B0FF 40%, #58A8FF 48%, #48A0FF 56%, #38A0FF 64%, #28A0FF 72%, #18A0FF 80%, #0A90FF 88%, #0080FF 96%, #0070FF 100%), radial-gradient(circle at 70% 80%, #B8D8FF 0%, #A8D0FF 8%, #98C8FF 16%, #88C0FF 24%, #78B8FF 32%, #68B0FF 40%, #58A8FF 48%, #48A0FF 56%, #38A0FF 64%, #28A0FF 72%, #18A0FF 80%, #0A90FF 88%, #0080FF 96%, #0070FF 100%), linear-gradient(45deg, #B8D8FF 0%, #A8D0FF 10%, #98C8FF 20%, #88C0FF 30%, #78B8FF 40%, #68B0FF 50%, #58A8FF 60%, #48A0FF 70%, #38A0FF 80%, #28A0FF 90%, #18A0FF 100%)',
-          backgroundSize: '200% 200%, 200% 200%, 200% 200%',
-          backgroundPosition: '0% 0%, 100% 100%, 0% 0%',
-          animation: 'gradientFlow 20s ease-in-out infinite'
-        }}>
-          {/* Vertical texture overlay */}
-          <div className="absolute inset-0 opacity-20" style={{
-            backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 1px, rgba(255,255,255,0.1) 1px, rgba(255,255,255,0.1) 2px)'
-          }}></div>
-          
-                            <div className="text-center relative z-10 flex flex-col items-center justify-center h-full">
-          <div className="text-6xl font-serif italic text-white mb-4">
-            Amply is coming
-          </div>
-          <div className="font-mono text-lg text-white/80">
-            attention is everything
-          </div>
-          
-
-        </div>
-        
-
-        </div>
-        
-        <style jsx>{`
-          @keyframes gradientFlow {
-            0% { 
-              background-position: 0% 0%, 100% 100%, 0% 0%;
-            }
-            25% { 
-              background-position: 100% 0%, 0% 100%, 100% 100%;
-            }
-            50% { 
-              background-position: 100% 100%, 0% 0%, 0% 100%;
-            }
-            75% { 
-              background-position: 0% 100%, 100% 0%, 100% 0%;
-            }
-            100% { 
-              background-position: 0% 0%, 100% 100%, 0% 0%;
-            }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FAF9F6] flex flex-col items-center px-6 py-32 sm:px-20 font-sans text-gray-900 relative" style={{ paddingTop: '120px' }}>
+      <p
+        className="fixed left-4 top-4 z-[60] font-mono text-[11px] font-medium tabular-nums tracking-tight text-gray-500 sm:left-6 sm:top-5 sm:text-xs"
+        aria-label="App version 1.4.4"
+      >
+        v1.4.4
+      </p>
       {/* Floating Pill Navigation Bar */}
       <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
         <div className="bg-white/95 backdrop-blur-md border border-gray-200 shadow-lg rounded-full px-8 py-4 flex items-center space-x-8">
@@ -440,75 +335,177 @@ export default function Home() {
 
       {/* Header Section */}
       <header 
-        className="max-w-2xl text-center mb-12" 
+        className="w-full max-w-4xl text-center mb-12 px-2 sm:px-4" 
         style={{ 
-          marginTop: '80px',
+          marginTop: '72px',
           opacity: isLoaded ? 1 : 0,
           transform: isLoaded ? 'translateY(0)' : 'translateY(30px)',
           transition: 'opacity 0.8s ease-out, transform 0.8s ease-out'
         }}
       >
-        {/* Version badge above main heading */}
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', marginBottom: '10px', marginTop: '0' }}>
-          <div style={{ display: 'inline-block', padding: '2px', borderRadius: '9999px', background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)' }}>
-            <span style={{ display: 'inline-block', borderRadius: '9999px', background: '#fef9f6', fontWeight: 'bold', fontSize: '15px', color: '#222', padding: '4px 16px', lineHeight: 1.2 }}>
-              Version 1.4.4
+        {/* Marketing tagline pill: same gradient “border” as the old Version badge */}
+        <div className="mb-4 flex w-full justify-center sm:mb-5">
+          <div
+            className="inline-block rounded-full p-[2px]"
+            style={{
+              background: 'linear-gradient(90deg, #3953e6 0%, #36aeea 100%)',
+            }}
+          >
+            <span
+              className="home-marketing-pill-glow-pulse inline-flex items-center gap-1 rounded-full px-3 py-1 sm:px-3.5 sm:py-1.5"
+              style={{ background: '#fef9f6' }}
+            >
+              <span className="inline-block bg-gradient-to-b from-[#93c5fd] from-[15%] to-[#9333ea] bg-clip-text text-sm font-bold leading-none tracking-tight text-transparent sm:text-[0.9375rem]">
+                #1
+              </span>
+              <span className="text-sm font-bold leading-none tracking-tight text-gray-800 sm:text-[0.9375rem]">
+                Marketing tool for AI
+              </span>
             </span>
           </div>
         </div>
-        <h1 className="text-6xl font-extrabold tracking-tight text-gray-800" style={{ fontWeight: 800, margin: 0, lineHeight: 1.1, textAlign: 'center', marginBottom: '18px' }}>
-          Automate TikToks<br />
-          that drive traffic to<br />
-          your startup
-          <span style={{ display: 'inline-flex', alignItems: 'flex-end', gap: '4px', marginLeft: '12px', verticalAlign: 'middle' }}>
-            {/* TikTok Logo - Rounded Square with Border and Glow */}
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              backgroundColor: '#000000',
-              border: '2px solid rgba(255, 255, 255, 0.8)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              transform: 'rotate(-15deg)'
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#FFFFFF', zIndex: 2 }}>
-                <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
-              </svg>
-            </div>
-            
-            {/* Instagram Logo - Rounded Square with Gradient Border and Glow */}
-            <div style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px',
-              background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
-              border: '2px solid rgba(255, 255, 255, 0.8)',
-              boxShadow: '0 4px 12px rgba(220, 39, 67, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative',
-              overflow: 'hidden',
-              transform: 'rotate(15deg)'
-            }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style={{ color: '#FFFFFF', zIndex: 2 }}>
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-              </svg>
-            </div>
+        <h1
+          className="flex flex-col items-center justify-center gap-y-2 sm:gap-y-3 text-[clamp(1.925rem,5.5vw,4.125rem)] font-extrabold tracking-tight text-gray-800 mb-20 sm:mb-24 px-1"
+          style={{ fontWeight: 800, margin: 0, lineHeight: 1.06, textAlign: 'center' }}
+        >
+          <span className="flex flex-wrap items-center justify-center gap-x-1.5 sm:gap-x-2 gap-y-2 text-balance max-w-6xl mx-auto leading-[1.03] sm:leading-[1.05]">
+            <span className="shrink-0">Make</span>
+            <span
+              role="group"
+              aria-label="Google, ChatGPT, Perplexity, and Claude"
+              className="inline-flex items-center justify-center shrink-0 align-middle"
+              style={{
+                gap: 0,
+                flexWrap: 'nowrap',
+                height: '0.82em',
+                marginLeft: '0.06em',
+                marginRight: '0.06em',
+                verticalAlign: 'middle',
+              }}
+            >
+              {/* Google: multicolor G on light tile (back of stack) */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: '0.78em',
+                  height: '0.78em',
+                  borderRadius: '0.2em',
+                  backgroundColor: '#F8FAFC',
+                  border: '1px solid rgba(0, 0, 0, 0.1)',
+                  boxShadow: '0 4px 12px rgba(66, 133, 244, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: 'rotate(-5deg)',
+                  marginLeft: 0,
+                  flexShrink: 0,
+                }}
+                title="Google"
+              >
+                <svg style={{ width: '0.44em', height: '0.44em', display: 'block' }} viewBox="0 0 24 24" role="img" aria-hidden="true">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                  <path fill="#EA4335" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                  <path fill="#34A853" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                </svg>
+              </div>
+
+              {/* ChatGPT: white knot on black */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 2,
+                  width: '0.78em',
+                  height: '0.78em',
+                  borderRadius: '0.2em',
+                  backgroundColor: '#000000',
+                  border: '2px solid rgba(255, 255, 255, 0.85)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: 'rotate(-10deg)',
+                  marginLeft: '-0.32em',
+                  flexShrink: 0,
+                }}
+                title="ChatGPT"
+              >
+                <svg style={{ width: '0.44em', height: '0.44em', display: 'block' }} viewBox="0 0 24 24" role="img" aria-hidden="true">
+                  <path
+                    fill="#FFFFFF"
+                    d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"
+                  />
+                </svg>
+              </div>
+
+              {/* Perplexity: dark mark on soft teal tile */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 3,
+                  width: '0.78em',
+                  height: '0.78em',
+                  borderRadius: '0.2em',
+                  backgroundColor: '#CCFBF1',
+                  border: '1px solid rgba(13, 148, 136, 0.35)',
+                  boxShadow: '0 4px 12px rgba(13, 148, 136, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: 'rotate(4deg)',
+                  marginLeft: '-0.32em',
+                  flexShrink: 0,
+                }}
+                title="Perplexity"
+              >
+                <svg style={{ width: '0.44em', height: '0.44em', display: 'block' }} viewBox="0 0 24 24" role="img" aria-hidden="true">
+                  <path
+                    fill="#0F766E"
+                    d="M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z"
+                  />
+                </svg>
+              </div>
+
+              {/* Claude: white mark on terracotta (front of stack) */}
+              <div
+                style={{
+                  position: 'relative',
+                  zIndex: 4,
+                  width: '0.78em',
+                  height: '0.78em',
+                  borderRadius: '0.2em',
+                  backgroundColor: '#D97757',
+                  border: '2px solid rgba(255, 255, 255, 0.75)',
+                  boxShadow: '0 4px 12px rgba(217, 119, 87, 0.35)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transform: 'rotate(8deg)',
+                  marginLeft: '-0.32em',
+                  flexShrink: 0,
+                }}
+                title="Claude"
+              >
+                <svg style={{ width: '0.44em', height: '0.44em', display: 'block' }} viewBox="0 0 24 24" role="img" aria-hidden="true">
+                  <path
+                    fill="#FFFFFF"
+                    d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"
+                  />
+                </svg>
+              </div>
+            </span>
+            <span className="shrink-0">choose</span>
+          </span>
+          <span className="block w-full max-w-6xl mx-auto text-center text-balance leading-[1.03] sm:leading-[1.05]">
+            your product
           </span>
         </h1>
-        <div className="max-w-2xl text-center" style={{ marginTop: '0', marginBottom: '18px' }}>
-          <p className="text-lg font-semibold text-gray-500 mb-4" style={{ marginBottom: '0', marginTop: '0' }}>
-          Get startup growth without a growth team
-          </p>
-        </div>
-        <div className="flex justify-center items-center gap-4" style={{ marginTop: '0', marginBottom: '18px' }}>
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <p className="mx-auto mt-3 max-w-lg text-center text-balance text-sm font-medium leading-snug text-gray-500 sm:mt-4 sm:max-w-xl sm:text-base">
+          Get your startup the attention it deserves
+        </p>
+        <div className="flex justify-center items-center gap-4 mt-6 sm:mt-8 mb-8 sm:mb-10">
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
             {/* Always show the main CTA button - it will handle auth state internally */}
             <button
               onClick={isUserAuthenticated ? () => window.location.href = "/dashboard" : handleGoogleSignIn}
@@ -567,232 +564,198 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Hero Image */}
-      {/* TODO: Replace with your downloaded running slide image */}
-      {/* Steps: 
-          1. Download your preferred running slide from the slides interface
-          2. Upload it to a CDN or place in public/ folder
-          3. Replace the src below with your image URL
-      */}
-      <Image
-        src="/contentpage.png"
-        alt="Running and Fitness Content Creation - Hero Image"
-        width={900}
-        height={500}
-        className="mx-auto max-w-full h-auto rounded-2xl shadow-lg"
-        style={{
-          border: '2px solid rgba(147, 197, 253, 0.2)',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
-          opacity: isLoaded ? 1 : 0,
-          transform: isLoaded ? 'translateY(0) scale(1)' : 'translateY(40px) scale(0.95)',
-          transition: 'opacity 1s ease-out 0.2s, transform 1s ease-out 0.2s'
-        }}
-      />
+      <MarketGrowthHeroChart isLoaded={isLoaded} />
 
-      {/* The Problem */}
-      <div
+      {/* AI selection moat: Your distribution moat */}
+      <section
         id="product"
+        className="w-full max-w-5xl mx-auto px-4 mb-16 sm:mb-20 mt-10 sm:mt-14"
         style={{
-          borderLeft: "4px solid #F05252",
-          borderRadius: 0,
-          padding: "clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)",
-          marginBottom: "clamp(1rem, 2vw, 1.5rem)",
-          marginTop: "clamp(3rem, 5vw, 6rem)",
-          backgroundColor: "rgba(240, 82, 82, 0.1)",
-          textAlign: "left",
-          display: "inline-block",
           opacity: isLoaded ? 1 : 0,
-          transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s'
+          transform: isLoaded ? 'translateY(0)' : 'translateY(24px)',
+          transition: 'opacity 0.9s ease-out 0.65s, transform 0.9s ease-out 0.65s',
         }}
       >
-        <p
+        <div
+          className="rounded-3xl overflow-hidden border border-gray-200/80"
           style={{
-            fontSize: "clamp(0.875rem, 1.25vw, 1.125rem)",
-            lineHeight: 1.2,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "#F05252",
-            fontWeight: 700,
+            background: 'linear-gradient(180deg, #141418 0%, #0a0a0c 45%, #12101a 100%)',
+            boxShadow:
+              '0 24px 80px rgba(57, 83, 230, 0.14), 0 0 0 1px rgba(255,255,255,0.06), 0 0 24px rgba(99, 102, 241, 0.14), 0 0 48px rgba(56, 189, 248, 0.08), 0 0 1px rgba(165, 180, 252, 0.35)',
           }}
-          className="mantine-focus-auto m_b6d8b162 mantine-Text-root"
         >
-          The Problem
-        </p>
-      </div>
-
-      {/* Problem Text */}
-      <div style={{
-        maxWidth: '900px',
-        margin: '0 auto 40px auto',
-        textAlign: 'center',
-        padding: '24px 32px',
-        background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(239, 68, 68, 0.02) 100%)',
-        borderRadius: '16px',
-        border: '1px solid rgba(239, 68, 68, 0.1)',
-      }}>
-        <h2
-          className="text-2xl font-bold tracking-tight text-gray-800 leading-relaxed"
-          style={{ fontWeight: "700" }}
-        >
-          Creating content that actually drives results often takes <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>hours,</span> <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>costs</span> a lot, and still <span style={{ color: "#DC2626", fontWeight: "900", textShadow: "0 1px 2px rgba(220, 38, 38, 0.1)" }}>fails</span> for most founders.
-        </h2>
-      </div>
-
-      {/* The Solution */}
-      <div
-        style={{
-          borderLeft: "4px solid #22C55E",
-          borderRadius: 0,
-          padding: "clamp(0.3rem, 1.2vw, 0.5rem) clamp(1rem, 2.5vw, 1.5rem)",
-          marginBottom: "clamp(1rem, 2vw, 1.5rem)",
-          marginTop: "clamp(3rem, 5vw, 6rem)",
-          backgroundColor: "rgba(34, 197, 94, 0.1)",
-          textAlign: "left",
-          display: "inline-block",
-          opacity: isLoaded ? 1 : 0,
-          transform: isLoaded ? 'translateY(0)' : 'translateY(20px)',
-          transition: 'opacity 0.8s ease-out 0.6s, transform 0.8s ease-out 0.6s'
-        }}
-      >
-        <p
-          style={{
-            fontSize: "clamp(0.875rem, 1.25vw, 1.125rem)",
-            lineHeight: 1.2,
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "#22C55E",
-            fontWeight: 700,
-          }}
-          className="mantine-focus-auto m_b6d8b162 mantine-Text-root"
-        >
-          The Solution
-        </p>
-      </div>
-
-      {/* Solution Text */}
-      <div style={{
-        maxWidth: '900px',
-        margin: '0 auto 40px auto',
-        textAlign: 'center',
-        padding: '24px 32px',
-        background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.02) 100%)',
-        borderRadius: '16px',
-        border: '1px solid rgba(34, 197, 94, 0.1)',
-      }}>
-        <h2
-          className="text-2xl font-bold tracking-tight text-gray-800 leading-relaxed"
-          style={{ fontWeight: "700" }}
-        >
-          Amply generates and optimizes content that learns what <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>works</span>, so you can post <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>faster</span>, grow <span style={{ color: "#16A34A", fontWeight: "900", textShadow: "0 1px 2px rgba(22, 163, 74, 0.1)" }}>consistently</span> and skip the guesswork.
-        </h2>
-      </div>
-
-      {/* Comparison Section */}
-      <section className="max-w-7xl mx-auto mb-16 px-4 mt-20">
-        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-8 text-center">
-          Alternatives <span className="text-red-600">suck</span>
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-20 items-stretch justify-items-center">
-          {/* UGC Agencies */}
-          <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-red-200 rounded-2xl shadow-md p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-red-400 cursor-pointer">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl font-bold text-gray-800">Content agencies</span>
+          <div className="text-center px-5 sm:px-10 pt-10 sm:pt-12 pb-10 sm:pb-12">
+            <div className="inline-flex items-center justify-center mb-5">
+              <span
+                className="text-xs sm:text-sm font-semibold tracking-wide text-white/90 px-4 py-1.5 rounded-full border border-white/15"
+                style={{ background: 'rgba(255,255,255,0.06)' }}
+              >
+                Your distribution moat
+              </span>
             </div>
-            <p className="text-gray-600 mb-4">
-              Expensive, going upwards of $2000 to $6000 a month.
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight mb-4 text-balance leading-tight">
+              Meet the AI selection engine
+            </h2>
+            <p className="text-sm sm:text-base text-white/75 max-w-2xl mx-auto leading-relaxed text-balance">
+              Gemini, ChatGPT, Copilot, Perplexity, and Claude are{' '}
+              <span className="text-white font-semibold">filtering, comparing, and picking products</span> to
+              recommend and buy, including your competitors. Other tools show where you&apos;re invisible.&nbsp;
+              <span className="text-white font-semibold">Amply</span> gets your product story and catalog into the answer so
+              your brand gets recommended first.
             </p>
-            <ul className="space-y-1 text-sm">
-              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> High cost</li>
-              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Limited control</li>
-              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Often inconsistent traffic growth</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Professional quality</li>
-            </ul>
-          </div>
-          {/* DIY Approach */}
-          <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-red-200 rounded-2xl shadow-md p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-red-400 cursor-pointer">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl font-bold text-gray-800">DIY Approach</span>
-            </div>
-            <p className="text-gray-600 mb-4">
-              Time-consuming process: research, plan, record, edit, schedule, iterate, re-purpose, analyze…
-            </p>
-            <ul className="space-y-1 text-sm">
-              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Time intensive</li>
-              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Requires expertise</li>
-              <li className="flex items-center"><span className="text-red-400 mr-2">✗</span> Rarely see traffic growth</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Full creative control</li>
-            </ul>
-          </div>
-          {/* Amply */}
-          <div className="h-64 w-[350px] flex flex-col justify-between bg-white border-2 border-green-300 rounded-2xl shadow-lg p-7 transition-all duration-200 hover:scale-105 hover:shadow-xl hover:border-green-400 cursor-pointer relative">
-            <span className="absolute top-4 right-4 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full shadow-sm">Best Value</span>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl font-bold text-gray-800">Amply</span>
-            </div>
-            <p className="text-gray-700 mb-4">
-              Automatically creates & publishes videos to all platforms for a simple monthly subscription.
-            </p>
-            <ul className="space-y-1 text-sm">
-              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Cost effective</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Fully automated</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Traffic growth</li>
-              <li className="flex items-center"><span className="text-green-500 mr-2">✔</span> Multi-platform publishing</li>
-            </ul>
-          </div>
-        </div>
-        <div className="my-10 border-t border-gray-200"></div>
-        <div className="max-w-3xl mx-auto text-center">
-          <h3 className="text-lg font-bold text-gray-800 mb-2">What can it do?</h3>
-          <p className="text-md text-gray-700 font-medium">
-            <span className="font-bold text-gray-900">Amply automatically creates self-improving content that drives users to your website.</span>
-            <br />
-            The differentiating factor between Amply and competitors is that Amply takes the approach of using faceless content to automate videos. While other services require you to upload all of your video & image assets in order to create &quot;AI ads&quot;, Amply believes in organic content with TikTok distribution as a means of getting leads/inbound.
-          </p>
-        </div>
-      </section>
-
-      {/* About Me Section */}
-      <section className="py-16 bg-[#FAF9F6]">
-        <div className="max-w-4xl mx-auto text-center px-4">
-          <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 border border-gray-100">
-            <div className="flex items-center justify-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-r from-[#3953e6] to-[#36aeea] rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                J
-              </div>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Hey, it&apos;s Thomas</h3>
-            <div className="text-gray-700 leading-relaxed space-y-4 text-left">
-              <p>
-                Last year, i was spending 10+ hours every week brainstorming, making, and posting content just to get the smallest ammount of traction for my startup. As a founder, I needed attention, but I didn&apos;t have the time or the team to consistently create content that actually worked.
-              </p>
-              <p>
-                I tried using existing AI tools, but they were either overpriced, too generic or just made complete slop. Most wanted $100 to $300/month just to give me surface-level results. I was barely making revenue, and none of it helped me <em>actually grow</em>.
-              </p>
-              <p>
-                So I built my own tool, just for myself at first. Something that could automatically generate <em>founder-style</em> content that felt real, looked native to TikTok and most of all actually got traffic.
-              </p>
-              <p>
-                Turns out I wasn&apos;t the only one struggling.
-              </p>
-              <p>
-                That&apos;s how <strong>Amply</strong> was born.
-              </p>
-              <p>
-                Today, Amply helps founders auto-create quality content that builds attention, trust and traffic without the cost, burnout or guesswork.
-              </p>
-                              <p>
-                  I use it every day to grow my own audience and bring in users and now, so can you. 😎
-                </p>
-                <p className="text-sm text-gray-500 italic mt-6 pt-4 border-t border-gray-100">
-                  P.S. You can try it 100% for free, but for a limited time.
-                </p>
-              </div>
+            <DistributionMoatDiagram />
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Testimonials: single block on page canvas */}
+      <section
+        className="w-full bg-[#FAF9F6] px-4 py-16 sm:py-20"
+        aria-labelledby="landing-testimonials-heading"
+      >
+        <div className="mx-auto max-w-6xl rounded-3xl border border-gray-200/90 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.06)] sm:p-8 md:p-10 lg:p-12">
+          <div className="text-center mb-10 sm:mb-12">
+            <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50/80 px-3 py-1 text-xs font-semibold tracking-wide text-gray-600">
+              Testimonials
+            </span>
+            <h2
+              id="landing-testimonials-heading"
+              className="mt-4 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl"
+            >
+              Don&apos;t Take Our Word for It
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-pretty text-base text-gray-600 sm:text-lg">
+              See how teams are turning AI search gaps into competitive advantages.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-4 md:grid-rows-[auto_auto]">
+          {/* Stat: LLM visibility */}
+          <div className="flex flex-col rounded-2xl border border-orange-200/90 bg-gradient-to-b from-orange-50/95 to-amber-50/80 p-6 shadow-sm md:col-span-1">
+            <p className="text-sm font-semibold text-gray-800">Increased LLM visibility</p>
+            <div className="relative mt-4 flex-1 min-h-[120px]">
+              <svg className="h-full w-full" viewBox="0 0 120 72" preserveAspectRatio="none" aria-hidden>
+                <defs>
+                  <linearGradient id="llmAreaGrad" x1="0" y1="1" x2="0" y2="0">
+                    <stop offset="0%" stopColor="#fb923c" stopOpacity="0.15" />
+                    <stop offset="100%" stopColor="#ea580c" stopOpacity="0.45" />
+                  </linearGradient>
+                </defs>
+                <path
+                  d="M 0 58 L 12 52 L 28 48 L 44 38 L 62 28 L 82 18 L 100 10 L 120 6 L 120 72 L 0 72 Z"
+                  fill="url(#llmAreaGrad)"
+                />
+                <path
+                  d="M 0 58 L 12 52 L 28 48 L 44 38 L 62 28 L 82 18 L 100 10 L 120 6"
+                  fill="none"
+                  stroke="#ea580c"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-lg border border-orange-100 bg-white px-2 py-1 text-xs font-bold text-gray-900 shadow-md">
+                <span className="text-emerald-600" aria-hidden>
+                  ↑
+                </span>
+                +47%
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2 border-t border-orange-200/60 pt-4">
+              <span className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-emerald-500 to-sky-500 text-[10px] font-bold text-white">
+                L
+              </span>
+              <span className="text-sm font-semibold text-gray-800">Levanta</span>
+            </div>
+          </div>
+
+          {/* Stat: citations */}
+          <div className="flex flex-col rounded-2xl border border-indigo-200/80 bg-gradient-to-b from-indigo-50/90 to-violet-50/70 p-6 shadow-sm md:col-span-1">
+            <p className="text-sm font-semibold text-indigo-950">Citations coverage</p>
+            <div className="relative mx-auto mt-2 flex h-32 w-32 items-center justify-center">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36" aria-hidden>
+                <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e0e7ff" strokeWidth="3" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.5"
+                  fill="none"
+                  stroke="#6366f1"
+                  strokeWidth="3"
+                  strokeDasharray="75 25"
+                  strokeLinecap="round"
+                  pathLength="100"
+                />
+              </svg>
+              <span className="absolute text-lg font-bold text-indigo-900">75%</span>
+            </div>
+            <div className="mt-auto flex justify-center border-t border-indigo-200/50 pt-4">
+              <span className="text-lg font-bold tracking-tight text-indigo-950">omio</span>
+            </div>
+          </div>
+
+          {/* Quote: Marcus */}
+          <article className="flex flex-col justify-between rounded-2xl border border-gray-200/90 bg-white p-6 shadow-sm md:col-span-2">
+            <p className="text-left text-sm font-medium leading-relaxed text-gray-800 sm:text-base">
+              &ldquo;I&apos;ve never seen such huge ROAS anywhere else. I was able to take my e-com stores to rank in
+              almost all of our core topics in our niche, which has led to over $1M extra revenue since
+              January.&rdquo;
+            </p>
+            <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
+              <div
+                className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 ring-2 ring-white shadow"
+                aria-hidden
+              />
+              <div className="text-left">
+                <p className="font-bold text-gray-900">Marcus A</p>
+                <p className="text-sm text-gray-500">eCom</p>
+              </div>
+            </div>
+          </article>
+
+          {/* Quote: Michal */}
+          <article className="flex flex-col justify-between rounded-2xl border border-gray-200/90 bg-white p-6 shadow-sm md:col-span-2">
+            <p className="text-left text-sm font-medium leading-relaxed text-gray-800 sm:text-base">
+              &ldquo;The tool really made our work so much easier, we&apos;re able to give our clients not only good
+              results, but with less effort from our side. We&apos;ve been with CrowdReply since they started,
+              primarily for Reddit marketing, but now we&apos;re also able to offer AI visibility to our
+              clients.&rdquo;
+            </p>
+            <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
+              <div
+                className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-amber-600 to-orange-700 ring-2 ring-white shadow"
+                aria-hidden
+              />
+              <div className="text-left">
+                <p className="font-bold text-gray-900">Michal H</p>
+                <p className="text-sm text-gray-500">Redditera</p>
+              </div>
+            </div>
+          </article>
+
+          {/* Quote: Adrina */}
+          <article className="flex flex-col justify-between rounded-2xl border border-gray-200/90 bg-white p-6 shadow-sm md:col-span-2">
+            <p className="text-left text-sm font-medium leading-relaxed text-gray-800 sm:text-base">
+              &ldquo;Our app launched 4 months ago and ranking on LLMs have driven more traffic than paid ads for us.
+              We&apos;ve tried to get our brand into all the relevant Reddit citations that we see LLMs citing
+              from.&rdquo;
+            </p>
+            <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-5">
+              <div
+                className="h-11 w-11 shrink-0 rounded-full bg-gradient-to-br from-rose-400 to-fuchsia-600 ring-2 ring-white shadow"
+                aria-hidden
+              />
+              <div className="text-left">
+                <p className="font-bold text-gray-900">Adrina W</p>
+                <p className="text-sm text-gray-500">App</p>
+              </div>
+            </div>
+          </article>
+        </div>
+        </div>
+      </section>
+
+      {/* Pricing Section (last) */}
       <section id="pricing" className="pt-16 pb-8 bg-[#FAF9F6]">
         <div className="max-w-4xl mx-auto text-center px-4">
           <h2 className="text-3xl font-bold text-gray-800 mb-6">Pricing</h2>
@@ -829,10 +792,10 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Starter</h3>
               <p className="mb-4">
                 <span className="text-gray-800 font-bold text-3xl">
-                  ${isMonthly ? 24 : 19}
+                  ${isMonthly ? 100 : 80}
                 </span>
                 <span className="text-gray-400 text-base ml-1">
-                  per {isMonthly ? 'month' : 'year'}
+                  per month
                 </span>
               </p>
               {/* Starter Plan Button (black gradient, lifted/glossy) */}
@@ -896,10 +859,10 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-800 mb-2 mt-8">Pro</h3>
               <p className="mb-4">
                 <span className="text-gray-800 font-bold text-3xl">
-                  ${isMonthly ? 62 : 49}
+                  ${isMonthly ? 250 : 200}
                 </span>
                 <span className="text-gray-400 text-base ml-1">
-                  per {isMonthly ? 'month' : 'year'}
+                  per month
                 </span>
               </p>
               {/* Growth Plan Button (blue gradient/gloss) */}
@@ -963,10 +926,10 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Scale</h3>
               <p className="mb-4">
                 <span className="text-gray-800 font-bold text-3xl">
-                  ${isMonthly ? 115 : 90}
+                  ${isMonthly ? 500 : 400}
                 </span>
                 <span className="text-gray-400 text-base ml-1">
-                  per {isMonthly ? 'month' : 'year'}
+                  per month
                 </span>
               </p>
               {/* Scale Plan Button (black gradient, lifted/glossy) */}
@@ -1029,8 +992,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-
 
       {/* Footer */}
       <footer className="absolute bottom-2 left-0 w-full flex flex-col items-center gap-2 text-gray-500 text-sm">

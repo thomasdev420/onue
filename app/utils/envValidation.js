@@ -20,10 +20,10 @@ const REQUIRED_ENV_VARS = {
 };
 
 const OPTIONAL_ENV_VARS = {
-  // TikTok API (optional)
-  TIKTOK_CLIENT_KEY: 'TikTok client key',
-  TIKTOK_CLIENT_SECRET: 'TikTok client secret',
-  TIKTOK_REDIRECT_URI: 'TikTok redirect URI',
+  // Short-form video platform OAuth (optional third-party integration)
+  TIKTOK_CLIENT_KEY: 'Short-form platform OAuth client key',
+  TIKTOK_CLIENT_SECRET: 'Short-form platform OAuth client secret',
+  TIKTOK_REDIRECT_URI: 'Short-form platform OAuth redirect URI',
   
   // Feature flags
   NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: 'Performance monitoring flag',

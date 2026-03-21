@@ -1,193 +1,140 @@
 'use client';
 
-import Link from "next/link";
-import { useSession } from "next-auth/react";
-import { Home, Video, Calendar, Megaphone, Image as ImageIcon, Book, User, HelpCircle, Settings, ArrowLeft, Sparkles, Lightbulb, Camera, CreditCard, Pocket, Package, Upload, Pencil, TrendingUp, Zap, Target, BarChart3, Globe, Palette } from 'lucide-react';
-import ChatBar from "./components/ChatBar";
-import WebsiteOnboarding from "../components/WebsiteOnboarding";
-import AuthGuard from "../components/AuthGuard";
-import { useState, useEffect, useRef } from "react";
-import { useOnboardingModal } from './OnboardingModalContext';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
+import { Settings, Target, ArrowRight, Bot, Zap, HelpCircle } from 'lucide-react';
+import AuthGuard from '../components/AuthGuard';
+import { useState, useEffect, useRef } from 'react';
 
-//Dashboard page
+/** Illustrative AI selection trends: link to AI Selection for real scores */
+function MissionMetricsSection() {
+  const visibilityPoints = [42, 44, 43, 48, 52, 55, 58, 62, 65, 68, 71, 74, 76, 78, 80, 82, 84, 85, 87, 88, 90, 91, 92, 93, 94];
+  const selectionPoints = [28, 29, 30, 31, 32, 33, 35, 36, 38, 40, 41, 43, 45, 46, 48, 50, 51, 53, 55, 56, 58, 59, 60, 61, 62];
 
-function AnimatedLineChart({ points, color, fill, percentLabel }) {
-  const [length, setLength] = useState(0);
-  const pathRef = useRef(null);
-
-  useEffect(() => {
-    if (pathRef.current) {
-      const totalLength = pathRef.current.getTotalLength();
-      setLength(totalLength);
-    }
-  }, [points]);
-
-  return (
-    <svg viewBox="0 0 260 80" width="100%" height="80" className="overflow-visible">
-      <defs>
-        <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
-          <stop offset="100%" stopColor={color} stopOpacity="0.04" />
-        </linearGradient>
-      </defs>
-      <path
-        ref={pathRef}
-        d={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="3"
-        style={{
-          strokeDasharray: length,
-          strokeDashoffset: length,
-          animation: 'dash 1.2s cubic-bezier(0.4,0,0.2,1) forwards',
-        }}
-      />
-      <path d={fill} fill="url(#chartFill)" />
-      {percentLabel && (
-        <text x="220" y="30" fontSize="14" fontWeight="bold" fill={color} opacity="0.7">{percentLabel}</text>
-      )}
-      <style>{`
-        @keyframes dash {
-          to { stroke-dashoffset: 0; }
-        }
-      `}</style>
-    </svg>
-  );
-}
-
-function DashboardAnalyticsSection() {
-  // More detailed mock data for both lines
-  const viewsPoints = [60, 58, 62, 70, 75, 80, 85, 90, 92, 95, 100, 110, 120, 130, 140, 145, 150, 155, 160, 162, 165, 170, 172, 175, 180];
-  const followersPoints = [55, 56, 58, 60, 62, 65, 68, 70, 73, 75, 78, 80, 83, 85, 88, 90, 92, 94, 97, 100, 102, 104, 106, 108, 110];
-
-  // Convert points to SVG path
   function getPath(points) {
     const step = 240 / (points.length - 1);
-    let d = `M10,${80 - points[0] * 0.5}`;
+    let d = `M10,${80 - points[0] * 0.55}`;
     points.forEach((pt, i) => {
       if (i === 0) return;
-      d += ` L${10 + i * step},${80 - pt * 0.5}`;
+      d += ` L${10 + i * step},${80 - pt * 0.55}`;
     });
     return d;
   }
 
-  // Animation state for both lines
-  const [viewsLength, setViewsLength] = useState(0);
-  const [followersLength, setFollowersLength] = useState(0);
-  const viewsRef = useRef(null);
-  const followersRef = useRef(null);
+  const [visLen, setVisLen] = useState(0);
+  const [selLen, setSelLen] = useState(0);
+  const visRef = useRef(null);
+  const selRef = useRef(null);
 
   useEffect(() => {
-    if (viewsRef.current) {
-      setViewsLength(viewsRef.current.getTotalLength());
-    }
-    if (followersRef.current) {
-      setFollowersLength(followersRef.current.getTotalLength());
-    }
+    if (visRef.current) setVisLen(visRef.current.getTotalLength());
+    if (selRef.current) setSelLen(selRef.current.getTotalLength());
   }, []);
 
   return (
-    <section className="w-full max-w-2xl mx-auto mt-10 mb-8 px-2 md:px-0">
-      <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col min-h-[220px] border border-gray-100">
-        <div className="flex justify-between items-center mb-2">
-          <div>
-            <div className="text-sm font-medium text-gray-500 mb-0.5">Analytics</div>
-            <div className="flex gap-6 items-end">
-              <div className="flex items-end gap-1">
-                <span className="w-3 h-3 rounded-full bg-blue-400 inline-block mr-2" />
-                <span className="text-base font-semibold text-blue-400">24.5K</span>
-                <span className="text-xs text-gray-400 ml-1">Views</span>
-              </div>
-              <div className="flex items-end gap-1">
-                <span className="w-3 h-3 rounded-full bg-purple-400 inline-block mr-2" />
-                <span className="text-base font-semibold text-purple-400">8.2K</span>
-                <span className="text-xs text-gray-400 ml-1">Followers</span>
-              </div>
+    <section className="w-full max-w-3xl mx-auto mt-10 mb-6 px-2 md:px-0">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <Bot className="h-4 w-4 text-violet-600" />
+            AI selection pulse
+          </h2>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Illustrative trend: run a scan on{' '}
+            <Link href="/dashboard/selection" className="text-violet-600 font-medium hover:underline">
+              AI Selection
+            </Link>{' '}
+            for real visibility &amp; selection scores
+          </p>
+        </div>
+      </div>
+      <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+        <div className="flex flex-wrap justify-between items-end gap-4 mb-2">
+          <div className="flex gap-8 items-end">
+            <div className="flex items-end gap-2">
+              <span className="w-3 h-3 rounded-full bg-emerald-500 inline-block" />
+              <span className="text-lg font-bold text-emerald-700">•</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Visibility</span>
+            </div>
+            <div className="flex items-end gap-2">
+              <span className="w-3 h-3 rounded-full bg-violet-500 inline-block" />
+              <span className="text-lg font-bold text-violet-700">•</span>
+              <span className="text-xs text-gray-500 uppercase tracking-wide">Selection</span>
             </div>
           </div>
-          <div className="flex gap-3">
-            <span className="flex items-center gap-1 text-green-400 text-xs font-medium">
-              <svg className="w-3 h-3" fill="none" stroke="#22C55E" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg>
-              +12.5%
-            </span>
-            <span className="flex items-center gap-1 text-green-400 text-xs font-medium">
-              <svg className="w-3 h-3" fill="none" stroke="#22C55E" strokeWidth="2" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7" /></svg>
-              +8.3%
-            </span>
-          </div>
+          <span className="text-xs text-amber-700 bg-amber-50 border border-amber-100 px-2 py-1 rounded-full font-medium">
+            Demo curve
+          </span>
         </div>
-        <div className="bg-[#f8fbff] rounded-xl p-2 mt-2 mb-1">
+        <div className="bg-gradient-to-b from-violet-50/80 to-white rounded-xl p-2 mt-2">
           <svg viewBox="0 0 260 80" width="100%" height="80" className="overflow-visible">
             <defs>
-              <linearGradient id="viewsFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="#60A5FA" stopOpacity="0.04" />
+              <linearGradient id="visFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#10B981" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#10B981" stopOpacity="0.04" />
               </linearGradient>
-              <linearGradient id="followersFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#A78BFA" stopOpacity="0.18" />
-                <stop offset="100%" stopColor="#A78BFA" stopOpacity="0.04" />
+              <linearGradient id="selFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.04" />
               </linearGradient>
             </defs>
-            {/* Views Line and Fill */}
-            <path d={getPath([...viewsPoints, viewsPoints[viewsPoints.length-1], viewsPoints[0]]) + ` L250,80 L10,80 Z`} fill="url(#viewsFill)" />
             <path
-              ref={viewsRef}
-              d={getPath(viewsPoints)}
+              d={`${getPath([...visibilityPoints, visibilityPoints[visibilityPoints.length - 1], visibilityPoints[0]])} L250,80 L10,80 Z`}
+              fill="url(#visFill)"
+            />
+            <path
+              ref={visRef}
+              d={getPath(visibilityPoints)}
               fill="none"
-              stroke="#60A5FA"
+              stroke="#10B981"
               strokeWidth="2.5"
               style={{
-                filter: 'drop-shadow(0 1px 2px #60A5FA22)',
-                strokeDasharray: viewsLength,
-                strokeDashoffset: viewsLength,
-                animation: 'dash-views 1.2s cubic-bezier(0.4,0,0.2,1) forwards',
+                strokeDasharray: visLen,
+                strokeDashoffset: visLen,
+                animation: 'dash-vis 1.2s cubic-bezier(0.4,0,0.2,1) forwards',
               }}
             />
-            {/* Followers Line and Fill */}
-            <path d={getPath([...followersPoints, followersPoints[followersPoints.length-1], followersPoints[0]]) + ` L250,80 L10,80 Z`} fill="url(#followersFill)" />
             <path
-              ref={followersRef}
-              d={getPath(followersPoints)}
+              d={`${getPath([...selectionPoints, selectionPoints[selectionPoints.length - 1], selectionPoints[0]])} L250,80 L10,80 Z`}
+              fill="url(#selFill)"
+            />
+            <path
+              ref={selRef}
+              d={getPath(selectionPoints)}
               fill="none"
-              stroke="#A78BFA"
+              stroke="#8B5CF6"
               strokeWidth="2.5"
               style={{
-                filter: 'drop-shadow(0 1px 2px #A78BFA22)',
-                strokeDasharray: followersLength,
-                strokeDashoffset: followersLength,
-                animation: 'dash-followers 1.2s cubic-bezier(0.4,0,0.2,1) 0.2s forwards',
+                strokeDasharray: selLen,
+                strokeDashoffset: selLen,
+                animation: 'dash-sel 1.2s cubic-bezier(0.4,0,0.2,1) 0.15s forwards',
               }}
             />
             <style>{`
-              @keyframes dash-views {
-                to { stroke-dashoffset: 0; }
-              }
-              @keyframes dash-followers {
-                to { stroke-dashoffset: 0; }
-              }
+              @keyframes dash-vis { to { stroke-dashoffset: 0; } }
+              @keyframes dash-sel { to { stroke-dashoffset: 0; } }
             `}</style>
           </svg>
         </div>
-        <div className="flex justify-between items-center mt-1 text-xs text-gray-300">
-          <span>This month</span>
-          <span>Combined Trends</span>
-        </div>
-      </div>
-      {/* Lower Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-        <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col items-start min-h-[70px] border border-gray-100">
-          <div className="text-gray-400 text-xs mb-0.5">Engagement Rate</div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-gray-900">4.8%</span>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+          <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-3">
+            <p className="text-[11px] font-medium text-gray-500 uppercase">The shift</p>
+            <p className="text-sm text-gray-800 mt-1 leading-snug">
+              Traffic mattered. Now <span className="font-semibold">agents pick the winner</span>.
+            </p>
           </div>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col items-start min-h-[70px] border border-gray-100">
-          <div className="text-gray-400 text-xs mb-0.5">Avg. Watch Time</div>
-          <span className="text-lg font-semibold text-gray-900">2m 34s</span>
-        </div>
-        <div className="bg-white rounded-xl shadow-sm p-4 flex flex-col items-start min-h-[70px] border border-gray-100">
-          <div className="text-gray-400 text-xs mb-0.5">Content Posted</div>
-          <span className="text-lg font-semibold text-gray-900">47</span>
+          <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-3">
+            <p className="text-[11px] font-medium text-gray-500 uppercase">What we fix</p>
+            <p className="text-sm text-gray-800 mt-1 leading-snug">
+              Revenue you lose when AI chooses <span className="font-semibold">competitors</span>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-gray-100 bg-gray-50/80 p-3">
+            <p className="text-[11px] font-medium text-gray-500 uppercase">Amply</p>
+            <p className="text-sm text-gray-800 mt-1 leading-snug">
+              Your product record so <span className="font-semibold">you get selected</span>.
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -195,59 +142,99 @@ function DashboardAnalyticsSection() {
 }
 
 function DashboardContent() {
-  const { showWebsiteOnboarding, setShowWebsiteOnboarding } = useOnboardingModal();
   const { data: session } = useSession();
-  const firstName = session?.user?.name?.split(' ')[0] || 'developer';
-  const [chatBarDocked, setChatBarDocked] = useState(false);
+  const firstName = session?.user?.name?.split(' ')[0] || 'there';
+
+  const quickLinks = [
+    {
+      href: '/dashboard/selection',
+      title: 'AI Selection',
+      desc: 'Simulate assistants: visibility & selection scores',
+      icon: Target,
+      accent: 'from-orange-500 to-rose-600',
+    },
+    {
+      href: '/dashboard/settings',
+      title: 'Settings',
+      desc: 'Account, credits, and preferences',
+      icon: Settings,
+      accent: 'from-slate-500 to-slate-700',
+    },
+    {
+      href: '/dashboard/support',
+      title: 'Support',
+      desc: 'Help and feedback',
+      icon: HelpCircle,
+      accent: 'from-sky-500 to-blue-600',
+    },
+  ];
 
   return (
     <AuthGuard>
-      {/* Header with Centered Welcome */}
-      {!chatBarDocked && (
-        <div className="mb-8 mt-8">
-          <div className="flex justify-center">
-            <h1 className="text-2xl font-bold text-black">
-              Welcome back, {firstName}
-            </h1>
+      <div className="mb-6 mt-4 max-w-3xl mx-auto px-2">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.2em] text-indigo-600 mb-2">
+          AI native commerce
+        </p>
+        <h1 className="text-center text-2xl sm:text-3xl font-extrabold text-gray-900 text-balance leading-tight">
+          Welcome back, {firstName}
+        </h1>
+        <p className="text-center text-gray-600 mt-3 max-w-xl mx-auto text-sm sm:text-base leading-relaxed">
+          Assistants are choosing products, not people scrolling forever. Amply helps you become the{' '}
+          <span className="text-indigo-600 font-semibold">picked</span> brand, with proof.
+        </p>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-2 mb-8">
+        <Link
+          href="/dashboard/selection"
+          className="group flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border-2 border-orange-200/80 bg-gradient-to-br from-orange-50 via-white to-violet-50 p-5 sm:p-6 shadow-md hover:shadow-lg hover:border-orange-300 transition-all"
+        >
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-rose-600 text-white shadow-lg">
+            <Zap className="h-7 w-7" />
           </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-bold uppercase tracking-wide text-orange-800">Start here</p>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mt-0.5">Run an AI selection scan</h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Ingest your product URL and measure how models mention you vs pick you as the best option.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-orange-700 group-hover:gap-2 transition-all shrink-0">
+            Open <ArrowRight className="h-4 w-4" />
+          </span>
+        </Link>
+      </div>
+
+      <div className="max-w-3xl mx-auto px-2 mb-10">
+        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 px-1">Workspace</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {quickLinks.map(({ href, title, desc, icon: Icon, accent }) => (
+            <Link
+              key={href}
+              href={href}
+              className="group rounded-2xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-gray-300 transition-all"
+            >
+              <div
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${accent} text-white mb-3`}
+              >
+                <Icon className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">{title}</h3>
+              <p className="text-sm text-gray-500 mt-1 leading-snug">{desc}</p>
+              <span className="inline-flex items-center gap-1 mt-3 text-xs font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                Go <ArrowRight className="h-3 w-3" />
+              </span>
+            </Link>
+          ))}
         </div>
-      )}
-      <ChatBar
-          actions={[
-            {
-              label: 'Analytics',
-              icon: <BarChart3 size={18} />,
-              href: '/dashboard/analytics',
-            },
-            {
-              label: 'Create content',
-              icon: <Palette size={18} />,
-              href: '/dashboard/slides',
-            },
-            {
-              label: 'Settings',
-              icon: <Settings size={18} />,
-              href: '/dashboard/settings',
-            },
-            {
-              label: 'Personalize',
-              icon: <Globe size={18} />,
-              href: undefined,
-              onClick: () => setShowWebsiteOnboarding(true),
-            },
-            {
-              label: 'Schedule',
-              icon: <Calendar size={18} />,
-              href: '/dashboard/schedule',
-            },
-          ]}
-          docked={chatBarDocked}
-          onMessageSubmit={() => setChatBarDocked(true)}
-        />
+      </div>
 
+      <MissionMetricsSection />
 
-
-      {/* Removed separate Personalize, Schedule, and Videos buttons for unified layout */}
+      <div className="max-w-3xl mx-auto px-2 mt-8 mb-12 text-center text-xs text-gray-400">
+        Social content tools have been removed. This workspace is focused on{' '}
+        <span className="text-gray-600 font-medium">AI selection &amp; revenue you&apos;re not capturing</span>.
+      </div>
     </AuthGuard>
   );
 }

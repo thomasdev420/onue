@@ -63,9 +63,9 @@ export const CONTEXT_EXAMPLES = {
       reason: "Explicit questionnaire response overrides email metadata"
     },
     {
-      scenario: "User asks for 'marketing tips for my restaurant' but their role is 'developer'",
-      correct_interpretation: "Provide restaurant marketing tips",
-      incorrect_interpretation: "Provide developer-focused content",
+      scenario: "User asks for 'positioning tips for my restaurant' but their role is 'developer'",
+      correct_interpretation: "Provide restaurant positioning tips",
+      incorrect_interpretation: "Provide developer-focused output",
       reason: "Explicit request overrides role information"
     },
     {
@@ -93,7 +93,7 @@ export const CONTEXT_EXAMPLES = {
  * @returns {string} Formatted system prompt
  */
 export function buildContextAwarePrompt(context, userPrompt) {
-  let systemPrompt = `You are Mr Flightmedia – a friendly marketing assistant. Help users directly with their requests.`;
+  let systemPrompt = `You are Amply’s generation copilot, focused on clear founder narratives that AI systems can summarize and recommend accurately. Help users directly with their requests.`;
 
   // Add explicit instruction about priority
   systemPrompt += `\n\nPriority: User's request is most important. Use context to enhance responses, not override requests.`;

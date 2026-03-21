@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useState, cloneElement, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
-import WebsiteOnboarding from '../components/WebsiteOnboarding';
 import FeedbackButton from '../components/FeedbackButton';
-import { OnboardingModalContext } from './OnboardingModalContext';
 
 export default function DashboardLayout({ children }) {
   const { data: session, status } = useSession();
@@ -16,117 +14,47 @@ export default function DashboardLayout({ children }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
   const [devAccessChecked, setDevAccessChecked] = useState(false);
   const [hasOAuthParams, setHasOAuthParams] = useState(false);
-  const [showWebsiteOnboarding, setShowWebsiteOnboarding] = useState(false);
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
-  const [onboardingStatusChecked, setOnboardingStatusChecked] = useState(false);
-  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
   const isDev = process.env.NODE_ENV === 'development';
 
-  // Check onboarding status on mount
-  useEffect(() => {
-    const checkOnboardingStatus = async () => {
-      if (session?.user?.email) {
-        try {
-          const response = await fetch('/api/user/onboarding-status', {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-          
-          if (response.ok) {
-            const { hasCompleted } = await response.json();
-            setHasCompletedOnboarding(hasCompleted);
-            
-            console.log('🔍 Dashboard Onboarding Check:', {
-              user: session.user.email,
-              hasCompleted,
-              willShowOnboarding: !hasCompleted
-            });
-            
-            // Show mandatory onboarding only for first-time users
-            if (!hasCompleted) {
-              setIsFirstTimeUser(true);
-              setShowWebsiteOnboarding(true);
-            } else {
-              setIsFirstTimeUser(false);
-            }
-          }
-        } catch (error) {
-          console.error('Error checking onboarding status:', error);
-          // Default to showing mandatory onboarding for new users
-          setIsFirstTimeUser(true);
-          setShowWebsiteOnboarding(true);
-        }
-      }
-      setOnboardingStatusChecked(true);
-    };
-
-    if (session?.user?.email) {
-      checkOnboardingStatus();
-    } else {
-      setOnboardingStatusChecked(true);
-    }
-  }, [session?.user?.email]);
-
-  // Determine page color based on current pathname
   const getPageColor = () => {
-    if (pathname.includes('/dashboard/slides')) return '#059669'; // Green for slides
-    if (pathname.includes('/dashboard/meme')) return '#DC2626'; // Red for meme
-    if (pathname.includes('/dashboard/videos')) return '#6366F1'; // Blue for videos
-    if (pathname.includes('/dashboard/images')) return '#9333EA'; // Purple for avatars
-    if (pathname.includes('/dashboard/analytics')) return '#10B981'; // Green for analytics
-    if (pathname.includes('/dashboard/schedule')) return '#F59E0B'; // Amber for schedule
-    if (pathname.includes('/dashboard/support')) return '#3B82F6'; // Blue for support
-    if (pathname.includes('/dashboard/settings')) return '#6B7280'; // Gray for settings
-    if (pathname.includes('/dashboard/upload')) return '#8B5CF6'; // Purple for upload
-    if (pathname.includes('/dashboard/research')) return '#8B5CF6'; // Purple for research
-    return '#93C5FD'; // Default blue for dashboard home
+    if (pathname.includes('/dashboard/support')) return '#3B82F6';
+    if (pathname.includes('/dashboard/settings')) return '#6B7280';
+    if (pathname.includes('/dashboard/selection')) return '#EA580C';
+    return '#6366F1';
   };
 
   const currentPageColor = getPageColor();
 
-  // Consolidated authentication check
   useEffect(() => {
-    const devAccessGranted = localStorage.getItem("devAccessGranted") === "true";
-    
-    // Check for OAuth parameters (indicates recent Google login)
+    const devAccessGranted = localStorage.getItem('devAccessGranted') === 'true';
     const urlParams = new URLSearchParams(window.location.search);
     const hasOAuth = urlParams.has('code') || urlParams.has('state');
     setHasOAuthParams(hasOAuth);
-    
-    console.log('🔍 Dashboard Auth Debug:', {
-      devAccessGranted,
-      isDev,
-      hasOAuth,
-      status,
-      session: !!session,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Clean up OAuth params if present
+
     if (hasOAuth) {
-      console.log('✅ OAuth params detected in dashboard - allowing access');
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-    
-    // Set dev access checked after initial check
+
     setDevAccessChecked(true);
-    
-    // Only redirect if we're not in development, not authenticated, no dev access, and no recent OAuth
-    // AND only if we're not still loading the session
-    if (!isDev && status === 'unauthenticated' && !devAccessGranted && !hasOAuth && status !== 'loading') {
-      console.log('❌ No auth detected - redirecting to landing page');
+
+    const onSelectionOnly =
+      typeof pathname === 'string' && pathname.startsWith('/dashboard/selection');
+
+    if (
+      !isDev &&
+      status === 'unauthenticated' &&
+      !devAccessGranted &&
+      !hasOAuth &&
+      status !== 'loading' &&
+      !onSelectionOnly
+    ) {
       router.push('/');
     }
-  }, [router, isDev, status, session]);
+  }, [router, isDev, status, session, pathname]);
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
 
-  // Show loading state while checking authentication, dev access, and onboarding status
-  if (!devAccessChecked || (status === 'loading' && !hasOAuthParams) || !onboardingStatusChecked) {
+  if (!devAccessChecked || (status === 'loading' && !hasOAuthParams)) {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#FAF9F6' }}>
         <div className="flex items-center gap-3">
@@ -137,34 +65,28 @@ export default function DashboardLayout({ children }) {
     );
   }
 
-  // In development, always allow access
-  // In production, only redirect if not authenticated AND no dev access AND no recent OAuth
-  if (!isDev && status === 'unauthenticated' && !localStorage.getItem("devAccessGranted") && !hasOAuthParams) {
-    console.log('🚫 Access denied - redirecting');
+  const onSelectionRoute =
+    typeof pathname === 'string' && pathname.startsWith('/dashboard/selection');
+
+  if (
+    !isDev &&
+    status === 'unauthenticated' &&
+    !localStorage.getItem('devAccessGranted') &&
+    !hasOAuthParams &&
+    !onSelectionRoute
+  ) {
     return null;
   }
 
   return (
-    <OnboardingModalContext.Provider value={{ showWebsiteOnboarding, setShowWebsiteOnboarding }}>
-      <div className="flex min-h-screen" style={{ backgroundColor: '#FAF9F6', position: 'relative' }}>
-        <div className={`flex w-full h-full${showWebsiteOnboarding ? ' blur-[6px] pointer-events-none' : ''}`}> 
-          <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} pageColor={currentPageColor} />
-          <main className={`flex-1 p-8 bg-[#FAF9F6] overflow-y-auto ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
-            {children}
-          </main>
-        </div>
+    <div className="flex min-h-screen" style={{ backgroundColor: '#FAF9F6', position: 'relative' }}>
+      <div className="flex w-full h-full">
+        <Sidebar isCollapsed={isCollapsed} toggleSidebar={toggleSidebar} pageColor={currentPageColor} />
+        <main className={`flex-1 p-8 bg-[#FAF9F6] overflow-y-auto ${isCollapsed ? 'ml-20' : 'ml-64'}`}>
+          {children}
+        </main>
       </div>
-      <WebsiteOnboarding 
-        open={showWebsiteOnboarding} 
-        onClose={() => setShowWebsiteOnboarding(false)} 
-        onComplete={() => {
-          setShowWebsiteOnboarding(false);
-          setHasCompletedOnboarding(true);
-          setIsFirstTimeUser(false);
-        }}
-        isMandatory={isFirstTimeUser}
-      />
       <FeedbackButton />
-    </OnboardingModalContext.Provider>
+    </div>
   );
 }

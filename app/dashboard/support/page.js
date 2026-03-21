@@ -12,41 +12,35 @@ export default function Support() {
 
   const faqs = [
     {
-      question: "Can I customize the generated content?",
-      answer: "Absolutely! All generated content is fully editable. You can modify text, adjust positioning, change colors, add images, and customize every aspect of your slides and memes using our intuitive drag-and-drop interface."
+      question: 'What is AI Selection?',
+      answer:
+        'We simulate how shopping assistants (like ChatGPT and Claude) answer real buyer questions, then measure whether your product is mentioned and whether it’s picked as the best option. That gives you visibility and selection scores you can improve over time.',
     },
     {
-      question: "How do you get such good results?",
-      answer: "At Flightmedia, every piece of content is uniquely crafted using the information you provide. We run it through a proven system that tests and refines it hundreds of times to ensure it’s as effective and engaging as possible. Then, we use AI to fine-tune the final version and schedule it for posting at the optimal time — so your content always performs at its best."
+      question: 'How do I run a scan?',
+      answer:
+        'Go to AI Selection in the sidebar, paste your public product or store URL, and choose Ingest. Then run a selection scan. You’ll need OpenAI (and optionally Anthropic) API keys configured on the server, plus Supabase with the amply_* tables. See AMPLY_SELECTION_MVP.md in the repo.',
     },
     {
-      question: "How does the AI content generation work?",
-      answer: "Our AI analyzes your prompts and business context to create relevant, engaging content. It considers your brand voice, target audience, and content goals to generate personalized slides, memes, and videos that match your style."
+      question: 'Where did social posting and slide generation go?',
+      answer:
+        'This workspace is focused on winning when AI chooses products, not on scheduling TikTok or generating slide decks. Those features were removed from the dashboard to match the product mission.',
     },
     {
-      question: "How does the content proccess work?",
-      answer: "Our model works with you to uncover unique, emotionally resonant, and context-aware stories, ideas, and insights that are 100 percent original and completely your own. We then refine the content to optimize it for reach and engagement, publish it at the right time, and gather feedback to keep improving with every post."
+      question: 'How do I upgrade my account?',
+      answer:
+        "Use the Upgrade button in the sidebar to view plans. Higher tiers include more credits for AI-powered features as we expand selection scans and fixes.",
     },
     {
-      question: "Can i fully automate my content creation?",
-      answer: "Some types of content are best fully automated, but for others, the best results come when you're involved, usually just a few hours each month."
+      question: 'Is my data secure?',
+      answer:
+        'We use standard security practices for authentication and storage. Scan data is tied to your account; follow your own privacy policy for customer-facing claims.',
     },
     {
-      question: "What social media platforms are supported?", 
-      answer: "For now we support TikTok, Instagram. Each platform is optimized for the best performance and engagement."
+      question: 'How can I get help if I’m stuck?',
+      answer:
+        'Use the options below to reach support. We typically respond within 24 hours; premium users may get priority.',
     },
-    {
-      question: "How do I upgrade my account?",
-      answer: "Click the 'Upgrade' button in your sidebar to view our premium plans. Premium features include unlimited content generation, advanced analytics, priority support, and exclusive templates."
-    },
-    {
-      question: "Is my data secure?",
-      answer: "Absolutely. We use enterprise-grade security measures to protect your data. All content and personal information is encrypted and stored securely. We never share your data with third parties."
-    },
-    {
-      question: "How can I get help if I'm stuck?",
-      answer: "You can reach our support team through the contact form below, email us directly, or use our live chat feature. We typically respond within 24 hours and offer priority support for premium users."
-    }
   ];
 
   return (

@@ -114,7 +114,7 @@ export function extractMemoryInsights(userInput, context = {}) {
 
   // Extract repeated themes and keywords
   const commonThemes = [
-    'marketing', 'branding', 'social media', 'content creation', 'engagement',
+    'brand positioning', 'AI visibility', 'founder narrative', 'product clarity', 'trust signals',
     'conversion', 'awareness', 'leadership', 'innovation', 'quality',
     'authentic', 'professional', 'casual', 'funny', 'serious', 'inspirational'
   ];

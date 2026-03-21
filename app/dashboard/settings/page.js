@@ -1,35 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { getSupabase } from '../../../supabaseClient';
-import { Upload, Instagram, Facebook, Twitter, Linkedin, Youtube, Check, X, Coins, TrendingUp, Crown, Zap, BarChart3, Calendar, RefreshCw, Play } from 'lucide-react';
+import { Check, X, Coins, TrendingUp, Crown, Zap, RefreshCw } from 'lucide-react';
 import ErrorAlert from '../../components/ErrorAlert';
-import Image from 'next/image';
 import MemoryManager from '../components/MemoryManager';
-import IntelligenceModeToggle from '../../components/IntelligenceModeToggle';
 
-import { useUserSettings } from '../../shared/hooks/useUserSettings';
 import { useCredits } from '../../shared/hooks/useCredits';
 
 export default function SettingsPage() {
   const { data: session } = useSession();
-  const [userImages, setUserImages] = useState([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isSettingUp, setIsSettingUp] = useState(false);
   
-  // User settings hook
-  const {
-    intelligenceMode,
-    updateIntelligenceMode,
-    isLoading: isLoadingSettings,
-    error: settingsError,
-    saveStatus: settingsSaveStatus,
-    clearError: clearSettingsError
-  } = useUserSettings();
-
   // Credits hook
   const {
     creditSummary,
@@ -52,114 +36,6 @@ export default function SettingsPage() {
 
   // Ensure usagePercentage is a valid number
   const safeUsagePercentage = isNaN(usagePercentage) ? 0 : usagePercentage;
-
-  const fetchUserImages = useCallback(async () => {
-    try {
-      const supabase = getSupabase();
-      const { data, error } = await supabase
-        .from('user_images')
-        .select('*')
-        .eq('user_id', session.user.email);
-
-      if (error) throw error;
-      setUserImages(data || []);
-    } catch (error) {
-      console.error('Error fetching user images:', error);
-      setError('Failed to load your images');
-    }
-  }, [session?.user?.email]);
-
-  useEffect(() => {
-    if (session?.user?.email) {
-      fetchUserImages();
-    }
-  }, [session, fetchUserImages]);
-
-  const handleFileUpload = async (event) => {
-    if (!session?.user?.email) {
-      setError('You must be logged in to upload images.');
-      return;
-    }
-
-    const files = Array.from(event.target.files);
-    if (files.length === 0) return;
-
-    setIsUploading(true);
-    setError(null);
-
-    try {
-      for (const file of files) {
-        // Validate file type and size
-        if (!file.type.startsWith('image/')) {
-          setError('Please upload only image files');
-          continue;
-        }
-
-        if (file.size > 10 * 1024 * 1024) { // 10MB limit
-          setError('File size must be less than 10MB');
-          continue;
-        }
-
-        const fileName = `${Date.now()}-${file.name}`;
-        const supabase = getSupabase();
-        const { data, error } = await supabase.storage
-          .from('user-content')
-          .upload(fileName, file);
-
-        if (error) throw error;
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('user-content')
-          .getPublicUrl(fileName);
-
-        // Save to database
-        const { error: dbError } = await supabase
-          .from('user_images')
-          .insert({
-            user_id: session.user.email,
-            title: file.name,
-            image_url: publicUrl,
-            file_size: file.size,
-            file_type: file.type
-          });
-
-        if (dbError) throw dbError;
-      }
-
-      setSuccessMessage('Images uploaded successfully!');
-      fetchUserImages(); // Refresh the list
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setError('Failed to upload images. Please try again.');
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleDeleteImage = async (imageId) => {
-    try {
-      const supabase = getSupabase();
-      const { error } = await supabase
-        .from('user_images')
-        .delete()
-        .eq('id', imageId);
-
-      if (error) throw error;
-
-      setSuccessMessage('Image deleted successfully!');
-      fetchUserImages(); // Refresh the list
-      
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(null), 3000);
-    } catch (error) {
-      console.error('Delete error:', error);
-      setError('Failed to delete image. Please try again.');
-    }
-  };
 
   const handleSetupDatabase = async () => {
     try {
@@ -188,11 +64,6 @@ export default function SettingsPage() {
       setIsSettingUp(false);
     }
   };
-
-  const socialPlatforms = [
-    { name: 'Instagram', icon: Instagram, color: 'bg-gradient-to-r from-purple-500 to-pink-500', subtitle: 'Creator accounts only' },
-    { name: 'TikTok', icon: 'tiktok', color: 'bg-gradient-to-r from-black to-gray-800', subtitle: 'Business accounts only' }
-  ];
 
   const getTierIcon = (tier) => {
     switch (tier) {
@@ -227,14 +98,9 @@ export default function SettingsPage() {
   };
 
   const actionTypes = [
-    { key: 'slide_generation', label: 'Slide Generation', icon: <Coins className="h-4 w-4" /> },
-    { key: 'ai_chat', label: 'AI Chat', icon: <Coins className="h-4 w-4" /> },
-    { key: 'image_analysis', label: 'Image Analysis', icon: <Coins className="h-4 w-4" /> },
-    { key: 'visual_analysis', label: 'Visual Analysis', icon: <Coins className="h-4 w-4" /> },
-    { key: 'content_creation', label: 'Content Creation', icon: <Coins className="h-4 w-4" /> },
-    { key: 'memory_processing', label: 'Memory Processing', icon: <Coins className="h-4 w-4" /> },
-    { key: 'website_scraping', label: 'Website Scraping', icon: <Coins className="h-4 w-4" /> },
-    { key: 'brand_analysis', label: 'Brand Analysis', icon: <Coins className="h-4 w-4" /> }
+    { key: 'memory_processing', label: 'AI memory', icon: <Coins className="h-4 w-4" /> },
+    { key: 'brand_analysis', label: 'Brand context', icon: <Coins className="h-4 w-4" /> },
+    { key: 'content_creation', label: 'Legacy usage', icon: <Coins className="h-4 w-4" /> },
   ];
 
   return (
@@ -245,14 +111,6 @@ export default function SettingsPage() {
         <ErrorAlert 
           error={error} 
           onDismiss={() => setError(null)}
-          className="mb-6"
-        />
-      )}
-
-      {settingsError && (
-        <ErrorAlert 
-          error={settingsError} 
-          onDismiss={clearSettingsError}
           className="mb-6"
         />
       )}
@@ -272,10 +130,10 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* AI Settings Section */}
+      {/* Workspace focus */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">AI Settings</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Workspace</h2>
           <button
             onClick={handleSetupDatabase}
             disabled={isSettingUp}
@@ -284,106 +142,13 @@ export default function SettingsPage() {
             {isSettingUp ? 'Setting up...' : 'Setup Database'}
           </button>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
-          <IntelligenceModeToggle
-            currentMode={intelligenceMode}
-            onModeChange={updateIntelligenceMode}
-            isLoading={isLoadingSettings}
-            saveStatus={settingsSaveStatus}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-        {/* Image Management */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Image Management</h2>
-          
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Images
-            </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileUpload}
-                disabled={isUploading}
-                className="hidden"
-                id="image-upload"
-              />
-              <label htmlFor="image-upload" className="cursor-pointer">
-                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">
-                  {isUploading ? 'Uploading...' : 'Click to upload images'}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">
-                  JPG, PNG, GIF up to 10MB each
-                </p>
-              </label>
-            </div>
-          </div>
-
-          {userImages.length > 0 && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-800 mb-3">Your Images</h3>
-              <div className="grid grid-cols-2 gap-4">
-                {userImages.map((image) => (
-                  <div key={image.id} className="relative group">
-                    <div className="aspect-[4/3] rounded-lg overflow-hidden">
-                      <Image
-                        src={image.image_url}
-                        alt={image.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 50vw, 50vw"
-                      />
-                    </div>
-                    <button
-                      onClick={() => handleDeleteImage(image.id)}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X size={12} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Social Media Connections */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Social Media Connections</h2>
-          
-          <div className="space-y-4">
-            {socialPlatforms.map((platform) => (
-              <div key={platform.name} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 ${platform.color} rounded-lg flex items-center justify-center`}>
-                    {platform.icon === 'tiktok' ? (
-                      <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-.88-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/>
-                      </svg>
-                    ) : (
-                      <platform.icon className="w-5 h-5 text-white" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-800">{platform.name}</h3>
-                    <p className="text-sm text-gray-500">{platform.subtitle}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setError(`${platform.name} connection coming soon!`)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Connect
-                </button>
-              </div>
-            ))}
-          </div>
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-6 text-sm text-gray-700 leading-relaxed">
+          <p className="font-semibold text-indigo-900 mb-2">Amply is now focused on AI selection</p>
+          <p>
+            Social posting, slide generation, and media libraries have been removed from this app. Use{' '}
+            <strong>AI Selection</strong> in the sidebar to ingest your product URL and measure how assistants mention
+            and choose you vs competitors. Credits below may still show legacy action types from older usage.
+          </p>
         </div>
       </div>
 
