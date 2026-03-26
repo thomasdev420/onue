@@ -83,7 +83,7 @@ export async function POST(request) {
   }
 
   const admin = getSupabaseServiceRole();
-  const { providers, source } = await loadProviders(admin);
+  const { providers, source, catalog_backend } = await loadProviders(admin);
 
   const { winner, composite, components } = scoreProviders(providers, {
     budgetUsd,
@@ -126,6 +126,7 @@ export async function POST(request) {
     budget_usd: budgetUsd,
     latency_target_ms: latencyTargetMs,
     catalog_source: source,
+    catalog_backend: catalog_backend ?? null,
   };
 
   const payload = {

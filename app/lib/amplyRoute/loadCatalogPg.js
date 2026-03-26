@@ -1,0 +1,70 @@
+/**
+ * Read amply_route_providers via Postgres (TCP). Bypasses Supabase PostgREST HTTP on hosts
+ * where fetch() to *.supabase.co fails (e.g. some serverless IPv6 paths).
+ */
+import pg from 'pg';
+import { SEEDED_PROVIDERS } from './seed.js';
+
+function rowToProvider(row) {
+  return {
+    display_name: row.display_name,
+    win_rate: Number(row.win_rate),
+    p99_latency_ms: Number(row.p99_latency_ms),
+    cost_per_1m_dims_usd: Number(row.cost_per_1m_dims_usd),
+    success_rate_last_24h: Number(row.success_rate_last_24h),
+    success_rate_last_7d: Number(row.success_rate_last_7d),
+    revenue_captured_usd:
+      row.revenue_captured_usd != null ? Number(row.revenue_captured_usd) : null,
+    missed_opportunity_usd:
+      row.missed_opportunity_usd != null ? Number(row.missed_opportunity_usd) : null,
+  };
+}
+
+function getPool(connectionString) {
+  const g = globalThis;
+  const key = '__amplyRoutePgPool';
+  if (!g[key]) {
+    g[key] = new pg.Pool({
+      connectionString,
+      max: 2,
+      idleTimeoutMillis: 20000,
+      connectionTimeoutMillis: 20000,
+      ssl: { rejectUnauthorized: false },
+    });
+  }
+  return g[key];
+}
+
+export async function loadProvidersFromDatabaseUrl(connectionString) {
+  const pool = getPool(connectionString);
+  const { rows } = await pool.query(
+    `SELECT id, display_name, p99_latency_ms, cost_per_1m_dims_usd,
+            success_rate_last_24h, success_rate_last_7d, win_rate,
+            revenue_captured_usd, missed_opportunity_usd
+     FROM amply_route_providers
+     WHERE is_active = true
+     ORDER BY id`,
+  );
+
+  if (!rows?.length) {
+    return {
+      providers: { ...SEEDED_PROVIDERS },
+      source: 'seed',
+      catalog_issue: 'empty_table',
+      catalog_error_code: null,
+      catalog_backend: 'postgres',
+    };
+  }
+
+  const providers = {};
+  for (const row of rows) {
+    providers[row.id] = rowToProvider(row);
+  }
+  return {
+    providers,
+    source: 'supabase',
+    catalog_issue: null,
+    catalog_error_code: null,
+    catalog_backend: 'postgres',
+  };
+}

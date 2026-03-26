@@ -1,4 +1,5 @@
 import { SEEDED_PROVIDERS } from './seed.js';
+import { loadProvidersFromDatabaseUrl } from './loadCatalogPg.js';
 
 function rowToProvider(row) {
   return {
@@ -17,20 +18,31 @@ function rowToProvider(row) {
 
 /**
  * @param {import('@supabase/supabase-js').SupabaseClient | null} admin
- * @returns {Promise<{
- *   providers: Record<string, object>,
- *   source: 'supabase' | 'seed',
- *   catalog_issue: null | 'no_admin_client' | 'query_failed' | 'empty_table',
- *   catalog_error_code: string | null,
- * }>}
  */
 export async function loadProviders(admin) {
+  const dbUrl = process.env.DATABASE_URL?.trim();
+  if (dbUrl) {
+    try {
+      return await loadProvidersFromDatabaseUrl(dbUrl);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      return {
+        providers: { ...SEEDED_PROVIDERS },
+        source: 'seed',
+        catalog_issue: 'query_failed',
+        catalog_error_code: `pg:${msg.slice(0, 100)}`,
+        catalog_backend: 'postgres',
+      };
+    }
+  }
+
   if (!admin) {
     return {
       providers: { ...SEEDED_PROVIDERS },
       source: 'seed',
       catalog_issue: 'no_admin_client',
       catalog_error_code: null,
+      catalog_backend: 'none',
     };
   }
 
@@ -48,6 +60,7 @@ export async function loadProviders(admin) {
       source: 'seed',
       catalog_issue: 'query_failed',
       catalog_error_code: error.code || String(error.message || 'unknown').slice(0, 80),
+      catalog_backend: 'rest',
     };
   }
 
@@ -57,6 +70,7 @@ export async function loadProviders(admin) {
       source: 'seed',
       catalog_issue: 'empty_table',
       catalog_error_code: null,
+      catalog_backend: 'rest',
     };
   }
 
@@ -69,5 +83,6 @@ export async function loadProviders(admin) {
     source: 'supabase',
     catalog_issue: null,
     catalog_error_code: null,
+    catalog_backend: 'rest',
   };
 }

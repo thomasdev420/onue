@@ -19,18 +19,21 @@ export async function OPTIONS() {
 export async function GET() {
   const hasSupabaseUrl = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL?.trim());
   const hasServiceRoleKey = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY?.trim());
+  const hasDatabaseUrl = Boolean(process.env.DATABASE_URL?.trim());
   const admin = getSupabaseServiceRole();
-  const { source, catalog_issue, catalog_error_code } = await loadProviders(admin);
+  const { source, catalog_issue, catalog_error_code, catalog_backend } = await loadProviders(admin);
   return NextResponse.json(
     {
       ok: true,
       service: 'amply',
-      version: '1.0.2-mvp',
+      version: '1.0.3-mvp',
       last_benchmark_at: benchmarkTimestampIso(),
       data_mode: source === 'supabase' ? 'catalog' : 'seeded',
       diagnostics: {
         has_supabase_url: hasSupabaseUrl,
         has_service_role_key: hasServiceRoleKey,
+        has_database_url: hasDatabaseUrl,
+        catalog_backend: catalog_backend ?? null,
         catalog_issue,
         catalog_error_code,
       },

@@ -92,7 +92,11 @@ if (statusJson.data_mode !== 'catalog') {
     '\nSee diagnostics above (has_supabase_url / has_service_role_key / catalog_issue).',
   );
   if (d?.catalog_issue === 'no_admin_client') {
-    if (!d.has_service_role_key) {
+    if (!d.has_database_url && !d.has_service_role_key) {
+      console.error(
+        '\n→ Set DATABASE_URL (Postgres URI, recommended on Vercel) or SUPABASE_SERVICE_ROLE_KEY for REST.',
+      );
+    } else if (!d.has_service_role_key) {
       console.error(
         '\n→ Production is missing SUPABASE_SERVICE_ROLE_KEY (or it is empty).',
         '\n  Vercel → Settings → Environment Variables → Production → add it, no space after =, redeploy.',
@@ -103,8 +107,10 @@ if (statusJson.data_mode !== 'catalog') {
       console.error('\n→ Both env vars set but admin client null — check for typos in variable names.');
     }
   } else if (d?.catalog_issue === 'query_failed') {
-    console.error('→ Supabase query failed:', d.catalog_error_code || 'unknown');
-    console.error('  Wrong key for this project, or table missing (run database_setup_amply_route.sql).');
+    console.error('→ Catalog query failed:', d.catalog_error_code || 'unknown');
+    console.error(
+      '  If using REST: wrong key or table missing. Prefer DATABASE_URL (Postgres) on Vercel — see .env.example.',
+    );
   } else if (d?.catalog_issue === 'empty_table') {
     console.error('→ Table amply_route_providers has no active rows in this Supabase project.');
   }
