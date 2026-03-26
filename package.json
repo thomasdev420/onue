@@ -4,13 +4,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "rm -rf .next && next dev",
+    "clean": "rm -rf .next",
     "build": "next build",
+    "build:clean": "rm -rf .next && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "phase0:pinecone": "node scripts/amply-phase0-prototype.js",
+    "check:v1-status": "node scripts/check-amply-v1-status.mjs",
+    "debug:route-catalog": "node scripts/debug-route-catalog.mjs",
+    "smoke:v1-route": "node scripts/smoke-post-v1-route.mjs",
+    "verify:deploy": "node scripts/verify-deployment.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
-    "@supabase/supabase-js": "^2.49.9",
+    "@pinecone-database/pinecone": "^7.1.0",
+    "@supabase/supabase-js": "^2.100.0",
     "canvas": "^3.1.2",
     "cheerio": "^1.1.0",
     "date-fns": "^4.1.0",
@@ -34,6 +43,7 @@
     "@tailwindcss/postcss": "^4",
     "autoprefixer": "^10.4.21",
     "daisyui": "^5.0.35",
+    "dotenv": "^17.3.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.14",
     "postcss": "^8.5.3",

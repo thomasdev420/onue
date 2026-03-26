@@ -1,0 +1,55 @@
+/**
+ * In-memory catalog fallback (aligned with amply-api/app/providers.py).
+ */
+export const SEEDED_PROVIDERS = {
+  qdrant: {
+    display_name: 'Qdrant',
+    win_rate: 0.44,
+    p99_latency_ms: 14,
+    cost_per_1m_dims_usd: 0.19,
+    success_rate_last_24h: 0.982,
+    success_rate_last_7d: 0.971,
+    revenue_captured_usd: 94500,
+    missed_opportunity_usd: null,
+  },
+  pinecone: {
+    display_name: 'Pinecone',
+    win_rate: 0.29,
+    p99_latency_ms: 28,
+    cost_per_1m_dims_usd: 0.42,
+    success_rate_last_24h: 0.941,
+    success_rate_last_7d: 0.935,
+    revenue_captured_usd: 62300,
+    missed_opportunity_usd: 71200,
+  },
+  weaviate: {
+    display_name: 'Weaviate',
+    win_rate: 0.17,
+    p99_latency_ms: 35,
+    cost_per_1m_dims_usd: 0.31,
+    success_rate_last_24h: 0.967,
+    success_rate_last_7d: 0.96,
+    revenue_captured_usd: 36500,
+    missed_opportunity_usd: 112400,
+  },
+  chroma: {
+    display_name: 'Chroma',
+    win_rate: 0.08,
+    p99_latency_ms: 62,
+    cost_per_1m_dims_usd: 0.12,
+    success_rate_last_24h: 0.894,
+    success_rate_last_7d: 0.885,
+    revenue_captured_usd: 17200,
+    missed_opportunity_usd: 89000,
+  },
+  supabase: {
+    display_name: 'Supabase',
+    win_rate: 0.02,
+    p99_latency_ms: 81,
+    cost_per_1m_dims_usd: 0.25,
+    success_rate_last_24h: 0.923,
+    success_rate_last_7d: 0.915,
+    revenue_captured_usd: 4300,
+    missed_opportunity_usd: 41000,
+  },
+};
