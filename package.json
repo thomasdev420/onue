@@ -17,7 +17,8 @@
     "check:v1-status": "node scripts/check-amply-v1-status.mjs",
     "debug:route-catalog": "node scripts/debug-route-catalog.mjs",
     "smoke:v1-route": "node scripts/smoke-post-v1-route.mjs",
-    "verify:deploy": "node scripts/verify-deployment.mjs"
+    "verify:deploy": "node scripts/verify-deployment.mjs",
+    "print:db-url": "node scripts/print-database-url-template.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
