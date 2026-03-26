@@ -3,7 +3,7 @@
 import { ArrowDown, ArrowRight } from 'lucide-react';
 
 /**
- * Before vs after: losing flow (top), Amply transform, winning flow (bottom).
+ * Before vs after: LLM-guessed tool choice (top) vs Amply empirical route (bottom).
  */
 
 /** Shorter on lg+ so tiles hug copy; arrows match row height */
@@ -67,21 +67,21 @@ function LosingFlow({ mobile = false }) {
   const inner = (
     <>
       <LoseBox>
-        <p className="text-sm font-bold text-white/75">Your product page</p>
-        <p className="text-xs font-medium text-white/45">(unstructured, vague)</p>
+        <p className="text-sm font-bold text-white/75">Model picks API</p>
+        <p className="text-xs font-medium text-white/45">Slow</p>
       </LoseBox>
       {mobile ? <RowArrowDown /> : <RowArrow />}
       <LoseBox>
-        <p className="text-sm font-bold text-white/75">AI tries to evaluate it</p>
+        <p className="text-sm font-bold text-white/75">Bad cost / latency info</p>
       </LoseBox>
       {mobile ? <RowArrowDown /> : <RowArrow />}
       <LoseBox>
-        <p className="text-sm font-bold text-white/75">Hard to understand and compare</p>
+        <p className="text-sm font-bold text-white/75">No real benchmarks</p>
       </LoseBox>
       {mobile ? <RowArrowDown /> : <RowArrow />}
       <LoseBox fatal>
-        <p className="text-sm font-bold text-red-200/90">Not recommended</p>
-        <p className="text-sm font-bold text-red-300/75">Never seen</p>
+        <p className="text-sm font-bold text-red-200/90">Wrong provider</p>
+        <p className="text-sm font-bold text-red-300/75">Slower & pricier</p>
       </LoseBox>
     </>
   );
@@ -101,20 +101,20 @@ function WinningFlow({ mobile = false }) {
   const inner = (
     <>
       <WinBox>
-        <p className="text-sm font-bold text-white">Product structured for AI</p>
+        <p className="text-sm font-bold text-white">POST to Amply</p>
       </WinBox>
       {mobile ? <RowArrowDown /> : <RowArrow />}
       <WinBox>
-        <p className="text-sm font-bold text-white">AI understands instantly</p>
+        <p className="text-sm font-bold text-white">Benchmark scores</p>
       </WinBox>
       {mobile ? <RowArrowDown /> : <RowArrow />}
       <WinBox>
-        <p className="text-sm font-bold text-white">Easy to compare and rank</p>
+        <p className="text-sm font-bold text-white">Pick + metrics + why</p>
       </WinBox>
       {mobile ? <RowArrowDown /> : <RowArrow />}
       <WinBox success>
-        <p className="text-sm font-bold text-emerald-100">Recommended</p>
-        <p className="text-sm font-bold text-emerald-50/95">Chosen in results</p>
+        <p className="text-sm font-bold text-emerald-100">Right service</p>
+        <p className="text-sm font-bold text-emerald-50/95">Fast path</p>
       </WinBox>
     </>
   );
@@ -134,13 +134,13 @@ export default function DistributionMoatDiagram() {
   return (
     <figure
       className="mt-8 w-full max-w-6xl mx-auto sm:mt-10"
-      aria-label="Before: unstructured product pages lead to not being recommended. After: with Amply, structured data leads to being chosen."
+      aria-label="Before: agents waste time and pick the wrong API. After: Amply returns an empirical best choice in milliseconds."
     >
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-8 sm:px-8 sm:py-10">
         {/* Mobile: stack both rows */}
         <div className="lg:hidden">
           <p className="text-center text-xs font-bold uppercase tracking-[0.08em] text-white/50 sm:text-sm">
-            What most businesses are doing
+            Without Amply
           </p>
           <div className="mt-3">
             <LosingFlow mobile />
@@ -157,7 +157,7 @@ export default function DistributionMoatDiagram() {
         {/* Desktop: two horizontal bands */}
         <div className="hidden lg:block">
           <p className="text-center text-sm font-bold uppercase tracking-[0.08em] text-white/50 lg:text-base">
-            What most businesses are doing
+            Without Amply
           </p>
           <div className="mt-4">
             <LosingFlow />

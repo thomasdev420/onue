@@ -75,7 +75,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#6366
 
         <div className="p-4">
           {!isCollapsed && (
-            <Link href="/#pricing">
+            <Link href="/#api">
               <button
                 style={{
                   position: 'relative',

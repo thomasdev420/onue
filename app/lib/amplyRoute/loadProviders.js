@@ -1,5 +1,7 @@
+import { maxTimestampsFromRows } from './catalogFreshness.js';
 import { SEEDED_PROVIDERS } from './seed.js';
 import { loadProvidersFromDatabaseUrl } from './loadCatalogPg.js';
+import { resolveDatabaseUrl } from './resolveDatabaseUrl.js';
 
 function rowToProvider(row) {
   return {
@@ -20,7 +22,7 @@ function rowToProvider(row) {
  * @param {import('@supabase/supabase-js').SupabaseClient | null} admin
  */
 export async function loadProviders(admin) {
-  const dbUrl = process.env.DATABASE_URL?.trim();
+  const dbUrl = resolveDatabaseUrl();
   if (dbUrl) {
     try {
       return await loadProvidersFromDatabaseUrl(dbUrl);
@@ -32,6 +34,7 @@ export async function loadProviders(admin) {
         catalog_issue: 'query_failed',
         catalog_error_code: `pg:${msg.slice(0, 100)}`,
         catalog_backend: 'postgres',
+        catalog_freshness: null,
       };
     }
   }
@@ -43,13 +46,14 @@ export async function loadProviders(admin) {
       catalog_issue: 'no_admin_client',
       catalog_error_code: null,
       catalog_backend: 'none',
+      catalog_freshness: null,
     };
   }
 
   const { data, error } = await admin
     .from('amply_route_providers')
     .select(
-      'id, display_name, p99_latency_ms, cost_per_1m_dims_usd, success_rate_last_24h, success_rate_last_7d, win_rate, revenue_captured_usd, missed_opportunity_usd',
+      'id, display_name, p99_latency_ms, cost_per_1m_dims_usd, success_rate_last_24h, success_rate_last_7d, win_rate, revenue_captured_usd, missed_opportunity_usd, metrics_as_of, updated_at',
     )
     .eq('is_active', true)
     .order('id');
@@ -61,6 +65,7 @@ export async function loadProviders(admin) {
       catalog_issue: 'query_failed',
       catalog_error_code: error.code || String(error.message || 'unknown').slice(0, 80),
       catalog_backend: 'rest',
+      catalog_freshness: null,
     };
   }
 
@@ -71,9 +76,11 @@ export async function loadProviders(admin) {
       catalog_issue: 'empty_table',
       catalog_error_code: null,
       catalog_backend: 'rest',
+      catalog_freshness: null,
     };
   }
 
+  const catalog_freshness = maxTimestampsFromRows(data);
   const providers = {};
   for (const row of data) {
     providers[row.id] = rowToProvider(row);
@@ -84,5 +91,6 @@ export async function loadProviders(admin) {
     catalog_issue: null,
     catalog_error_code: null,
     catalog_backend: 'rest',
+    catalog_freshness,
   };
 }

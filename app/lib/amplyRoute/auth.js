@@ -12,6 +12,11 @@ export function getApiKeySet() {
   );
 }
 
+/** @returns {'none' | 'api_key'} */
+export function getAuthMode() {
+  return getApiKeySet().size > 0 ? 'api_key' : 'none';
+}
+
 /**
  * @param {Request} request
  * @returns {{ ok: boolean, error?: string }}

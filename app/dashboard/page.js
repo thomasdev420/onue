@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useSession } from 'next-auth/react';
 import { Settings, Target, ArrowRight, Bot, Zap, HelpCircle } from 'lucide-react';
 import AuthGuard from '../components/AuthGuard';
+import WebsitePersonalizationPanel from '../components/WebsitePersonalizationPanel';
 import { useState, useEffect, useRef } from 'react';
 
 /** Illustrative AI selection trends: link to AI Selection for real scores */
@@ -205,6 +206,10 @@ function DashboardContent() {
         </Link>
       </div>
 
+      <div className="max-w-3xl mx-auto px-2 mb-8">
+        <WebsitePersonalizationPanel />
+      </div>
+
       <div className="max-w-3xl mx-auto px-2 mb-10">
         <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4 px-1">Workspace</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -232,8 +237,9 @@ function DashboardContent() {
       <MissionMetricsSection />
 
       <div className="max-w-3xl mx-auto px-2 mt-8 mb-12 text-center text-xs text-gray-400">
-        Social content tools have been removed. This workspace is focused on{' '}
-        <span className="text-gray-600 font-medium">AI selection &amp; revenue you&apos;re not capturing</span>.
+        Scan your site above for saved context, or run{' '}
+        <span className="text-gray-600 font-medium">AI Selection</span> for visibility scores — focused on
+        revenue you&apos;re not capturing when models pick competitors.
       </div>
     </AuthGuard>
   );

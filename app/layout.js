@@ -138,8 +138,9 @@ const permanentMarker = Permanent_Marker({
 
 export async function generateMetadata() {
   return {
-            title: "Amply: The one AI agents choose",
-    description: "Turn your product into the one AI agents choose. Win discovery on Google, ChatGPT, Perplexity, and Claude with Amply.",
+    title: "Amply: know which API to call in 200ms",
+    description:
+      "Machine readable routing for agents: price, latency, success rate from real usage, not LLM guesses. Faster and cheaper than reasoning. Free to start.",
     icons: {
       icon: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },
       apple: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },

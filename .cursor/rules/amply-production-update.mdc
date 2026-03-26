@@ -1,0 +1,36 @@
+---
+description: On user message UPDATE — show live production readiness chart and drive work to all green
+alwaysApply: true
+---
+
+# Amply: UPDATE command
+
+When the user’s message is **UPDATE** (or starts with **UPDATE**), treat it as a **mandatory status pass**:
+
+1. **Refresh facts** (run from repo root, network allowed):
+   - `curl -sS "https://www.useamply.com/api/v1/status"` → note `version`, `data_mode`, `diagnostics` (`has_database_url`, `catalog_backend`, `catalog_issue`).
+   - Optionally: `npm run verify:deploy -- https://www.useamply.com` (needs local `.env` if `AMPLY_API_KEYS` required).
+   - Optionally: `npx vercel env ls` if CLI is linked (confirms `DATABASE_URL` on project).
+
+2. **Reply with one big markdown table** — *Amply production readiness (agents, &lt;200ms goal, machine-friendly JSON, live catalog data)* — with columns:
+   **`#` | `Pillar` | `Requirement` | `Status` | `Notes`**
+
+   Use only these status cells: **`✅ 🎉`** when something **works** (verified) · **`⚠️`** partial / verify · **`❌`** gap. Append **`🎉`** to **Notes** (or the opening line) when a live check succeeds (e.g. `data_mode: catalog`, `verify:deploy` OK).
+
+3. **Include these rows** (same bar as product: agents, speed, structured responses, live data). Re-evaluate each row from current code + live checks; update **Notes** with specifics (e.g. version string, error codes).
+
+   | Area | Coverage |
+   |------|----------|
+   | Latency | &lt;200ms p95 goal; cold start; region; pg pool; no broken REST fallback; payload/timeouts |
+   | Machine-friendly | JSON shape; `/api/v1/status`; errors; OpenAPI; stable IDs; `request_id` |
+   | Live data | catalog not seeded; DB freshness metadata; caching vs freshness; no Realtime unless built |
+   | Security | `AMPLY_API_KEYS`; secrets; rate limits |
+   | Reliability | `DATABASE_URL`/aliases; redeploy; pooler; SQL seed |
+   | Observability | logs/APM; verify scripts |
+   | Ops | CI Node 20; deploy version |
+
+4. **After the table:** list **next actions** ordered by impact, only for rows not **`✅`**.
+
+5. **Persistence:** Until the user stops or all rows are **`✅`**, continue implementing and verifying in follow-ups (code, Vercel env, deploy). Do not treat “UPDATE” as a one-line answer — always include the **full table** with refreshed ticks.
+
+If **UPDATE** is combined with other text, still run the full pass and table, then address the rest of the message.

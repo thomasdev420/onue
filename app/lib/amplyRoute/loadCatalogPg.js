@@ -2,7 +2,9 @@
  * Read amply_route_providers via Postgres (TCP). Bypasses Supabase PostgREST HTTP on hosts
  * where fetch() to *.supabase.co fails (e.g. some serverless IPv6 paths).
  */
+import { createHash } from 'node:crypto';
 import pg from 'pg';
+import { maxTimestampsFromRows } from './catalogFreshness.js';
 import { SEEDED_PROVIDERS } from './seed.js';
 
 function rowToProvider(row) {
@@ -22,7 +24,8 @@ function rowToProvider(row) {
 
 function getPool(connectionString) {
   const g = globalThis;
-  const key = '__amplyRoutePgPool';
+  const id = createHash('sha256').update(connectionString).digest('hex').slice(0, 24);
+  const key = `__amplyRoutePgPool_${id}`;
   if (!g[key]) {
     g[key] = new pg.Pool({
       connectionString,
@@ -40,7 +43,8 @@ export async function loadProvidersFromDatabaseUrl(connectionString) {
   const { rows } = await pool.query(
     `SELECT id, display_name, p99_latency_ms, cost_per_1m_dims_usd,
             success_rate_last_24h, success_rate_last_7d, win_rate,
-            revenue_captured_usd, missed_opportunity_usd
+            revenue_captured_usd, missed_opportunity_usd,
+            metrics_as_of, updated_at
      FROM amply_route_providers
      WHERE is_active = true
      ORDER BY id`,
@@ -53,9 +57,11 @@ export async function loadProvidersFromDatabaseUrl(connectionString) {
       catalog_issue: 'empty_table',
       catalog_error_code: null,
       catalog_backend: 'postgres',
+      catalog_freshness: null,
     };
   }
 
+  const catalog_freshness = maxTimestampsFromRows(rows);
   const providers = {};
   for (const row of rows) {
     providers[row.id] = rowToProvider(row);
@@ -66,5 +72,6 @@ export async function loadProvidersFromDatabaseUrl(connectionString) {
     catalog_issue: null,
     catalog_error_code: null,
     catalog_backend: 'postgres',
+    catalog_freshness,
   };
 }

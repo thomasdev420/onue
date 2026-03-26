@@ -18,7 +18,7 @@ export async function OPTIONS() {
 
 export async function GET() {
   const admin = getSupabaseServiceRole();
-  const { providers } = await loadProviders(admin);
+  const { providers, catalog_freshness } = await loadProviders(admin);
   const w = taskWeights(null, null);
   const { composite } = scoreProviders(providers, {
     budgetUsd: 0.01,
@@ -30,7 +30,7 @@ export async function GET() {
     publicProviderSnapshot(providers, pid, composite[pid]),
   );
   return NextResponse.json(
-    { providers: items, default_scoring_weights: w },
+    { providers: items, default_scoring_weights: w, catalog_freshness: catalog_freshness ?? null },
     { headers: corsHeaders },
   );
 }

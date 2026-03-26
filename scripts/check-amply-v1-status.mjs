@@ -37,12 +37,19 @@ if (!res.ok) {
 }
 
 if (data.data_mode !== 'catalog') {
+  const d = data.diagnostics;
   console.error(
     `\nExpected data_mode "catalog", got "${data.data_mode}".`,
     '\n- Is npm run dev running?',
-    '\n- Set SUPABASE_SERVICE_ROLE_KEY in .env and restart dev.',
+    '\n- Prefer DATABASE_URL (Postgres URI) in .env — same as Vercel — then restart dev.',
+    '\n- Or set SUPABASE_SERVICE_ROLE_KEY for REST fallback.',
     '\n- Run database_setup_amply_route.sql in this Supabase project.',
   );
+  if (d?.has_database_url === false && d?.catalog_issue === 'query_failed') {
+    console.error(
+      '\nDiagnostics: no usable DATABASE_URL and REST failed (e.g. fetch). Add DATABASE_URL and restart.',
+    );
+  }
   process.exit(1);
 }
 

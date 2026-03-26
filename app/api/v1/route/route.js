@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyBearer } from '@/app/lib/amplyRoute/auth';
+import { checkV1RouteRateLimit } from '@/app/lib/amplyRoute/rateLimitV1Route';
 import {
   buildWhy,
   estimateDimUnits,
@@ -31,6 +32,20 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
+  const rl = checkV1RouteRateLimit(request);
+  if (!rl.ok) {
+    return NextResponse.json(
+      { detail: 'Too many requests', retry_after_sec: rl.retryAfterSec },
+      {
+        status: 429,
+        headers: {
+          ...corsHeaders,
+          ...(rl.retryAfterSec != null ? { 'Retry-After': String(rl.retryAfterSec) } : {}),
+        },
+      },
+    );
+  }
+
   const auth = verifyBearer(request);
   if (!auth.ok) {
     return NextResponse.json({ detail: auth.error }, { status: 401, headers: corsHeaders });
@@ -83,7 +98,7 @@ export async function POST(request) {
   }
 
   const admin = getSupabaseServiceRole();
-  const { providers, source, catalog_backend } = await loadProviders(admin);
+  const { providers, source, catalog_backend, catalog_freshness } = await loadProviders(admin);
 
   const { winner, composite, components } = scoreProviders(providers, {
     budgetUsd,
@@ -127,6 +142,7 @@ export async function POST(request) {
     latency_target_ms: latencyTargetMs,
     catalog_source: source,
     catalog_backend: catalog_backend ?? null,
+    catalog_freshness: catalog_freshness ?? null,
   };
 
   const payload = {

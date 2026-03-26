@@ -3,108 +3,28 @@
 import { useEffect, useId, useState } from 'react';
 
 /**
- * Hero visual: exponential curve 2026 to 2030 for estimated share of buying decisions
- * influenced or mediated by AI (illustrative %, not financial market size).
+ * Hero visual: illustrative curves, teams routing with Amply vs LLM only provider picks.
+ * Figcaption and cards describe the agent / vector DB routing story.
  */
 
-/** Logo tiles + SVG paths match `app/page.js` hero title (Google, ChatGPT, Perplexity, Claude). */
-const LANDING_LOGO_TILE = {
-  google: {
-    style: {
-      width: '2.75rem',
-      height: '2.75rem',
-      borderRadius: '0.55rem',
-      backgroundColor: '#F8FAFC',
-      border: '1px solid rgba(0, 0, 0, 0.1)',
-      boxShadow: '0 4px 12px rgba(66, 133, 244, 0.15)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transform: 'rotate(-5deg)',
-      flexShrink: 0,
-    },
-  },
-  chatgpt: {
-    style: {
-      width: '2.75rem',
-      height: '2.75rem',
-      borderRadius: '0.55rem',
-      backgroundColor: '#000000',
-      border: '2px solid rgba(255, 255, 255, 0.85)',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.08)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transform: 'rotate(-10deg)',
-      flexShrink: 0,
-    },
-  },
-  perplexity: {
-    style: {
-      width: '2.75rem',
-      height: '2.75rem',
-      borderRadius: '0.55rem',
-      backgroundColor: '#CCFBF1',
-      border: '1px solid rgba(13, 148, 136, 0.35)',
-      boxShadow: '0 4px 12px rgba(13, 148, 136, 0.2)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transform: 'rotate(4deg)',
-      flexShrink: 0,
-    },
-  },
-  claude: {
-    style: {
-      width: '2.75rem',
-      height: '2.75rem',
-      borderRadius: '0.55rem',
-      backgroundColor: '#D97757',
-      border: '2px solid rgba(255, 255, 255, 0.75)',
-      boxShadow: '0 4px 12px rgba(217, 119, 87, 0.35)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      transform: 'rotate(8deg)',
-      flexShrink: 0,
-    },
-  },
+/** Agent icon tile for rotating example task cards. */
+const AGENT_TILE_STYLE = {
+  width: '2.75rem',
+  height: '2.75rem',
+  borderRadius: '0.55rem',
+  backgroundColor: '#000000',
+  border: '2px solid rgba(255, 255, 255, 0.85)',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.08)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transform: 'rotate(-6deg)',
+  flexShrink: 0,
 };
-
-function LandingLogoGoogle() {
-  return (
-    <div style={{ position: 'relative', zIndex: 1, ...LANDING_LOGO_TILE.google.style }} title="Google">
-      <svg
-        className="block shrink-0"
-        style={{ width: '1.55rem', height: '1.55rem' }}
-        viewBox="0 0 24 24"
-        role="img"
-        aria-hidden
-      >
-        <path
-          fill="#4285F4"
-          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-        />
-        <path
-          fill="#EA4335"
-          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-        />
-        <path
-          fill="#FBBC05"
-          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-        />
-        <path
-          fill="#34A853"
-          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-        />
-      </svg>
-    </div>
-  );
-}
 
 function LandingLogoChatGPT() {
   return (
-    <div style={{ position: 'relative', zIndex: 2, ...LANDING_LOGO_TILE.chatgpt.style }} title="ChatGPT">
+    <div style={{ position: 'relative', zIndex: 2, ...AGENT_TILE_STYLE }} title="Agent task">
       <svg
         className="block shrink-0"
         style={{ width: '1.55rem', height: '1.55rem' }}
@@ -121,116 +41,65 @@ function LandingLogoChatGPT() {
   );
 }
 
-function LandingLogoPerplexity() {
-  return (
-    <div style={{ position: 'relative', zIndex: 3, ...LANDING_LOGO_TILE.perplexity.style }} title="Perplexity">
-      <svg
-        className="block shrink-0"
-        style={{ width: '1.55rem', height: '1.55rem' }}
-        viewBox="0 0 24 24"
-        role="img"
-        aria-hidden
-      >
-        <path
-          fill="#0F766E"
-          d="M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z"
-        />
-      </svg>
-    </div>
-  );
-}
-
-function LandingLogoClaude() {
-  return (
-    <div style={{ position: 'relative', zIndex: 4, ...LANDING_LOGO_TILE.claude.style }} title="Claude">
-      <svg
-        className="block shrink-0"
-        style={{ width: '1.55rem', height: '1.55rem' }}
-        viewBox="0 0 24 24"
-        role="img"
-        aria-hidden
-      >
-        <path
-          fill="#FFFFFF"
-          d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"
-        />
-      </svg>
-    </div>
-  );
-}
-
 const QUERY_ROTATE_MS = 4200;
 
 /** Solution section: how Amply works, in order (three steps). */
 const SOLUTION_STEPS = [
   {
-    title: 'Connect your catalog',
-    body: 'Paste your product or site URL so Amply knows what you sell and how you want to sound.',
+    title: 'Get a key',
+    body: 'Free to start. No pay to rank.',
   },
   {
-    title: 'See how AI answers, and where you stand',
-    body: 'We run category questions and score visibility, positioning vs competitors, and whether you’re the top pick.',
+    title: 'POST /v1/route',
+    body: 'Task string in. Service pick, metrics, and why out as JSON only.',
   },
   {
-    title: 'Close the gap and re-run',
-    body: 'Fix copy and proof from the guidance, then re-run to track progress.',
+    title: 'Call the tool',
+    body: 'Use the recommended API from your agent loop. No comparison browsing.',
   },
 ];
 
-/** Same card pattern as existing slides; logos match landing hero only. */
+/** Rotating example agent tasks (icon stack uses ChatGPT tile as generic “agent”). */
 const AI_QUERY_SLIDES = [
   {
-    id: 'google-analytics',
-    Logo: LandingLogoGoogle,
-    text: 'Top analytics tools for ecommerce',
-    cardExtra: '',
-  },
-  {
-    id: 'chatgpt-design',
+    id: 'task-embed-store',
     Logo: LandingLogoChatGPT,
-    text: 'Easy design tools for non designers',
+    text: 'Store 100k 1536 dimensional vectors with metadata filters and run 50 similarity queries',
     cardExtra: '',
   },
   {
-    id: 'perplexity-crm',
-    Logo: LandingLogoPerplexity,
-    text: 'Best CRM for B2B companies?',
-    /** Keep solid surface like other slides: no opacity / frosted look */
-    cardExtra: '',
-  },
-  {
-    id: 'claude-pm',
-    Logo: LandingLogoClaude,
-    text: 'Best project management software for remote teams',
-    cardExtra: '',
-  },
-  {
-    id: 'google-email',
-    Logo: LandingLogoGoogle,
-    text: 'Affordable email marketing tools for startups',
-    cardExtra: '',
-  },
-  {
-    id: 'chatgpt-payroll',
+    id: 'task-query-heavy',
     Logo: LandingLogoChatGPT,
-    text: 'How do I compare payroll providers for a 50-person company?',
+    text: 'Query heavy RAG: low latency hybrid search with medium filter complexity',
     cardExtra: '',
   },
   {
-    id: 'perplexity-docs',
-    Logo: LandingLogoPerplexity,
-    text: 'Notion alternatives for internal documentation',
+    id: 'task-insert',
+    Logo: LandingLogoChatGPT,
+    text: 'Insert heavy pipeline: bulk upserts, then occasional ANN queries',
     cardExtra: '',
   },
   {
-    id: 'claude-security',
-    Logo: LandingLogoClaude,
-    text: 'Explain zero trust security in simple terms for executives',
+    id: 'task-cost',
+    Logo: LandingLogoChatGPT,
+    text: 'Stay under $0.01 per decision with p99 latency under 200ms',
+    cardExtra: '',
+  },
+  {
+    id: 'task-dim',
+    Logo: LandingLogoChatGPT,
+    text: '768-dimensional embeddings with high filter complexity',
+    cardExtra: '',
+  },
+  {
+    id: 'task-multi',
+    Logo: LandingLogoChatGPT,
+    text: 'Compare live success rates across Pinecone, Qdrant, Weaviate, and more',
     cardExtra: '',
   },
 ];
 
-/** Rotating query cards: same brand tiles as the landing hero title. */
+/** Rotating task cards */
 function AiQueryPromptStack() {
   const [active, setActive] = useState(0);
 
@@ -260,7 +129,7 @@ function AiQueryPromptStack() {
   return (
     <div className="mx-auto mt-8 w-full max-w-full sm:mt-10">
       <span className="sr-only" aria-live="polite" aria-atomic="true">
-        Example query: {AI_QUERY_SLIDES[active].text}
+        Example agent task: {AI_QUERY_SLIDES[active].text}
       </span>
       {/* Narrow column so centered copy isn’t lost in a full-width strip */}
       <div
@@ -311,7 +180,11 @@ function AiQueryPromptStack() {
 }
 
 export default function MarketGrowthHeroChart({ isLoaded }) {
-  const chartTravelGlowFilterId = `mg-line-glow-${useId().replace(/:/g, '')}`;
+  const uid = useId().replace(/:/g, '');
+  const chartTravelGlowFilterId = `mg-line-glow-${uid}`;
+  const fillAmplyId = `marketGrowthFillAmply-${uid}`;
+  const strokeAmplyId = `marketGrowthStrokeAmply-${uid}`;
+  const strokeWithoutId = `marketGrowthStrokeWithout-${uid}`;
 
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   useEffect(() => {
@@ -327,42 +200,53 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
   const CHART_YEAR_END = 2030;
   const CHART_SPAN = CHART_YEAR_END - CHART_YEAR_START;
 
-  /** % of buying decisions (AI-influenced / agent-mediated): chart endpoints. */
-  const pctChartStart = 28;
-  const pctEnd = 82;
+  /** Indexed efficiency: Amply path compounds; LLM-only selection drags outcomes. */
+  const REV_BASE = 100;
+  const REV_AMPLY_MULTIPLIER = 3;
+  const REV_WITHOUT_END = 88;
+  const REV_AXIS_MIN = 72;
+  const REV_AXIS_MAX = 318;
 
-  const padL = 72;
-  const padR = 48;
-  const padT = 40;
-  /** Extra bottom space for year labels + subtitle below the plot. */
-  const padB = 82;
+  const padL = 78;
+  const padR = 52;
+  const padT = 44;
+  /** Bottom space for legend + callout clearance below the plot. */
+  const padB = 70;
   const W = 920;
   const H = 348;
   const innerW = W - padL - padR;
   const innerH = H - padT - padB;
 
   const scaleX = (year) => padL + ((year - CHART_YEAR_START) / CHART_SPAN) * innerW;
-  const scaleY = (pct) =>
-    padT + (1 - (pct - pctChartStart) / (pctEnd - pctChartStart)) * innerH;
+  const scaleYRev = (rev) =>
+    padT + (1 - (rev - REV_AXIS_MIN) / (REV_AXIS_MAX - REV_AXIS_MIN)) * innerH;
 
-  /** pct(t) = pctStart * (pctEnd/pctStart)^t, t ∈ [0,1] from 2026 to 2030. */
-  const valueAtT = (t) => pctChartStart * (pctEnd / pctChartStart) ** t;
-
-  const startValueLabel = `~${Math.round(pctChartStart)}%`;
+  /** t ∈ [0,1] from 2026 → 2030 */
+  const revenueAmplyAtT = (t) => REV_BASE * REV_AMPLY_MULTIPLIER ** t;
+  const revenueWithoutAtT = (t) => REV_BASE + (REV_WITHOUT_END - REV_BASE) * t;
 
   const STEPS = 96;
-  const pts = Array.from({ length: STEPS + 1 }, (_, i) => {
+  const ptsAmply = Array.from({ length: STEPS + 1 }, (_, i) => {
     const t = i / STEPS;
     const year = CHART_YEAR_START + CHART_SPAN * t;
-    const v = valueAtT(t);
-    return { x: scaleX(year), y: scaleY(v) };
+    const v = revenueAmplyAtT(t);
+    return { x: scaleX(year), y: scaleYRev(v) };
+  });
+  const ptsWithout = Array.from({ length: STEPS + 1 }, (_, i) => {
+    const t = i / STEPS;
+    const year = CHART_YEAR_START + CHART_SPAN * t;
+    const v = revenueWithoutAtT(t);
+    return { x: scaleX(year), y: scaleYRev(v) };
   });
 
-  const lineD = pts
+  const lineAmplyD = ptsAmply
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
+    .join(' ');
+  const lineWithoutD = ptsWithout
     .map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
     .join(' ');
   const bottomY = padT + innerH;
-  const areaD = `${lineD} L ${pts[pts.length - 1].x.toFixed(2)} ${bottomY.toFixed(2)} L ${pts[0].x.toFixed(2)} ${bottomY.toFixed(2)} Z`;
+  const areaAmplyD = `${lineAmplyD} L ${ptsAmply[ptsAmply.length - 1].x.toFixed(2)} ${bottomY.toFixed(2)} L ${ptsAmply[0].x.toFixed(2)} ${bottomY.toFixed(2)} Z`;
 
   /** Shared shell for Problem/Solution narrative cards (gradient, shadow). */
   const narrativeCardShell =
@@ -384,17 +268,16 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
       <figure
         className="overflow-visible rounded-2xl border-2 border-blue-200/30 bg-gradient-to-b from-white to-slate-50/90 shadow-[0_20px_40px_rgba(0,0,0,0.1)] px-4 py-5 sm:px-8 sm:py-7"
         role="img"
-        aria-label="Your customer has changed. AI agents are already recommending and starting to buy products for users. When someone asks what to buy, AI decides what gets chosen. If your product is not easy for AI to understand, compare, and trust, it will not be picked. The new game is not convincing people, it is convincing AI. Line chart shows estimated share of buying decisions influenced by AI, rising from about 28 percent in 2026 to about 82 percent in 2030."
+        aria-label="Amply data backed routing versus asking an LLM to pick a provider."
       >
-        <figcaption className="mb-4 text-center sm:mb-5">
-          <p className="text-lg font-bold tracking-tight text-gray-800 sm:text-2xl">
-            Your customer has changed
+        <figcaption className="mb-5 text-center sm:mb-6">
+          <p className="mx-auto max-w-xl text-pretty text-lg font-extrabold leading-snug tracking-tight text-gray-900 sm:text-xl md:text-2xl md:leading-tight">
+            Know the pick. Skip the reasoning tax.
           </p>
-          <p className="mx-auto mt-4 max-w-3xl text-pretty text-sm font-medium leading-relaxed text-gray-800 sm:text-base">
-            AI agents are already recommending and starting to buy products for users. When someone asks what to buy, AI decides what gets chosen. If your product is not easy for AI to understand, compare, and trust, it will not be picked.
-          </p>
-          <p className="mx-auto mt-3 max-w-3xl text-pretty text-center text-sm font-bold leading-relaxed text-gray-800 sm:mt-4 sm:text-base">
-            The new game is not convincing people, it is convincing AI.
+          <p className="mx-auto mt-4 max-w-lg text-pretty text-center text-sm font-medium leading-relaxed text-gray-600 sm:mt-5 sm:text-base">
+            Teams that route on telemetry instead of model guesses tend to outperform{' '}
+            <strong className="home-stat-text-glow-pulse font-extrabold text-blue-600">3×</strong> on this chart vs
+            LLM only: illustrative, not a guarantee.
           </p>
         </figcaption>
 
@@ -405,14 +288,18 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="marketGrowthFill" x1="0" y1="1" x2="0" y2="0">
+            <linearGradient id={fillAmplyId} x1="0" y1="1" x2="0" y2="0">
               <stop offset="0%" stopColor="#3953e6" stopOpacity="0.06" />
               <stop offset="55%" stopColor="#36aeea" stopOpacity="0.18" />
               <stop offset="100%" stopColor="#6366f1" stopOpacity="0.28" />
             </linearGradient>
-            <linearGradient id="marketGrowthStroke" x1="0" y1="0" x2="1" y2="0">
+            <linearGradient id={strokeAmplyId} x1="0" y1="0" x2="1" y2="0">
               <stop offset="0%" stopColor="#3953e6" />
               <stop offset="100%" stopColor="#36aeea" />
+            </linearGradient>
+            <linearGradient id={strokeWithoutId} x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#c2410c" />
+              <stop offset="100%" stopColor="#ea580c" />
             </linearGradient>
 
             <filter
@@ -454,21 +341,72 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
             />
           ))}
 
-          <path d={areaD} fill="url(#marketGrowthFill)" />
+          {/* Y-axis ticks (indexed revenue) */}
+          {[100, 200, 300].map((rev) => {
+            const y = scaleYRev(rev);
+            return (
+              <g key={rev}>
+                <line
+                  x1={padL - 6}
+                  y1={y}
+                  x2={padL}
+                  y2={y}
+                  stroke="#D1D5DB"
+                  strokeWidth="1"
+                />
+                <text
+                  x={padL - 10}
+                  y={y + 5}
+                  textAnchor="end"
+                  fill="#6B7280"
+                  style={{ fontSize: 12, fontWeight: 600 }}
+                >
+                  {rev}
+                </text>
+              </g>
+            );
+          })}
+
+          <path d={areaAmplyD} fill={`url(#${fillAmplyId})`} />
           <path
-            d={lineD}
+            d={lineAmplyD}
             fill="none"
-            stroke="url(#marketGrowthStroke)"
+            stroke={`url(#${strokeAmplyId})`}
             strokeWidth="4"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
+          <path
+            d={lineWithoutD}
+            fill="none"
+            stroke={`url(#${strokeWithoutId})`}
+            strokeWidth="3.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={0.95}
+          />
 
-          {/* Pulsing glow that travels along the curve (2026 to 2030) */}
+          {/* Legend: bottom center, two entries grouped closer (shared visual unit) */}
+          <g transform={`translate(${W / 2}, ${H - 28})`} aria-hidden="true">
+            <g>
+              <line x1={-138} y1={0} x2={-114} y2={0} stroke="#36aeea" strokeWidth={4} strokeLinecap="round" />
+              <text x={-106} y={4.5} textAnchor="start" fill="#1F2937" style={{ fontSize: 12.5, fontWeight: 700 }}>
+                With Amply
+              </text>
+            </g>
+            <g>
+              <line x1={-18} y1={0} x2={6} y2={0} stroke="#ea580c" strokeWidth={3.25} strokeLinecap="round" />
+              <text x={14} y={4.5} textAnchor="start" fill="#1F2937" style={{ fontSize: 12.5, fontWeight: 600 }}>
+                Reasoning only
+              </text>
+            </g>
+          </g>
+
+          {/* Pulsing glow that travels along the Amply curve */}
           {!prefersReducedMotion && (
             <g aria-hidden="true">
               <animateMotion
-                path={lineD}
+                path={lineAmplyD}
                 dur="6.5s"
                 repeatCount="indefinite"
                 calcMode="linear"
@@ -487,42 +425,24 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
             </g>
           )}
 
-          {/* X labels */}
-          <text x={scaleX(2026)} y={H - 42} textAnchor="middle" fill="#374151" style={{ fontSize: 15, fontWeight: 600 }}>
-            2026
-          </text>
-          <text x={scaleX(2030)} y={H - 42} textAnchor="middle" fill="#374151" style={{ fontSize: 15, fontWeight: 600 }}>
-            2030
-          </text>
-
-          {/* Value callouts */}
+          {/* Value callouts (right end of series) */}
           <text
-            x={scaleX(2026)}
-            y={pts[0].y + 24}
+            x={scaleX(CHART_YEAR_END)}
+            y={ptsAmply[ptsAmply.length - 1].y - 14}
             textAnchor="middle"
-            fill="#374151"
-            style={{ fontSize: 14, fontWeight: 700 }}
+            fill="#1D4ED8"
+            style={{ fontSize: 14, fontWeight: 800 }}
           >
-            {startValueLabel}
+            3× efficiency
           </text>
           <text
-            x={scaleX(2030)}
-            y={pts[pts.length - 1].y - 16}
+            x={scaleX(CHART_YEAR_END)}
+            y={ptsWithout[ptsWithout.length - 1].y + 22}
             textAnchor="middle"
-            fill="#374151"
-            style={{ fontSize: 15, fontWeight: 800 }}
+            fill="#C2410C"
+            style={{ fontSize: 13, fontWeight: 700 }}
           >
-            ~{Math.round(pctEnd)}%
-          </text>
-
-          <text
-            x={W / 2}
-            y={H - 32}
-            textAnchor="middle"
-            fill="#374151"
-            style={{ fontSize: 13, fontWeight: 600 }}
-          >
-            % of buying decisions influenced by AI
+            12% drag
           </text>
         </svg>
       </figure>
@@ -540,14 +460,10 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
             id="market-growth-problem-heading"
             className="mt-4 text-pretty text-2xl font-bold tracking-tight text-gray-900 sm:mt-5 sm:text-3xl"
           >
-            AI is the new search engine. Are you visible?
+            Wrong API pick = slow and expensive
           </p>
           <p className="mt-4 text-pretty text-base font-medium leading-relaxed text-gray-800 sm:text-lg">
-            Buyers are turning to ChatGPT, Perplexity, Gemini, and similar tools, not just Google, to decide
-            what to buy. If you&apos;re not in the answers they trust, that demand goes to competitors, and
-            the gap shows up as{' '}
-            <strong className="font-bold text-gray-900">thousands of dollars in lost revenue</strong> you never
-            see.
+            Letting the model reason over vendors burns time and tokens. You need numbers: latency, cost, success rate, grounded in usage.
           </p>
         </div>
 
@@ -566,16 +482,15 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
             id="market-growth-solution-heading"
             className="mt-4 text-pretty text-2xl font-bold tracking-tight text-gray-900 sm:mt-5 sm:text-3xl"
           >
-            Be the pick when AI answers.
+            200ms. One POST. A clear answer.
           </p>
           <p className="mt-4 text-pretty text-base font-medium leading-relaxed text-gray-800 sm:text-lg">
-            Amply automatically reviews where you show up and why you don&apos;t, then makes targeted changes
-            to increase your visibility to AI.
+            Amply scores services from live performance data. You get a pick, metrics, and a short why, fully structured. More tool categories over time; same contract.
           </p>
 
           <div className="mt-8 border-t border-gray-200/80 pt-8 sm:mt-10 sm:pt-10">
             <p className="text-sm font-bold uppercase tracking-wide text-gray-500">
-              How it works
+              Steps
             </p>
             <ol className="mt-5 list-none space-y-5 pl-0 sm:mt-6 sm:space-y-6">
               {SOLUTION_STEPS.map((step, index) => (
