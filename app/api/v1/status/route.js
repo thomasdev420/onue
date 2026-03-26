@@ -25,7 +25,7 @@ export async function GET() {
     {
       ok: true,
       service: 'amply',
-      version: '1.0.1-mvp',
+      version: '1.0.2-mvp',
       last_benchmark_at: benchmarkTimestampIso(),
       data_mode: source === 'supabase' ? 'catalog' : 'seeded',
       diagnostics: {

@@ -4,10 +4,24 @@
  */
 import dns from 'node:dns';
 import { createClient } from '@supabase/supabase-js';
+import { Agent, fetch as undiciFetch } from 'undici';
 
-// Vercel/serverless: Node may resolve *.supabase.co to IPv6 first; outbound IPv6 can fail → "fetch failed".
+// Vercel/serverless: outbound IPv6 to *.supabase.co can fail → "TypeError: fetch failed".
 if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
+}
+
+const ipv4Agent = new Agent({
+  connect: {
+    family: 4,
+  },
+});
+
+function ipv4Fetch(input, init) {
+  return undiciFetch(input, {
+    ...init,
+    dispatcher: ipv4Agent,
+  });
 }
 
 export function getSupabaseServiceRole() {
@@ -18,6 +32,9 @@ export function getSupabaseServiceRole() {
   }
   return createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: ipv4Fetch,
+    },
   });
 }
 

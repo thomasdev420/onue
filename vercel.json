@@ -1,17 +1,5 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
-  "installCommand": "npm install",
-  "headers": [
-    {
-      "source": "/favicon.png",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    }
-  ]
-} 
+  "env": {
+    "NODE_OPTIONS": "--dns-result-order=ipv4first"
+  }
+}
