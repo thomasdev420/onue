@@ -2,7 +2,13 @@
  * Server-only Supabase client with service role (bypasses RLS).
  * Required for amply_* tables from API routes.
  */
+import dns from 'node:dns';
 import { createClient } from '@supabase/supabase-js';
+
+// Vercel/serverless: Node may resolve *.supabase.co to IPv6 first; outbound IPv6 can fail → "fetch failed".
+if (typeof dns.setDefaultResultOrder === 'function') {
+  dns.setDefaultResultOrder('ipv4first');
+}
 
 export function getSupabaseServiceRole() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
