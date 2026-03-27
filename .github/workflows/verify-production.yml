@@ -1,0 +1,32 @@
+# Actions → "Verify production API" workflow_dispatch.
+# Settings → Secrets → Actions: AMPLY_PROD_URL (https://www.useamply.com), AMPLY_API_KEYS (same as Vercel Production).
+
+name: Verify production API
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: verify:deploy
+        env:
+          AMPLY_API_KEYS: ${{ secrets.AMPLY_API_KEYS }}
+          AMPLY_PROD_URL: ${{ secrets.AMPLY_PROD_URL }}
+        run: |
+          if [ -z "$AMPLY_PROD_URL" ] || [ -z "$AMPLY_API_KEYS" ]; then
+            echo "Skipping: add repository secrets AMPLY_PROD_URL and AMPLY_API_KEYS (see workflow file comment)."
+            exit 0
+          fi
+          npm run verify:deploy -- "$AMPLY_PROD_URL"

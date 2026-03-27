@@ -17,7 +17,7 @@ function useRoutePostUrl() {
     if (mounted && typeof window !== 'undefined') {
       return `${window.location.origin}/api/v1/route`;
     }
-    return 'https://api.amply.ai/v1/route';
+    return 'https://www.useamply.com/api/v1/route';
   }, [mounted]);
 }
 
@@ -39,6 +39,14 @@ export default function AmplyApiConsole() {
   const [taskInput, setTaskInput] = useState(DEFAULT_TASK);
   const [tab, setTab] = useState('curl');
   const [copied, setCopied] = useState(false);
+  const [statusMeta, setStatusMeta] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/v1/status')
+      .then((r) => r.json())
+      .then(setStatusMeta)
+      .catch(() => setStatusMeta(null));
+  }, []);
 
   const routeUrl = useRoutePostUrl();
   const payload = useMemo(() => buildPayload(taskInput), [taskInput]);
@@ -121,11 +129,33 @@ print(data["recommended"], data.get("why", ""))`;
             Copy a request
           </h2>
           <p className="mt-1 text-sm leading-relaxed text-gray-600">
-            Adjust the task, pick a format, replace{' '}
+            <strong className="font-medium text-gray-800">POST /api/v1/route</strong> on production requires{' '}
+            <code className="rounded-md bg-amber-50 px-1.5 py-0.5 font-mono text-[0.8125rem] text-amber-950">
+              Authorization: Bearer &lt;your key&gt;
+            </code>
+            {statusMeta?.auth_mode === 'api_key' ? (
+              <span className="text-gray-700"> (this host has keys enabled).</span>
+            ) : (
+              <span className="text-gray-700"> (omit Bearer only if the server has no AMPLY_API_KEYS).</span>
+            )}{' '}
+            Replace{' '}
             <code className="rounded-md bg-indigo-50 px-1.5 py-0.5 font-mono text-[0.8125rem] font-medium text-indigo-900">
               YOUR_API_KEY
-            </code>
-            .
+            </code>{' '}
+            in the snippet.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-500">
+            Machine-readable contract:{' '}
+            <a className="font-medium text-indigo-600 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-800" href="/api/v1/openapi">
+              OpenAPI JSON
+            </a>
+            {' · '}
+            <a className="font-medium text-indigo-600 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-800" href="/api/v1/status">
+              Status &amp; diagnostics
+            </a>
+            {statusMeta?.version ? (
+              <span className="text-gray-400"> (v{statusMeta.version})</span>
+            ) : null}
           </p>
 
           <label htmlFor="amply-api-task" className="mt-5 block text-sm font-medium text-indigo-950/80">
