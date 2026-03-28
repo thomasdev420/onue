@@ -1,0 +1,61 @@
+{
+  "$schema": "Canonical routing metrics for POST /api/v1/route. Applied to Postgres by catalog:sync and Vercel /api/cron/catalog-refresh.",
+  "version": 1,
+  "providers": [
+    {
+      "id": "qdrant",
+      "display_name": "Qdrant",
+      "p99_latency_ms": 14,
+      "cost_per_1m_dims_usd": 0.19,
+      "success_rate_last_24h": 0.982,
+      "success_rate_last_7d": 0.971,
+      "win_rate": 0.44,
+      "revenue_captured_usd": 94500,
+      "missed_opportunity_usd": null
+    },
+    {
+      "id": "pinecone",
+      "display_name": "Pinecone",
+      "p99_latency_ms": 28,
+      "cost_per_1m_dims_usd": 0.42,
+      "success_rate_last_24h": 0.941,
+      "success_rate_last_7d": 0.935,
+      "win_rate": 0.29,
+      "revenue_captured_usd": 62300,
+      "missed_opportunity_usd": 71200
+    },
+    {
+      "id": "weaviate",
+      "display_name": "Weaviate",
+      "p99_latency_ms": 35,
+      "cost_per_1m_dims_usd": 0.31,
+      "success_rate_last_24h": 0.967,
+      "success_rate_last_7d": 0.96,
+      "win_rate": 0.17,
+      "revenue_captured_usd": 36500,
+      "missed_opportunity_usd": 112400
+    },
+    {
+      "id": "chroma",
+      "display_name": "Chroma",
+      "p99_latency_ms": 62,
+      "cost_per_1m_dims_usd": 0.12,
+      "success_rate_last_24h": 0.894,
+      "success_rate_last_7d": 0.885,
+      "win_rate": 0.08,
+      "revenue_captured_usd": 17200,
+      "missed_opportunity_usd": 89000
+    },
+    {
+      "id": "supabase",
+      "display_name": "Supabase",
+      "p99_latency_ms": 81,
+      "cost_per_1m_dims_usd": 0.25,
+      "success_rate_last_24h": 0.923,
+      "success_rate_last_7d": 0.915,
+      "win_rate": 0.02,
+      "revenue_captured_usd": 4300,
+      "missed_opportunity_usd": 41000
+    }
+  ]
+}

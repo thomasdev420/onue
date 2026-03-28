@@ -1,5 +1,6 @@
 -- Amply routing catalog: vector DB providers + metrics (MVP).
 -- Run in Supabase SQL editor after backup. API uses SUPABASE_SERVICE_ROLE_KEY.
+-- Ongoing updates: prefer data/amply_route_catalog.json + npm run catalog:sync or Vercel GET /api/cron/catalog-refresh.
 
 CREATE TABLE IF NOT EXISTS amply_route_providers (
     id TEXT PRIMARY KEY,

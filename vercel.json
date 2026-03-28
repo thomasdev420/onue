@@ -1,5 +1,11 @@
 {
   "env": {
     "NODE_OPTIONS": "--dns-result-order=ipv4first"
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/catalog-refresh",
+      "schedule": "0 9 * * *"
+    }
+  ]
 }

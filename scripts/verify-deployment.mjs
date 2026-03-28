@@ -85,6 +85,40 @@ if (!statusRes.ok) {
   process.exit(1);
 }
 
+const reqIdHdr = statusRes.headers.get('x-amply-request-id');
+const computeHdr = statusRes.headers.get('x-amply-compute-ms');
+if (
+  typeof statusJson.request_id !== 'string' ||
+  !/^[0-9a-f-]{36}$/i.test(statusJson.request_id)
+) {
+  console.error('\nFAIL: GET /api/v1/status JSON missing valid request_id (deploy API tracing).');
+  process.exit(1);
+}
+if (typeof statusJson.compute_ms !== 'number' || !Number.isFinite(statusJson.compute_ms)) {
+  console.error('\nFAIL: GET /api/v1/status JSON missing compute_ms (deploy API tracing).');
+  process.exit(1);
+}
+if (!reqIdHdr || reqIdHdr !== statusJson.request_id) {
+  console.error(
+    '\nFAIL: X-Amply-Request-Id header missing or does not match JSON request_id.',
+    '\n  header:',
+    reqIdHdr,
+    '\n  json:',
+    statusJson.request_id,
+  );
+  process.exit(1);
+}
+if (computeHdr == null || String(Math.round(Number(computeHdr))) !== String(statusJson.compute_ms)) {
+  console.error(
+    '\nFAIL: X-Amply-Compute-Ms header missing or does not match JSON compute_ms.',
+    '\n  header:',
+    computeHdr,
+    '\n  json:',
+    statusJson.compute_ms,
+  );
+  process.exit(1);
+}
+
 if (statusJson.data_mode !== 'catalog') {
   const d = statusJson.diagnostics;
   console.error(
@@ -115,6 +149,16 @@ if (statusJson.data_mode !== 'catalog') {
     console.error('→ Table amply_route_providers has no active rows in this Supabase project.');
   }
   process.exit(1);
+}
+
+if (statusJson.diagnostics?.catalog_metrics_stale) {
+  console.error(
+    '\nWARN: catalog metrics are stale vs AMPLY_CATALOG_STALE_AFTER_HOURS (see diagnostics.catalog_metrics_*). Refresh: deploy-setup.md § Catalog automation (ETL).',
+  );
+  if (process.env.AMPLY_VERIFY_FAIL_ON_STALE === '1') {
+    console.error('\nFAIL: AMPLY_VERIFY_FAIL_ON_STALE=1 (treat stale catalog as deploy error).');
+    process.exit(1);
+  }
 }
 
 // --- POST /api/v1/route ---

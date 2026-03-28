@@ -1,0 +1,33 @@
+# Fail when production GET /api/v1/status reports catalog_metrics_stale (alert via GitHub email / notifications).
+# Needs: repository secret AMPLY_PROD_URL (same host as prod).
+
+name: Catalog freshness check
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '35 */4 * * *'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check production catalog is not stale
+        env:
+          AMPLY_PROD_URL: ${{ secrets.AMPLY_PROD_URL }}
+        run: |
+          if [ -z "$AMPLY_PROD_URL" ]; then
+            echo '::error::Set repository secret AMPLY_PROD_URL (e.g. https://www.useamply.com)'
+            exit 1
+          fi
+          npm run check:catalog-fresh -- "$AMPLY_PROD_URL"
