@@ -62,31 +62,32 @@ The public API (`/api/v1/status`, `/api/v1/route`) exposes two different timing 
 
 **Product bar (~200 ms):** Use **server compute** (`compute_ms` / `X-Amply-Compute-Ms`, e.g. `compute_p95_ms` in the synthetic probe) as the primary SLO for “fast agent path.” **Wall p95** from a **GitHub-hosted runner** (typically US) can sit around **~200–250 ms** without indicating a regression—compare **compute p95** across deploys. For wall RTT comparable to users in another region, run `npm run probe:synthetic` from a machine in that region.
 
-**Optional tuning:** To pin where serverless functions run, set **`regions`** in `vercel.json` (e.g. `"iad1"` for US East, `"lhr1"` for London). That trades **consistent** compute placement against **global** client RTT; leave unset to use Vercel defaults.
+**Compute region:** This repo sets **`"regions": ["iad1"]`** in **`vercel.json`** (US East) for more **stable** latency from US probes and shorter cold paths vs. bouncing regions. **EU-heavy users** may see higher RTT; switch to **`"lhr1"`** or remove **`regions`** if that fits your audience better.
 
 ---
 
-## GitHub Actions — synthetic latency workflow
+## GitHub Actions — secrets checklist (complete in GitHub UI)
 
-The workflow **Synthetic API latency** (`.github/workflows/synthetic-latency.yml`) runs on a schedule and on **workflow_dispatch**. It needs these **repository secrets** (not environment secrets):
+Do this once so **scheduled jobs are real**, not failing every run.
 
-1. Open the repo on GitHub → **Settings** → **Secrets and variables** → **Actions**.
-2. Confirm both exist:
+1. GitHub → **your repo** → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**.
 
-| Secret | Example / notes |
-|--------|-----------------|
-| **`AMPLY_PROD_URL`** | `https://www.useamply.com` (origin only, no trailing path) |
-| **`AMPLY_API_KEYS`** | Same comma-separated value as **Vercel** → Project → Environment Variables → `AMPLY_API_KEYS` (first key is used for `POST /api/v1/route`). |
+| Secret | Required for | Value source |
+|--------|----------------|--------------|
+| **`AMPLY_PROD_URL`** | **Synthetic API latency** (`.github/workflows/synthetic-latency.yml`) **and** **Catalog freshness** (`.github/workflows/catalog-freshness.yml`) | Production origin only, e.g. `https://www.useamply.com` (no path). |
+| **`AMPLY_API_KEYS`** | **Synthetic API latency** only (so `POST /api/v1/route` is probed) | Same **comma-separated** string as **Vercel** → Project → **Environment Variables** → **`AMPLY_API_KEYS`**. |
 
-If either secret is missing, the workflow **fails** with an explicit error (no silent skip). After adding secrets, re-run the workflow from the **Actions** tab (**Run workflow**) to verify.
+2. **Actions** tab → run **Synthetic API latency** → **Run workflow** once; confirm green.
+3. **Actions** tab → run **Catalog freshness check** → **Run workflow** once; confirm green.
 
-**Local check (optional):** with [GitHub CLI](https://cli.github.com/) installed and authenticated:
+Workflows **fail fast** if a required secret is missing (no silent skip).
+
+**Local check (optional):** [GitHub CLI](https://cli.github.com/) + `npm run check:gha-secrets` (verifies secret **names** exist — see `deploy-setup.md` § Catalog automation for `gh auth login`).
 
 ```bash
 gh auth login
 npm run check:gha-secrets
-# Monorepo / non-default remote:
-GITHUB_REPOSITORY=owner/repo npm run check:gha-secrets
+GITHUB_REPOSITORY=owner/repo npm run check:gha-secrets   # if not default remote
 ```
 
 ---

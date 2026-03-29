@@ -1,0 +1,51 @@
+# Scheduled synthetic latency from GitHub-hosted runners (typically US Azure) → your Vercel origin.
+# For wall RTT comparable to EU users, also run probe:synthetic from a machine in that region.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   AMPLY_PROD_URL     — e.g. https://www.useamply.com
+#   AMPLY_API_KEYS     — same comma-separated keys as Vercel production (POST /api/v1/route)
+#
+# Confirm in GitHub: repo → Settings → Secrets and variables → Actions — both names must be listed.
+# Full checklist: deploy-setup.md § "GitHub Actions — synthetic latency workflow".
+# Optional local verify: `npm run check:gha-secrets` (requires `gh auth login`).
+#
+# To change sample size, edit AMPLY_PROBE_ITERATIONS below.
+# Optional env: AMPLY_PROBE_FAIL_WALL_P95_MS / AMPLY_PROBE_FAIL_COMPUTE_P95_MS for hard gates.
+
+name: Synthetic API latency
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 */6 * * *'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check secrets and run synthetic probe
+        env:
+          AMPLY_PROD_URL: ${{ secrets.AMPLY_PROD_URL }}
+          AMPLY_API_KEYS: ${{ secrets.AMPLY_API_KEYS }}
+          AMPLY_PROBE_ITERATIONS: '60'
+        run: |
+          if [ -z "$AMPLY_PROD_URL" ]; then
+            echo '::error::Missing repository secret AMPLY_PROD_URL. GitHub → Settings → Secrets and variables → Actions → New repository secret.'
+            exit 1
+          fi
+          if [ -z "$AMPLY_API_KEYS" ]; then
+            echo '::error::Missing repository secret AMPLY_API_KEYS (same value as Vercel AMPLY_API_KEYS).'
+            exit 1
+          fi
+          echo '::notice::Required Actions secrets are present. Probing production (host value is masked in logs).'
+          npm run probe:synthetic -- "$AMPLY_PROD_URL"

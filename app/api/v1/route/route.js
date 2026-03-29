@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyBearer } from '@/app/lib/amplyRoute/auth';
+import { amplyLog } from '@/app/lib/amplyRoute/amplyLog';
 import { checkV1RouteRateLimit } from '@/app/lib/amplyRoute/rateLimitV1Route';
 import {
   buildWhy,
@@ -9,10 +10,13 @@ import {
   taskWeights,
 } from '@/app/lib/amplyRoute/engine';
 import { loadProviders } from '@/app/lib/amplyRoute/loadProviders';
+import { resolveDatabaseUrl } from '@/app/lib/amplyRoute/resolveDatabaseUrl';
+import { withV1TraceHeaders } from '@/app/lib/amplyRoute/v1TraceHeaders';
 import { getSupabaseServiceRole } from '@/app/services/amplySelection/supabaseAdmin';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 25;
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,8 +27,18 @@ const corsHeaders = {
 const FILTER = new Set(['low', 'medium', 'high']);
 const WORKLOAD = new Set(['insert_heavy', 'query_heavy', 'hybrid']);
 
-function badRequest(message, status = 400) {
-  return NextResponse.json({ detail: message }, { status, headers: corsHeaders });
+function traceHeaders(requestId, t0) {
+  return withV1TraceHeaders(corsHeaders, {
+    requestId,
+    computeMs: performance.now() - t0,
+  });
+}
+
+function badRequest(message, requestId, t0) {
+  return NextResponse.json(
+    { detail: message, request_id: requestId },
+    { status: 400, headers: traceHeaders(requestId, t0) },
+  );
 }
 
 export async function OPTIONS() {
@@ -32,14 +46,23 @@ export async function OPTIONS() {
 }
 
 export async function POST(request) {
+  const requestId = crypto.randomUUID();
+  const t0 = performance.now();
+
   const rl = checkV1RouteRateLimit(request);
   if (!rl.ok) {
+    amplyLog({
+      level: 'warn',
+      msg: 'v1.route.rate_limited',
+      request_id: requestId,
+      compute_ms: Math.round(performance.now() - t0),
+    });
     return NextResponse.json(
-      { detail: 'Too many requests', retry_after_sec: rl.retryAfterSec },
+      { detail: 'Too many requests', retry_after_sec: rl.retryAfterSec, request_id: requestId },
       {
         status: 429,
         headers: {
-          ...corsHeaders,
+          ...traceHeaders(requestId, t0),
           ...(rl.retryAfterSec != null ? { 'Retry-After': String(rl.retryAfterSec) } : {}),
         },
       },
@@ -48,36 +71,48 @@ export async function POST(request) {
 
   const auth = verifyBearer(request);
   if (!auth.ok) {
-    return NextResponse.json({ detail: auth.error }, { status: 401, headers: corsHeaders });
+    amplyLog({
+      level: 'warn',
+      msg: 'v1.route.unauthorized',
+      request_id: requestId,
+      compute_ms: Math.round(performance.now() - t0),
+    });
+    return NextResponse.json(
+      { detail: auth.error, request_id: requestId },
+      { status: 401, headers: traceHeaders(requestId, t0) },
+    );
   }
 
   let body;
   try {
     body = await request.json();
   } catch {
-    return badRequest('Invalid JSON body');
+    return NextResponse.json(
+      { detail: 'Invalid JSON body', request_id: requestId },
+      { status: 400, headers: traceHeaders(requestId, t0) },
+    );
   }
 
   const task = typeof body.task === 'string' ? body.task.trim() : '';
   if (!task || task.length > 8000) {
-    return badRequest('task is required (1–8000 characters)');
+    return badRequest('task is required (1–8000 characters)', requestId, t0);
   }
 
   const budgetUsd = Number(body.budget_usd ?? 0.01);
   if (Number.isNaN(budgetUsd) || budgetUsd < 0) {
-    return badRequest('budget_usd must be a number >= 0');
+    return badRequest('budget_usd must be a number >= 0', requestId, t0);
   }
 
   const latencyTargetMs = Number(body.latency_target_ms ?? 200);
   if (Number.isNaN(latencyTargetMs) || latencyTargetMs < 0) {
-    return badRequest('latency_target_ms must be a number >= 0');
+    return badRequest('latency_target_ms must be a number >= 0', requestId, t0);
   }
 
   let dimension = body.dimension;
   if (dimension != null) {
     dimension = Number(dimension);
     if (!Number.isInteger(dimension) || dimension < 1 || dimension > 65536) {
-      return badRequest('dimension must be an integer 1–65536 when provided');
+      return badRequest('dimension must be an integer 1–65536 when provided', requestId, t0);
     }
   }
 
@@ -85,7 +120,7 @@ export async function POST(request) {
   if (filterComplexity != null) {
     filterComplexity = String(filterComplexity).toLowerCase();
     if (!FILTER.has(filterComplexity)) {
-      return badRequest('filter_complexity must be low, medium, or high');
+      return badRequest('filter_complexity must be low, medium, or high', requestId, t0);
     }
   }
 
@@ -93,11 +128,12 @@ export async function POST(request) {
   if (workloadType != null) {
     workloadType = String(workloadType).toLowerCase();
     if (!WORKLOAD.has(workloadType)) {
-      return badRequest('workload_type must be insert_heavy, query_heavy, or hybrid');
+      return badRequest('workload_type must be insert_heavy, query_heavy, or hybrid', requestId, t0);
     }
   }
 
-  const admin = getSupabaseServiceRole();
+  const hasDb = Boolean(resolveDatabaseUrl());
+  const admin = hasDb ? null : getSupabaseServiceRole();
   const { providers, source, catalog_backend, catalog_freshness } = await loadProviders(admin);
 
   const { winner, composite, components } = scoreProviders(providers, {
@@ -145,6 +181,9 @@ export async function POST(request) {
     catalog_freshness: catalog_freshness ?? null,
   };
 
+  const computeMs = performance.now() - t0;
+  const computeRounded = Math.round(computeMs);
+
   const payload = {
     recommended: winner,
     score: Math.round(composite[winner] * 1e4) / 1e4,
@@ -154,8 +193,21 @@ export async function POST(request) {
     success_rate_last_7d: Number(wrow.success_rate_last_7d),
     why,
     raw_metrics: rawMetrics,
-    request_id: crypto.randomUUID(),
+    request_id: requestId,
+    compute_ms: computeRounded,
   };
 
-  return NextResponse.json(payload, { headers: corsHeaders });
+  amplyLog({
+    level: 'info',
+    msg: 'v1.route.ok',
+    request_id: requestId,
+    compute_ms: computeRounded,
+    catalog_backend: catalog_backend ?? null,
+    catalog_source: source,
+    recommended: winner,
+  });
+
+  return NextResponse.json(payload, {
+    headers: withV1TraceHeaders(corsHeaders, { requestId, computeMs }),
+  });
 }

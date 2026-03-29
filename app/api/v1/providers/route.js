@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { publicProviderSnapshot, scoreProviders, taskWeights } from '@/app/lib/amplyRoute/engine';
 import { loadProviders } from '@/app/lib/amplyRoute/loadProviders';
+import { resolveDatabaseUrl } from '@/app/lib/amplyRoute/resolveDatabaseUrl';
 import { getSupabaseServiceRole } from '@/app/services/amplySelection/supabaseAdmin';
 
 export const runtime = 'nodejs';
@@ -17,7 +18,7 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
-  const admin = getSupabaseServiceRole();
+  const admin = resolveDatabaseUrl() ? null : getSupabaseServiceRole();
   const { providers, catalog_freshness } = await loadProviders(admin);
   const w = taskWeights(null, null);
   const { composite } = scoreProviders(providers, {
