@@ -20,6 +20,7 @@
     "verify:deploy": "node scripts/verify-deployment.mjs",
     "check:gha-secrets": "node scripts/check-gha-secrets.mjs",
     "catalog:sync": "node scripts/catalog-sync.mjs",
+    "catalog:refresh:remote": "node scripts/trigger-catalog-refresh.mjs",
     "check:catalog-fresh": "node scripts/check-catalog-fresh.mjs",
     "probe:synthetic": "node scripts/synthetic-probe.mjs",
     "print:db-url": "node scripts/print-database-url-template.mjs"

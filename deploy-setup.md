@@ -105,7 +105,10 @@ GITHUB_REPOSITORY=owner/repo npm run check:gha-secrets   # if not default remote
 **Manual / CI (same logic as cron):**
 
 ```bash
-# .env with DATABASE_URL
+# Hit the deployed cron route (uses snapshot in the running build; needs CRON_SECRET)
+CRON_SECRET='…' npm run catalog:refresh:remote -- https://www.useamply.com
+
+# Or upsert from your machine (.env with DATABASE_URL) using the same JSON as the app
 npm run catalog:sync
 ```
 
