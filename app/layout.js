@@ -138,9 +138,9 @@ const permanentMarker = Permanent_Marker({
 
 export async function generateMetadata() {
   return {
-    title: "Amply: know which API to call in 200ms",
+    title: "Amply: agent routing API — sub-200ms server work",
     description:
-      "Machine readable routing for agents: price, latency, success rate from real usage, not LLM guesses. Faster and cheaper than reasoning. Free to start.",
+      "Machine-readable routing: price, latency, success rate from usage data. Typical server-side routing work is well under 200ms (see API compute_ms); HTTP round-trip adds network time. Free to start.",
     icons: {
       icon: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },
       apple: { url: '/favicon.png?v=9', type: 'image/png', sizes: '32x32' },

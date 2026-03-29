@@ -2,9 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Check, Copy } from 'lucide-react';
-
-const DEFAULT_TASK =
-  'store 100k 1536 dimensional vectors with metadata filters and run 50 similarity queries';
+import { HighlightBash } from './landing/CodeHighlight';
+import { buildPayload, buildCurlSnippet, DEFAULT_TASK } from '@/app/lib/amplyCurlSnippet';
 
 /** Dedicated API host (FastAPI etc.): …/v1/route. Same Next app: …/api/v1/route. */
 function useRoutePostUrl() {
@@ -19,20 +18,6 @@ function useRoutePostUrl() {
     }
     return 'https://www.useamply.com/api/v1/route';
   }, [mounted]);
-}
-
-/** Bash-safe single-quoted string: wrap in '...' with '\'' for embedded quotes */
-function bashSingleQuote(s) {
-  return `'${String(s).replace(/'/g, `'\\''`)}'`;
-}
-
-function buildPayload(task) {
-  return {
-    task: task.trim() || DEFAULT_TASK,
-    dimension: 1536,
-    workload_type: 'hybrid',
-    filter_complexity: 'high',
-  };
 }
 
 export default function AmplyApiConsole() {
@@ -50,15 +35,8 @@ export default function AmplyApiConsole() {
 
   const routeUrl = useRoutePostUrl();
   const payload = useMemo(() => buildPayload(taskInput), [taskInput]);
-  const bodyCompact = useMemo(() => JSON.stringify(payload), [payload]);
 
-  const curlScript = useMemo(() => {
-    const d = bashSingleQuote(bodyCompact);
-    return `curl -s -X POST "${routeUrl}" \\
-  -H "Content-Type: application/json" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -d ${d}`;
-  }, [routeUrl, bodyCompact]);
+  const curlScript = useMemo(() => buildCurlSnippet(routeUrl, taskInput), [routeUrl, taskInput]);
 
   const fetchScript = useMemo(() => {
     return `const res = await fetch("${routeUrl}", {
@@ -145,7 +123,10 @@ print(data["recommended"], data.get("why", ""))`;
             in the snippet.
           </p>
           <p className="mt-2 text-xs leading-relaxed text-gray-500">
-            Machine-readable contract:{' '}
+            <a className="font-medium text-indigo-600 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-800" href="/docs">
+              Documentation
+            </a>
+            {' · '}
             <a className="font-medium text-indigo-600 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-800" href="/api/v1/openapi">
               OpenAPI JSON
             </a>
@@ -214,10 +195,14 @@ print(data["recommended"], data.get("why", ""))`;
           </div>
 
           <pre
-            className="mt-3 max-h-[min(50vh,380px)] overflow-auto rounded-xl border border-slate-700/80 bg-slate-950 px-4 py-3.5 text-left font-mono text-[13px] leading-relaxed text-slate-200 sm:text-sm whitespace-pre-wrap break-words shadow-inner selection:bg-cyan-500/25"
+            className="mt-3 max-h-[min(50vh,380px)] overflow-x-auto overflow-y-auto rounded-xl border border-slate-600/90 bg-slate-950 px-4 py-3.5 text-left font-mono text-[13px] leading-relaxed shadow-[0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.04)] sm:text-sm selection:bg-cyan-500/25"
             tabIndex={0}
           >
-            {activeSnippet}
+            {tab === 'curl' ? (
+              <HighlightBash code={activeSnippet} />
+            ) : (
+              <span className="whitespace-pre-wrap break-words text-slate-200">{activeSnippet}</span>
+            )}
           </pre>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { AMPLY_PRODUCT_VERSION } from '@/app/lib/amplyProductVersion';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,9 +15,10 @@ function buildSpec(baseUrl) {
     openapi: '3.0.3',
     info: {
       title: 'Amply Routing API',
-      version: '1.0.5-mvp',
+      version: AMPLY_PRODUCT_VERSION,
       description:
-        'Machine-friendly vector routing: scores providers from catalog metrics (Supabase Postgres).',
+        'Machine-friendly vector routing: scores providers from catalog metrics (Supabase Postgres).\n\n' +
+        'Latency semantics: **Wall RTT** is full client round-trip (network + edge). **Server compute** is handler time only—use JSON `compute_ms` and the `X-Amply-Compute-Ms` response header (and `compute_*` fields from scripts/synthetic-probe.mjs) for SLO tracking; the ~200ms product bar applies to server compute, not necessarily to wall RTT from arbitrary clients or CI runners.',
     },
     servers: [{ url: baseUrl }],
     paths: {
@@ -33,7 +35,8 @@ function buildSpec(baseUrl) {
           operationId: 'getStatus',
           responses: {
             '200': {
-              description: 'ok, data_mode, diagnostics, catalog_freshness, auth_mode, rate_limit',
+              description:
+                'ok, data_mode, diagnostics (includes catalog_metrics_age_hours, catalog_metrics_stale vs AMPLY_CATALOG_STALE_AFTER_HOURS), catalog_freshness, auth_mode, rate_limit, request_id, compute_ms (handler time only). Headers: X-Amply-Request-Id, X-Amply-Compute-Ms (matches compute_ms). Wall RTT is not the same as compute_ms.',
             },
           },
         },
@@ -71,11 +74,12 @@ function buildSpec(baseUrl) {
           },
           responses: {
             '200': {
-              description: 'recommended, score, raw_metrics, request_id',
+              description:
+                'recommended, score, raw_metrics, request_id, compute_ms (handler time only). Headers: X-Amply-Request-Id, X-Amply-Compute-Ms. Compare compute_ms across deploys; wall RTT depends on client location.',
             },
-            '400': { description: 'Validation error' },
-            '401': { description: 'When AMPLY_API_KEYS is set: missing/invalid Bearer token' },
-            '429': { description: 'When rate limit enabled (AMPLY_V1_RATE_LIMIT_PER_MIN)' },
+            '400': { description: 'Validation error; body includes request_id when applicable' },
+            '401': { description: 'When AMPLY_API_KEYS is set: missing/invalid Bearer token + request_id' },
+            '429': { description: 'When rate limit enabled (AMPLY_V1_RATE_LIMIT_PER_MIN) + request_id' },
           },
         },
       },

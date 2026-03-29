@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Amply Phase 0 — Interactive demo</title>
+  <style>
+    :root {
+      --bg: #faf9f6;
+      --text: #111827;
+      --muted: #6b7280;
+      --red-border: rgba(248, 113, 113, 0.4);
+      --red-bg: rgba(254, 242, 242, 0.75);
+      --emerald-border: rgba(52, 211, 153, 0.45);
+      --emerald-bg: rgba(236, 253, 245, 0.75);
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --pre-bg: #0f172a;
+      --pre-fg: #e2e8f0;
+      --json-key: #93c5fd;
+      --json-string: #86efac;
+      --json-number: #fcd34d;
+      --json-bool: #c4b5fd;
+      --json-null: #94a3b8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding: 2rem 1.25rem 3.5rem;
+    }
+    .wrap {
+      max-width: 44rem;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.625rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin: 0 0 0.4rem;
+    }
+    .lede {
+      color: var(--muted);
+      font-size: 0.9375rem;
+      margin: 0 0 1.5rem;
+      max-width: 38rem;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    /* Primary action */
+    #runBtn {
+      border: none;
+      border-radius: 9999px;
+      padding: 0.65rem 1.35rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #fff;
+      background: linear-gradient(90deg, #3953e6 0%, #36aeea 100%);
+      box-shadow: 0 4px 16px rgba(57, 83, 230, 0.28);
+      transition: transform 0.1s ease, opacity 0.15s ease;
+    }
+    #runBtn:hover:not(:disabled) {
+      transform: scale(1.02);
+    }
+    #runBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .hint {
+      font-size: 0.8125rem;
+      color: var(--muted);
+      max-width: 20rem;
+    }
+    /* Shared card shell */
+    .card {
+      border-radius: 1rem;
+      padding: 1rem 1.2rem;
+      margin-bottom: 1rem;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      box-shadow: var(--card-shadow);
+    }
+    .card h2 {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.11em;
+      margin: 0 0 0.55rem;
+    }
+    /* Status: error / problem tone */
+    .card-status.card-error {
+      border-color: var(--red-border);
+      background: linear-gradient(180deg, var(--red-bg), #fff 55%);
+    }
+    .card-status.card-error h2 {
+      color: #b91c1c;
+    }
+    /* Status: success tone */
+    .card-status.card-ok {
+      border-color: var(--emerald-border);
+      background: linear-gradient(180deg, var(--emerald-bg), #fff 55%);
+    }
+    .card-status.card-ok h2 {
+      color: #047857;
+    }
+    .card-status p {
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .card-status .msg-strong {
+      font-weight: 700;
+    }
+    /* JSON output card */
+    .card-output h2 {
+      color: var(--muted);
+    }
+    .pre-wrap {
+      margin: 0;
+      padding: 1rem 1.1rem;
+      border-radius: 0.75rem;
+      background: var(--pre-bg);
+      color: var(--pre-fg);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      overflow: auto;
+      max-height: min(72vh, 560px);
+      border: 1px solid #1e293b;
+      white-space: pre;
+    }
+    .pre-wrap .json-key { color: var(--json-key); }
+    .pre-wrap .json-string { color: var(--json-string); }
+    .pre-wrap .json-number { color: var(--json-number); }
+    .pre-wrap .json-boolean { color: var(--json-bool); }
+    .pre-wrap .json-null { color: var(--json-null); }
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Amply Phase 0 demo</h1>
+    <p class="lede">
+      Runs a browser-side simulation of the Node prototype (100×8 vectors, 10 cosine queries) or POSTs to
+      <code>window.__AMPLY_PHASE0_ENDPOINT__</code> when set.
+    </p>
+
+    <div class="toolbar">
+      <button type="button" id="runBtn">Run Amply Demo</button>
+      <span class="hint" id="hint" aria-live="polite"></span>
+    </div>
+
+    <!-- Filled on each run: success (emerald) or error (red) -->
+    <section class="card card-status" id="statusCard" hidden aria-live="assertive">
+      <h2 id="statusTitle">Status</h2>
+      <p id="statusBody"></p>
+    </section>
+
+    <!-- Pretty-printed JSON with light syntax highlighting -->
+    <section class="card card-output" id="outputCard" hidden>
+      <h2>Response JSON</h2>
+      <pre class="pre-wrap" id="jsonPre"><code id="jsonCode"></code></pre>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // -------------------------------------------------------------------------
+      // Config: live backend URL (set before click), e.g. '/api/phase0'
+      // -------------------------------------------------------------------------
+      const LIVE =
+        typeof window.__AMPLY_PHASE0_ENDPOINT__ === 'string' &&
+        window.__AMPLY_PHASE0_ENDPOINT__.trim().length > 0;
+
+      // -------------------------------------------------------------------------
+      // Vector helpers: random unit vectors + cosine similarity (same dim as Node script)
+      // -------------------------------------------------------------------------
+      const DIMENSION = 8;
+
+      /** @returns {number[]} L2-normalized random vector */
+      function randomUnitVector(dim) {
+        const v = Array.from({ length: dim }, () => Math.random() * 2 - 1);
+        const norm = Math.sqrt(v.reduce((s, x) => s + x * x, 0)) || 1;
+        return v.map((x) => x / norm);
+      }
+
+      /** Cosine similarity for unit vectors ≈ dot product */
+      function cosineSimilarity(a, b) {
+        let s = 0;
+        for (let i = 0; i < a.length; i++) s += a[i] * b[i];
+        return s;
+      }
+
+      // -------------------------------------------------------------------------
+      // Percentile on sorted ascending array (matches Node prototype logic)
+      // -------------------------------------------------------------------------
+      function percentile(sortedAsc, p) {
+        if (!sortedAsc.length) return null;
+        const n = sortedAsc.length;
+        const idx = Math.ceil((p / 100) * n) - 1;
+        return sortedAsc[Math.max(0, Math.min(n - 1, idx))];
+      }
+
+      /** Map p50 latency (ms) to confidence, aligned with scripts/amply-phase0-prototype.js */
+      function confidenceFromP50(p50) {
+        const s = 1 - Math.min(p50 / 800, 0.25);
+        return Math.round(Math.max(0.75, Math.min(0.99, s)) * 100) / 100;
+      }
+
+      // -------------------------------------------------------------------------
+      // Build 100 indexed records (values + simple metadata)
+      // -------------------------------------------------------------------------
+      function buildIndexRecords() {
+        const records = [];
+        for (let i = 0; i < 100; i++) {
+          records.push({
+            id: `vec-${i}`,
+            values: randomUnitVector(DIMENSION),
+            metadata: {
+              phase: 'phase0',
+              idx: i,
+              label: `dummy-${i}`,
+              batch_id: `b${Math.floor(i / 20)}`,
+            },
+          });
+        }
+        return records;
+      }
+
+      /**
+       * One query: cosine against all 100 vectors, return topK ids + scores.
+       * Wraps work in performance.now(); adds synthetic network latency so UI feels like RPC.
+       */
+      function runOneQuery(records, topK = 5) {
+        const q = randomUnitVector(DIMENSION);
+        const t0 = performance.now();
+
+        const scored = records.map((r) => ({
+          id: r.id,
+          score: cosineSimilarity(q, r.values),
+        }));
+        scored.sort((a, b) => b.score - a.score);
+        const top = scored.slice(0, topK);
+
+        const computeMs = performance.now() - t0;
+        // Blend local compute time with simulated WAN / Pinecone-style delay
+        const simulatedMs = Math.max(12, computeMs * 80 + Math.random() * 220 + 35);
+
+        return { top, latencyMs: simulatedMs };
+      }
+
+      // -------------------------------------------------------------------------
+      // Full browser simulation: 10 queries, optional random failure, build Amply-shaped JSON
+      // -------------------------------------------------------------------------
+      async function simulatePhase0InBrowser() {
+        // Tiny yield so the button disabled state paints before heavy work
+        await Promise.resolve();
+
+        const records = buildIndexRecords();
+        const latencies = [];
+        const errors = [];
+        let lastTop = [];
+
+        for (let i = 0; i < 10; i++) {
+          try {
+            // Occasional soft failure for demo error UI (~4%)
+            if (Math.random() < 0.04) {
+              throw new Error(`Query ${i} failed (simulated transport error).`);
+            }
+            const { top, latencyMs } = runOneQuery(records, 5);
+            latencies.push(latencyMs);
+            lastTop = top;
+          } catch (e) {
+            errors.push({ query: i, message: e.message || String(e) });
+          }
+        }
+
+        const sorted = [...latencies].sort((a, b) => a - b);
+        const successRate = latencies.length / 10;
+        const p50 = sorted.length ? percentile(sorted, 50) : null;
+        const p95 = sorted.length ? percentile(sorted, 95) : null;
+        const p99 = sorted.length ? percentile(sorted, 99) : null;
+        const conf = p50 != null ? confidenceFromP50(p50) : 0.85;
+
+        return {
+          recommended: {
+            provider: 'Pinecone',
+            provider_id: 'pinecone_serverless',
+            index: 'ampley-demo',
+            confidence: conf,
+          },
+          rankings: [
+            { provider_id: 'pinecone_serverless', rank: 1, score: conf },
+            { provider_id: 'qdrant_cloud', rank: 2, score: 0.78 },
+            { provider_id: 'weaviate_cloud', rank: 3, score: 0.71 },
+          ],
+          metrics: {
+            p50_latency_ms: p50 != null ? Math.round(p50 * 10) / 10 : null,
+            p95_latency_ms: p95 != null ? Math.round(p95 * 10) / 10 : null,
+            p99_latency_ms: p99 != null ? Math.round(p99 * 10) / 10 : null,
+            success_rate_7d: Math.round(successRate * 1000) / 1000,
+            estimated_cost_per_1m_ops_usd: 12.4,
+          },
+          why:
+            `Simulated Phase 0: 100×${DIMENSION} unit vectors, cosine top-5 per query, 10 runs. ` +
+            `p50≈${p50?.toFixed(1) ?? 'n/a'}ms (synthetic latency). Pinecone ranked first as the measured backend; ` +
+            `Qdrant/Weaviate are illustrative. Top match last run: ${lastTop[0]?.id ?? 'n/a'}.`,
+          errors: errors.length ? errors : undefined,
+          prototype: {
+            query_runs: 10,
+            vectors_upserted: 100,
+            mode: 'browser_simulation',
+            note: 'success_rate_7d reflects successful queries in this session, not production 7d telemetry.',
+          },
+        };
+      }
+
+      // -------------------------------------------------------------------------
+      // Optional live call: POST JSON endpoint, same shape expected back
+      // -------------------------------------------------------------------------
+      async function fetchLivePhase0() {
+        const url = window.__AMPLY_PHASE0_ENDPOINT__.trim();
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        const text = await res.text();
+        if (!res.ok) {
+          throw new Error(text || `HTTP ${res.status}`);
+        }
+        try {
+          return JSON.parse(text);
+        } catch {
+          throw new Error('Live endpoint did not return JSON.');
+        }
+      }
+
+      async function runDemo() {
+        if (LIVE) {
+          return fetchLivePhase0();
+        }
+        return simulatePhase0InBrowser();
+      }
+
+      // -------------------------------------------------------------------------
+      // Minimal JSON syntax highlighting (safe entities + span classes)
+      // -------------------------------------------------------------------------
+      function escapeHtml(s) {
+        return s
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+      }
+
+      function highlightJsonString(jsonStr) {
+        const esc = escapeHtml(jsonStr);
+        return esc.replace(
+          /("(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+\.?\d*([eE][+\-]?\d+)?)/g,
+          (match) => {
+            let cls = 'json-number';
+            if (/^"/.test(match)) {
+              cls = /:$/.test(match) ? 'json-key' : 'json-string';
+            } else if (/true|false/.test(match)) {
+              cls = 'json-boolean';
+            } else if (match === 'null') {
+              cls = 'json-null';
+            }
+            return `<span class="${cls}">${match}</span>`;
+          },
+        );
+      }
+
+      // -------------------------------------------------------------------------
+      // UI wiring: button, status card, output card
+      // -------------------------------------------------------------------------
+      const runBtn = document.getElementById('runBtn');
+      const hint = document.getElementById('hint');
+      const statusCard = document.getElementById('statusCard');
+      const statusTitle = document.getElementById('statusTitle');
+      const statusBody = document.getElementById('statusBody');
+      const outputCard = document.getElementById('outputCard');
+      const jsonCode = document.getElementById('jsonCode');
+
+      runBtn.addEventListener('click', async () => {
+        outputCard.hidden = true;
+        statusCard.hidden = true;
+        jsonCode.innerHTML = '';
+        runBtn.disabled = true;
+        hint.textContent = LIVE
+          ? `POST ${window.__AMPLY_PHASE0_ENDPOINT__} …`
+          : 'Simulating 100 vectors, 10 cosine queries…';
+
+        try {
+          const data = await runDemo();
+          const raw = JSON.stringify(data, null, 2);
+          jsonCode.innerHTML = highlightJsonString(raw);
+
+          statusCard.hidden = false;
+          statusCard.className = 'card card-status card-ok';
+          statusTitle.textContent = 'Status';
+          statusBody.innerHTML =
+            '<span class="msg-strong">Success.</span> JSON below ' +
+            (LIVE ? '(live endpoint).' : '(browser simulation; use Node script for Pinecone).');
+
+          outputCard.hidden = false;
+        } catch (err) {
+          statusCard.hidden = false;
+          statusCard.className = 'card card-status card-error';
+          statusTitle.textContent = 'Error';
+          const m = err && err.message ? err.message : String(err);
+          statusBody.innerHTML = `<span class="msg-strong">Phase 0 failed.</span> ${escapeHtml(m)}`;
+        } finally {
+          runBtn.disabled = false;
+          hint.textContent = LIVE
+            ? `Live: ${window.__AMPLY_PHASE0_ENDPOINT__}`
+            : 'Set window.__AMPLY_PHASE0_ENDPOINT__ for a live POST instead of simulation.';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

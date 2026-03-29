@@ -27,11 +27,17 @@ function getPool(connectionString) {
   const id = createHash('sha256').update(connectionString).digest('hex').slice(0, 24);
   const key = `__amplyRoutePgPool_${id}`;
   if (!g[key]) {
+    const poolMax = Math.min(
+      10,
+      Math.max(1, Number.parseInt(process.env.AMPLY_PG_POOL_MAX || '3', 10) || 3),
+    );
+    const idleMs = Number.parseInt(process.env.AMPLY_PG_IDLE_MS || '20000', 10) || 20000;
+    const connTimeout = Number.parseInt(process.env.AMPLY_PG_CONN_TIMEOUT_MS || '12000', 10) || 12000;
     g[key] = new pg.Pool({
       connectionString,
-      max: 2,
-      idleTimeoutMillis: 20000,
-      connectionTimeoutMillis: 20000,
+      max: poolMax,
+      idleTimeoutMillis: idleMs,
+      connectionTimeoutMillis: connTimeout,
       ssl: { rejectUnauthorized: false },
     });
   }

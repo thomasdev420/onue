@@ -82,7 +82,7 @@ const AI_QUERY_SLIDES = [
   {
     id: 'task-cost',
     Logo: LandingLogoChatGPT,
-    text: 'Stay under $0.01 per decision with p99 latency under 200ms',
+    text: 'Stay under $0.01 per decision with vector index p99 latency under 200ms',
     cardExtra: '',
   },
   {
@@ -482,7 +482,7 @@ export default function MarketGrowthHeroChart({ isLoaded }) {
             id="market-growth-solution-heading"
             className="mt-4 text-pretty text-2xl font-bold tracking-tight text-gray-900 sm:mt-5 sm:text-3xl"
           >
-            200ms. One POST. A clear answer.
+            Sub-200ms server-side routing. One POST. A clear answer.
           </p>
           <p className="mt-4 text-pretty text-base font-medium leading-relaxed text-gray-800 sm:text-lg">
             Amply scores services from live performance data. You get a pick, metrics, and a short why, fully structured. More tool categories over time; same contract.

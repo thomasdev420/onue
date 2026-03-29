@@ -1,176 +1,105 @@
 'use client';
 
-import { ArrowDown, ArrowRight } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  CircleDollarSign,
+  Gauge,
+  ListChecks,
+  Sparkles,
+  XOctagon,
+  Zap,
+} from 'lucide-react';
 
 /**
- * Before vs after: LLM-guessed tool choice (top) vs Amply empirical route (bottom).
+ * Side-by-side: without Amply vs with Amply (same copy as previous flow diagram).
  */
-
-/** Shorter on lg+ so tiles hug copy; arrows match row height */
-const ROW_BOX_H = 'h-[150px] shrink-0 sm:h-[154px] lg:h-[128px]';
-
-function RowArrow() {
-  return (
-    <div
-      className={`hidden items-center justify-center lg:flex ${ROW_BOX_H} w-8 shrink-0 text-white xl:w-9`}
-      aria-hidden
-    >
-      <ArrowRight className="h-6 w-6 xl:h-7 xl:w-7" strokeWidth={3} />
-    </div>
-  );
-}
-
-function RowArrowDown() {
-  return (
-    <div className="flex justify-center py-1 text-white" aria-hidden>
-      <ArrowDown className="h-6 w-6" strokeWidth={3} />
-    </div>
-  );
-}
-
-/** Losing row tiles: muted + cool/red undertone */
-function LoseBox({ children, fatal = false }) {
-  return (
-    <div
-      className={`relative flex w-full ${ROW_BOX_H} flex-col overflow-hidden rounded-2xl border px-2.5 py-2 text-center sm:px-3 sm:py-2.5 lg:px-3 lg:py-2 ${
-        fatal
-          ? 'border-red-500/25 bg-red-950/20 opacity-[0.92] shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_0_28px_rgba(239,68,68,0.08)]'
-          : 'border-white/10 bg-white/[0.03] opacity-[0.88]'
-      }`}
-    >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-400/15 to-transparent" aria-hidden />
-      <div className="flex h-full flex-col items-center justify-center gap-0.5 leading-snug">{children}</div>
-    </div>
-  );
-}
-
-/** Winning row tiles; success = pure emerald (no indigo/blue) */
-function WinBox({ children, success = false }) {
-  return (
-    <div
-      className={`relative flex w-full ${ROW_BOX_H} flex-col overflow-hidden rounded-2xl border px-2.5 py-2 text-center sm:px-3 sm:py-2.5 lg:px-3 lg:py-2 ${
-        success
-          ? 'border-emerald-400/50 bg-gradient-to-b from-emerald-500/25 to-emerald-950/35 shadow-[0_0_40px_rgba(16,185,129,0.22),inset_0_1px_0_rgba(167,243,208,0.12)]'
-          : 'border-emerald-500/20 bg-white/[0.08]'
-      }`}
-    >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent"
-        aria-hidden
-      />
-      <div className="flex h-full flex-col items-center justify-center gap-0.5 leading-snug">{children}</div>
-    </div>
-  );
-}
-
-function LosingFlow({ mobile = false }) {
-  const inner = (
-    <>
-      <LoseBox>
-        <p className="text-sm font-bold text-white/75">Model picks API</p>
-        <p className="text-xs font-medium text-white/45">Slow</p>
-      </LoseBox>
-      {mobile ? <RowArrowDown /> : <RowArrow />}
-      <LoseBox>
-        <p className="text-sm font-bold text-white/75">Bad cost / latency info</p>
-      </LoseBox>
-      {mobile ? <RowArrowDown /> : <RowArrow />}
-      <LoseBox>
-        <p className="text-sm font-bold text-white/75">No real benchmarks</p>
-      </LoseBox>
-      {mobile ? <RowArrowDown /> : <RowArrow />}
-      <LoseBox fatal>
-        <p className="text-sm font-bold text-red-200/90">Wrong provider</p>
-        <p className="text-sm font-bold text-red-300/75">Slower & pricier</p>
-      </LoseBox>
-    </>
-  );
-
-  if (mobile) {
-    return <div className="flex flex-col">{inner}</div>;
-  }
-
-  return (
-    <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-stretch gap-x-1.5 xl:gap-x-2">
-      {inner}
-    </div>
-  );
-}
-
-function WinningFlow({ mobile = false }) {
-  const inner = (
-    <>
-      <WinBox>
-        <p className="text-sm font-bold text-white">POST to Amply</p>
-      </WinBox>
-      {mobile ? <RowArrowDown /> : <RowArrow />}
-      <WinBox>
-        <p className="text-sm font-bold text-white">Benchmark scores</p>
-      </WinBox>
-      {mobile ? <RowArrowDown /> : <RowArrow />}
-      <WinBox>
-        <p className="text-sm font-bold text-white">Pick + metrics + why</p>
-      </WinBox>
-      {mobile ? <RowArrowDown /> : <RowArrow />}
-      <WinBox success>
-        <p className="text-sm font-bold text-emerald-100">Right service</p>
-        <p className="text-sm font-bold text-emerald-50/95">Fast path</p>
-      </WinBox>
-    </>
-  );
-
-  if (mobile) {
-    return <div className="flex flex-col">{inner}</div>;
-  }
-
-  return (
-    <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] items-stretch gap-x-1.5 xl:gap-x-2">
-      {inner}
-    </div>
-  );
-}
-
 export default function DistributionMoatDiagram() {
   return (
     <figure
       className="mt-8 w-full max-w-6xl mx-auto sm:mt-10"
       aria-label="Before: agents waste time and pick the wrong API. After: Amply returns an empirical best choice in milliseconds."
     >
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-8 sm:px-8 sm:py-10">
-        {/* Mobile: stack both rows */}
-        <div className="lg:hidden">
-          <p className="text-center text-xs font-bold uppercase tracking-[0.08em] text-white/50 sm:text-sm">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-8">
+        {/* Without Amply */}
+        <div className="rounded-2xl border border-red-500/20 bg-gradient-to-b from-red-950/40 to-[#0c0c10] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:p-6 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-red-900/20">
+          <p className="text-center text-xs font-bold uppercase tracking-[0.12em] text-red-300/90 sm:text-sm">
             Without Amply
           </p>
-          <div className="mt-3">
-            <LosingFlow mobile />
-          </div>
-
-          <p className="mt-8 text-center text-sm font-bold uppercase tracking-[0.1em] text-emerald-300/95 sm:text-base">
-            With Amply
-          </p>
-          <div className="mt-3">
-            <WinningFlow mobile />
-          </div>
+          <ul className="mt-5 flex flex-col gap-3">
+            <li className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3.5 transition hover:border-red-400/25 hover:bg-white/[0.06]">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-200">
+                <AlertTriangle className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-left leading-snug">
+                <span className="block text-sm font-bold text-white/85">Model picks API</span>
+                <span className="text-xs font-medium text-white/50">Slow</span>
+              </span>
+            </li>
+            <li className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3.5 transition hover:border-red-400/25 hover:bg-white/[0.06]">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-200">
+                <CircleDollarSign className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-sm font-bold leading-snug text-white/85">Bad cost / latency info</span>
+            </li>
+            <li className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3.5 transition hover:border-red-400/25 hover:bg-white/[0.06]">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/15 text-red-200">
+                <Gauge className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-sm font-bold leading-snug text-white/85">No real benchmarks</span>
+            </li>
+            <li className="flex gap-3 rounded-xl border border-red-500/25 bg-red-950/35 p-3.5 shadow-[0_0_24px_rgba(239,68,68,0.12)] transition hover:border-red-400/40">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-500/25 text-red-100">
+                <XOctagon className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-left leading-snug">
+                <span className="block text-sm font-bold text-red-200/95">Wrong provider</span>
+                <span className="text-sm font-bold text-red-300/80">Slower & pricier</span>
+              </span>
+            </li>
+          </ul>
         </div>
 
-        {/* Desktop: two horizontal bands */}
-        <div className="hidden lg:block">
-          <p className="text-center text-sm font-bold uppercase tracking-[0.08em] text-white/50 lg:text-base">
-            Without Amply
-          </p>
-          <div className="mt-4">
-            <LosingFlow />
-          </div>
-
-          <p className="mt-10 text-center text-base font-bold uppercase tracking-[0.1em] text-emerald-300/95 lg:text-lg">
+        {/* With Amply */}
+        <div className="rounded-2xl border border-emerald-500/25 bg-gradient-to-b from-emerald-950/35 to-[#0a100e] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-6 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-emerald-900/25">
+          <p className="text-center text-sm font-bold uppercase tracking-[0.1em] text-emerald-300/95 sm:text-base">
             With Amply
           </p>
-          <div className="mt-4">
-            <WinningFlow />
-          </div>
+          <ul className="mt-5 flex flex-col gap-3">
+            <li className="flex gap-3 rounded-xl border border-emerald-500/20 bg-white/[0.06] p-3.5 transition hover:border-emerald-400/35 hover:bg-white/[0.08]">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-100">
+                <Zap className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-sm font-bold leading-snug text-white">POST to Amply</span>
+            </li>
+            <li className="flex gap-3 rounded-xl border border-emerald-500/20 bg-white/[0.06] p-3.5 transition hover:border-emerald-400/35 hover:bg-white/[0.08]">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-100">
+                <BarChart3 className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-sm font-bold leading-snug text-white">Benchmark scores</span>
+            </li>
+            <li className="flex gap-3 rounded-xl border border-emerald-500/20 bg-white/[0.06] p-3.5 transition hover:border-emerald-400/35 hover:bg-white/[0.08]">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-100">
+                <ListChecks className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-sm font-bold leading-snug text-white">Pick + metrics + why</span>
+            </li>
+            <li className="flex gap-3 rounded-xl border border-emerald-400/45 bg-gradient-to-b from-emerald-500/20 to-emerald-950/40 p-3.5 shadow-[0_0_32px_rgba(16,185,129,0.2)] transition hover:border-emerald-300/50">
+              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-400/30 text-emerald-50">
+                <Sparkles className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </span>
+              <span className="text-left leading-snug">
+                <span className="block text-sm font-bold text-emerald-100">Right service</span>
+                <span className="text-sm font-bold text-emerald-50/95">Fast path</span>
+              </span>
+            </li>
+          </ul>
         </div>
+      </div>
 
+      <div className="mt-6 flex justify-center md:hidden" aria-hidden>
+        <ArrowRight className="h-6 w-6 rotate-90 text-white/25" />
       </div>
     </figure>
   );
