@@ -752,6 +752,9 @@ export default function Home() {
           >
             Dev Access
           </button>
+          <p className="mt-8 text-center text-xs font-medium tracking-wide text-gray-400">
+            A Thomas Collins production
+          </p>
         </div>
       </div>
     </div>
