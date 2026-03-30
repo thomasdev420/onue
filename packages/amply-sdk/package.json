@@ -1,0 +1,25 @@
+{
+  "name": "amply-sdk",
+  "version": "0.1.0",
+  "description": "Official JavaScript/TypeScript client for the Amply routing API (POST /api/v1/route).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js",
+      "default": "./index.js"
+    }
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thomasdev420/onue.git",
+    "directory": "packages/amply-sdk"
+  },
+  "keywords": ["amply", "vector", "routing", "api-client"]
+}

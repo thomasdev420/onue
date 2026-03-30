@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Copy, Check } from "lucide-react";
+import { X } from "lucide-react";
 import Link from "next/link";
 import { signIn, useSession } from "next-auth/react";
 import { useState, useEffect, useMemo, useCallback } from "react";
@@ -10,8 +10,12 @@ import MarketingNav from "./components/marketing/MarketingNav";
 import DistributionMoatDiagram from "./components/DistributionMoatDiagram";
 import AmplyApiConsole from "./components/AmplyApiConsole";
 import JsonExampleBlock from "./components/landing/JsonExampleBlock";
-import { HighlightBash } from "./components/landing/CodeHighlight";
-import { buildCurlSnippet, DEFAULT_TASK } from "@/app/lib/amplyCurlSnippet";
+import CodeSnippetTabs from "./components/marketing/CodeSnippetTabs";
+import RoutePlayground from "./components/marketing/RoutePlayground";
+import AgentFlowDiagram from "./components/marketing/AgentFlowDiagram";
+import ProviderPills from "./components/marketing/ProviderPills";
+import DashboardPreviewMock from "./components/marketing/DashboardPreviewMock";
+import PricingTable from "./components/marketing/PricingTable";
 import { formatDistanceToNow } from "date-fns";
 
 function LiveBenchmarkBadge() {
@@ -94,64 +98,10 @@ function LiveBenchmarkBadge() {
   );
 }
 
-function useQuickstartCurl() {
-  const [curl, setCurl] = useState(() =>
-    buildCurlSnippet("https://www.useamply.com/api/v1/route", DEFAULT_TASK),
-  );
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setCurl(buildCurlSnippet(`${window.location.origin}/api/v1/route`, DEFAULT_TASK));
-    }
-  }, []);
-
-  return curl;
-}
-
-function QuickstartCurlCopy({ curl }) {
-  const [copied, setCopied] = useState(false);
-  const onCopy = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(curl);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* ignore */
-    }
-  }, [curl]);
-
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={onCopy}
-        className="absolute right-2 top-2 z-10 inline-flex items-center gap-1.5 rounded-lg border border-slate-600/90 bg-slate-900/95 px-2.5 py-1.5 text-xs font-semibold text-slate-200 shadow-md backdrop-blur-sm transition hover:border-cyan-500/50 hover:bg-slate-800 sm:right-3 sm:top-3 sm:px-3 sm:text-sm"
-      >
-        {copied ? (
-          <>
-            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-            Copied
-          </>
-        ) : (
-          <>
-            <Copy className="h-3.5 w-3.5 opacity-90" strokeWidth={2} />
-            Copy
-          </>
-        )}
-      </button>
-      <pre className="max-h-[min(45vh,320px)] overflow-x-auto overflow-y-auto rounded-xl border border-slate-600/90 bg-slate-950 p-4 pt-12 text-left font-mono text-[11px] leading-relaxed shadow-[0_12px_40px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.04)] sm:max-h-[380px] sm:p-5 sm:pt-14 sm:text-[13px]">
-        <HighlightBash code={curl} />
-      </pre>
-    </div>
-  );
-}
-
 // Landing page
 export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const quickstartCurl = useQuickstartCurl();
-
   const [showDevModal, setShowDevModal] = useState(false);
   const [devCode, setDevCode] = useState("");
   const [devCodeError, setDevCodeError] = useState("");
@@ -274,7 +224,7 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900 antialiased">
+    <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-[#FAF9F6] to-[#FAF9F6] font-sans text-gray-900 antialiased">
       <MarketingNav />
 
       <div className="relative flex flex-col items-center px-5 pb-28 pt-10 sm:px-10 sm:pb-36 sm:pt-14">
@@ -374,6 +324,27 @@ export default function Home() {
           </div>
         </header>
 
+        <AgentFlowDiagram />
+        <ProviderPills />
+
+        <section className="mx-auto mb-12 mt-10 flex w-full max-w-4xl flex-col items-center gap-6 px-2 sm:mb-16 sm:flex-row sm:justify-center sm:gap-10 sm:px-4">
+          <div className="max-w-md text-center sm:text-left">
+            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">Keys live in the dashboard</h2>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              Sign in, create a key, and use it with curl, <code className="font-mono text-xs">amply-sdk</code>, or any HTTP client.
+            </p>
+            <Link
+              href="/docs/quickstart"
+              className="mt-3 inline-block text-sm font-semibold text-indigo-600 underline underline-offset-2"
+            >
+              Open the quickstart guide →
+            </Link>
+          </div>
+          <DashboardPreviewMock />
+        </section>
+
+        <RoutePlayground />
+
         {/* Live in 60 Seconds */}
         <section
           id="quickstart"
@@ -437,13 +408,15 @@ export default function Home() {
                 <div className="min-w-0 flex-1 space-y-4">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-600">Step 2 of 3</p>
-                    <h3 className="mt-1 text-lg font-semibold text-gray-900">Copy this curl</h3>
+                    <h3 className="mt-1 text-lg font-semibold text-gray-900">Copy a request</h3>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                      Same payload as the API console — replace <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">YOUR_API_KEY</code>.
+                      cURL, TypeScript, or Python — same payload. Replace{" "}
+                      <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">YOUR_API_KEY</code> /{" "}
+                      <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">AMPLY_API_KEY</code>.
                     </p>
                   </div>
                   <div className="w-full min-w-0">
-                    <QuickstartCurlCopy curl={quickstartCurl} />
+                    <CodeSnippetTabs baseUrl="https://www.useamply.com" />
                   </div>
                 </div>
               </div>
@@ -648,47 +621,39 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Social Proof */}
-        <section className="mb-20 w-full max-w-5xl scroll-mt-28 px-4 sm:mb-28" aria-label="Early feedback">
+        <section className="mb-12 w-full max-w-3xl scroll-mt-28 px-4 sm:mb-16" aria-label="Built for">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-3xl">Built for</h2>
+          <ul className="mx-auto mt-6 max-w-xl space-y-3 text-sm leading-relaxed text-gray-700">
+            <li className="flex gap-2">
+              <span className="font-bold text-indigo-600">·</span>
+              Teams shipping <strong className="font-semibold text-gray-900">agent loops</strong> that need a fast, loggable routing decision.
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold text-indigo-600">·</span>
+              <strong className="font-semibold text-gray-900">Vector + RAG</strong> workloads where provider economics and p99 latency matter.
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold text-indigo-600">·</span>
+              Builders who want <strong className="font-semibold text-gray-900">structured JSON</strong> (not model prose) in the critical path.
+            </li>
+          </ul>
+        </section>
+
+        <section className="mb-20 w-full max-w-3xl scroll-mt-28 px-4 sm:mb-28" aria-label="Early access">
           <h2 className="text-center text-2xl font-bold leading-snug tracking-tight text-gray-900 sm:text-3xl">
-            Social Proof
+            Early access
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-relaxed text-gray-500">
-            Early builders — see also{" "}
-            <Link href="/about#testimonials" className="font-medium text-indigo-600 underline">
-              customer quotes on About
+          <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-gray-600">
+            We&apos;re working with a small set of design partners on routing SLAs and data sourcing. For narrative examples and the types of teams we talk to, see{" "}
+            <Link href="/about" className="font-medium text-indigo-600 underline">
+              About
             </Link>
+            . If you have a production agent workload, we&apos;d love to hear from you at{" "}
+            <a href="mailto:support@useamply.com" className="font-medium text-indigo-600 underline">
+              support@useamply.com
+            </a>
             .
           </p>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {[
-              {
-                quote: "We cut tool-pick latency to a single HTTP round-trip. Game changer for our agent loop.",
-                who: "Engineering lead",
-                org: "AI startup",
-              },
-              {
-                quote: "Finally JSON I can log and replay — not another paragraph from the model.",
-                who: "Founder",
-                org: "B2B SaaS",
-              },
-              {
-                quote: "The cost and latency fields made it obvious which vector host to standardize on.",
-                who: "Platform",
-                org: "Enterprise team",
-              },
-            ].map((t, i) => (
-              <blockquote
-                key={i}
-                className="rounded-2xl border border-gray-200/90 bg-white p-6 shadow-sm transition hover:shadow-md"
-              >
-                <p className="text-sm leading-relaxed text-gray-700">&ldquo;{t.quote}&rdquo;</p>
-                <footer className="mt-4 text-xs font-medium text-gray-500">
-                  — {t.who}, {t.org}
-                </footer>
-              </blockquote>
-            ))}
-          </div>
         </section>
 
         {/* Pricing */}
@@ -700,46 +665,15 @@ export default function Home() {
             Pricing
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-base leading-relaxed text-gray-600">
-            Start free, scale when your agents do.
+            Design partner quotas — enforcement and billing roll out on Stripe next.
           </p>
-          <div className="mt-10 overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow-md">
-            <table className="w-full min-w-[520px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-gray-200 bg-gray-50/80">
-                  <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6"> </th>
-                  <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">Free</th>
-                  <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">Pro</th>
-                  <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">Enterprise</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 text-gray-700">
-                <tr className="transition hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">API access</td>
-                  <td className="px-4 py-3 sm:px-6">Generous free tier</td>
-                  <td className="px-4 py-3 sm:px-6">Higher limits + priority</td>
-                  <td className="px-4 py-3 sm:px-6">Custom SLAs</td>
-                </tr>
-                <tr className="transition hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Support</td>
-                  <td className="px-4 py-3 sm:px-6">Community</td>
-                  <td className="px-4 py-3 sm:px-6">Email</td>
-                  <td className="px-4 py-3 sm:px-6">Dedicated</td>
-                </tr>
-                <tr className="transition hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Deployment</td>
-                  <td className="px-4 py-3 sm:px-6">Cloud</td>
-                  <td className="px-4 py-3 sm:px-6">Cloud</td>
-                  <td className="px-4 py-3 sm:px-6">VPC / hybrid options</td>
-                </tr>
-              </tbody>
-            </table>
+          <div className="mt-10">
+            <PricingTable />
           </div>
-          <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">
-            Contact sales for Enterprise pricing and volume commitments.{" "}
+          <p className="mt-4 text-center text-xs text-gray-500">
             <Link href="/pricing" className="font-medium text-indigo-600 underline">
               Full pricing page
             </Link>
-            .
           </p>
         </section>
 
@@ -752,7 +686,7 @@ export default function Home() {
           >
             Dev Access
           </button>
-          <p className="mt-8 text-center text-xs font-medium tracking-wide text-gray-400">
+          <p className="mt-8 text-center font-mono text-[11px] font-medium leading-none tracking-[0.14em] text-gray-400 antialiased">
             A Thomas Collins production
           </p>
         </div>

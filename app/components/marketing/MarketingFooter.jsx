@@ -93,8 +93,18 @@ export default function MarketingFooter() {
             <h3 className={headingClass}>Developer</h3>
             <ul className="space-y-3">
               <li>
+                <Link href="/docs/quickstart" className={linkClass}>
+                  Quickstart
+                </Link>
+              </li>
+              <li>
                 <Link href="/docs" className={linkClass}>
                   Documentation
+                </Link>
+              </li>
+              <li>
+                <Link href="/changelog" className={linkClass}>
+                  Changelog & roadmap
                 </Link>
               </li>
               <li>
