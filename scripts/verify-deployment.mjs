@@ -10,9 +10,12 @@
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveAmplyBearerFromEnv } from './lib/resolveAmplyBearer.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+const envPath =
+  process.env.DOTENV_CONFIG_PATH?.trim() || path.join(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
 
 const fromArg = process.argv[2];
 const fromEnv = process.env.AMPLY_PROD_URL;
@@ -42,14 +45,11 @@ if (base.startsWith('http://') && !base.includes('localhost')) {
   process.exit(1);
 }
 
-const keys = (process.env.AMPLY_API_KEYS || '')
-  .split(',')
-  .map((k) => k.trim())
-  .filter(Boolean);
+const routeBearer = resolveAmplyBearerFromEnv();
 
 function authHeaders(extra = {}) {
   const h = { ...extra };
-  if (keys.length) h.Authorization = `Bearer ${keys[0]}`;
+  if (routeBearer) h.Authorization = `Bearer ${routeBearer}`;
   return h;
 }
 
@@ -196,8 +196,17 @@ console.log('\nPOST /api/v1/route\n', JSON.stringify(routeJson, null, 2));
 if (!routeRes.ok) {
   console.error(`\nHTTP ${routeRes.status} on route`);
   if (routeJson.detail) console.error('Detail:', routeJson.detail);
-  if (keys.length === 0 && routeRes.status === 401) {
-    console.error('Hint: set AMPLY_API_KEYS on Vercel and add the same key to local .env for this script.');
+  if (routeRes.status === 401) {
+    if (!routeBearer) {
+      console.error(
+        'Hint: no Bearer in env. Set AMPLY_API_KEYS (first key is used), or AMPLY_ROUTE_BEARER_TOKEN / AMPLY_DEV_ROUTE_TOKEN (must match a Production key or dashboard user key).',
+      );
+    } else {
+      console.error(
+        'Hint: Bearer was sent but rejected. Local token must match Vercel Production → AMPLY_API_KEYS (comma-separated) or a valid amply_api_keys row.',
+        '\n  Fix: copy Production AMPLY_API_KEYS into .env, or set AMPLY_ROUTE_BEARER_TOKEN to the exact key string (no extra quotes/spaces).',
+      );
+    }
   }
   process.exit(1);
 }
