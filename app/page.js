@@ -380,7 +380,7 @@ export default function Home() {
             >
               List your service
             </Link>{" "}
-            — paid catalog tiers, transparent placement.
+            — $199/mo catalog listing, transparent placement.
           </p>
         </header>
 
@@ -743,25 +743,15 @@ export default function Home() {
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/80">
                   <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">Provider listing</th>
-                  <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">From</th>
+                  <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">Price</th>
                   <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6">Includes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-gray-700">
                 <tr className="transition hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Basic</td>
+                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Catalog listing</td>
                   <td className="px-4 py-3 sm:px-6">$199/mo</td>
-                  <td className="px-4 py-3 sm:px-6">Catalog + API placement badge, 48h review</td>
-                </tr>
-                <tr className="transition hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Featured</td>
-                  <td className="px-4 py-3 sm:px-6">$499/mo</td>
-                  <td className="px-4 py-3 sm:px-6">Homepage &amp; /catalog rotation, co-marketing</td>
-                </tr>
-                <tr className="transition hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Spotlight</td>
-                  <td className="px-4 py-3 sm:px-6">from $1.2k/mo</td>
-                  <td className="px-4 py-3 sm:px-6">Top-3 category slots, dedicated updates</td>
+                  <td className="px-4 py-3 sm:px-6">Public catalog + API placement badge, 48h review</td>
                 </tr>
               </tbody>
             </table>

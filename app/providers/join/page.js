@@ -5,16 +5,10 @@ import ProviderJoinForm from "./ProviderJoinForm";
 
 export const metadata = {
   title: "List your service | Amply",
-  description: "Submit provider details for catalog review — sponsorship tiers and transparent placement.",
+  description: "Submit provider details for catalog review — $199/mo listing, transparent placement.",
 };
 
-export default async function ProviderJoinPage({ searchParams }) {
-  const sp = await searchParams;
-  const tierRaw = typeof sp?.tier === "string" ? sp.tier : "";
-  const initialTier = ["basic_listing", "featured", "sponsored_top3"].includes(tierRaw)
-    ? tierRaw
-    : "unsure";
-
+export default function ProviderJoinPage() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -24,16 +18,17 @@ export default async function ProviderJoinPage({ searchParams }) {
           List your service
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-gray-600 sm:text-base">
-          Tell us who you are and which tier you want. We&apos;ll follow up with payment (Stripe) or an
-          invoice, then update <Link href="/catalog" className="text-indigo-600 underline">the catalog</Link>{" "}
-          within ~48h after confirmation. Metrics used for routing stay auditable — see{" "}
+          One catalog listing at <strong>$199/mo</strong>. Pay via Stripe (if shown below), then submit this
+          form with the same email. We&apos;ll update{" "}
+          <Link href="/catalog" className="text-indigo-600 underline">the catalog</Link> within ~48h after
+          confirmation. Metrics used for routing stay auditable — see{" "}
           <Link href="/for-providers" className="text-indigo-600 underline">
             For providers
           </Link>
           .
         </p>
         <div className="mt-10">
-          <ProviderJoinForm initialTier={initialTier} />
+          <ProviderJoinForm />
         </div>
       </main>
       <MarketingFooter />

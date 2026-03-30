@@ -4,21 +4,12 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
 
-const TIERS = [
-  { value: "unsure", label: "Not sure yet" },
-  { value: "basic_listing", label: "Basic listing ($199/mo)" },
-  { value: "featured", label: "Featured ($499/mo)" },
-  { value: "sponsored_top3", label: "Sponsored spotlight (from $1.2k/mo)" },
-  { value: "enterprise_call", label: "Enterprise / custom" },
-];
+const LISTING_PRICE_LABEL = "$199/mo";
 
-export default function ProviderJoinForm({ initialTier = "unsure" }) {
+export default function ProviderJoinForm() {
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
   const [providerName, setProviderName] = useState("");
-  const [tier, setTier] = useState(
-    TIERS.some((t) => t.value === initialTier) ? initialTier : "unsure",
-  );
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(null);
 
@@ -40,7 +31,7 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
           company,
           email,
           provider_name: providerName,
-          tier_interest: tier,
+          tier_interest: "basic_listing",
           message,
         }),
       });
@@ -85,26 +76,12 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
           onChange={(e) => setProviderName(e.target.value)}
         />
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-800">Tier interest</label>
-        <select
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          value={tier}
-          onChange={(e) => setTier(e.target.value)}
-        >
-          {TIERS.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
-      </div>
       {stripePayUrl && (
         <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-4 text-sm text-violet-950">
-          <p className="font-medium">Pay (listing deposit)</p>
+          <p className="font-medium">Pay — {LISTING_PRICE_LABEL} listing</p>
           <p className="mt-1 text-xs text-violet-900/90">
-            One checkout for now. Pay in Stripe, then submit this form with the <strong>same email</strong> and the
-            tier you want — we&apos;ll match payment to catalog placement.
+            Check out in Stripe first, then submit this form with the <strong>same email</strong> so we can
+            match your payment.
           </p>
           <a
             href={stripePayUrl}

@@ -27,7 +27,7 @@ export default function ForProvidersPage() {
           <li className="flex gap-2">
             <span className="font-semibold text-indigo-600">1.</span>
             <span>
-              <strong>Transparent placement</strong> — Sponsored tiers are labeled in{" "}
+              <strong>Transparent placement</strong> — Paid listings are labeled in{" "}
               <Link href="/catalog" className="text-indigo-600 underline">
                 /catalog
               </Link>{" "}
@@ -38,7 +38,7 @@ export default function ForProvidersPage() {
           <li className="flex gap-2">
             <span className="font-semibold text-indigo-600">2.</span>
             <span>
-              <strong>No pay-to-win routing</strong> — Paid tiers buy visibility and editorial support,
+              <strong>No pay-to-win routing</strong> — Listings buy visibility and editorial support,
               not a hidden score boost. Scoring still uses the metrics we publish.
             </span>
           </li>
@@ -62,7 +62,7 @@ export default function ForProvidersPage() {
             href="/pricing#providers"
             className="inline-flex rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
           >
-            View sponsorship tiers
+            View pricing
           </Link>
         </div>
 

@@ -31,7 +31,7 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong>Provider leads:</strong> when you submit the &ldquo;List your service&rdquo; form, we
-            process company name, email, product name, tier interest, and message for sales and fulfillment.
+            process company name, email, product name, and optional message for sales and fulfillment.
           </li>
           <li>
             <strong>Technical data:</strong> IP, user agent, approximate region via edge/CDN headers where

@@ -6,45 +6,20 @@ import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
 export const metadata = {
   title: "Pricing | Amply",
   description:
-    "Free for agent builders — unlimited fair-use routing. Providers: sponsorship and catalog listings.",
+    "Free for agent builders — unlimited fair-use routing. Providers: one catalog listing price.",
 };
 
-const SPONSOR_TIERS = [
-  {
-    name: "Basic listing",
-    price: "$199/mo",
-    bullets: [
-      "Logo + one-line description on the public catalog",
-      "Linked from GET /api/v1/providers with placement badge",
-      "48h review after payment",
-    ],
-    cta: "Submit listing details",
-    href: "/providers/join?tier=basic_listing",
-  },
-  {
-    name: "Featured",
-    price: "$499/mo",
-    bullets: [
-      "Everything in Basic",
-      "Featured row on /catalog + homepage “supported by” rotation",
-      "Quarterly metrics refresh collaboration",
-    ],
-    cta: "Submit listing details",
-    href: "/providers/join?tier=featured",
-    highlight: true,
-  },
-  {
-    name: "Sponsored top-3 spotlight",
-    price: "From $1.2k/mo",
-    bullets: [
-      "Reserved for category leaders — limited slots",
-      "Co-marketing on agent-facing docs",
-      "Direct line for catalog updates",
-    ],
-    cta: "Submit listing details",
-    href: "/providers/join?tier=sponsored_top3",
-  },
-];
+const LISTING_PRICE = "$199/mo";
+
+const LISTING = {
+  name: "Catalog listing",
+  price: LISTING_PRICE,
+  bullets: [
+    "Logo + one-line description on the public catalog",
+    "Linked from GET /api/v1/providers with placement badge",
+    "48h review after payment",
+  ],
+};
 
 export default function PricingPage() {
   const stripeUrl = getStripeListingPaymentUrl();
@@ -54,12 +29,12 @@ export default function PricingPage() {
       <main className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8 sm:pb-32 sm:pt-14">
         <p className="text-center text-sm font-medium text-indigo-600">Pricing</p>
         <h1 className="mt-2 text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          Free for builders. Paid for providers.
+          Free for builders. One listing price for providers.
         </h1>
         <p className="mx-auto mt-4 max-w-2xl text-center text-base leading-relaxed text-gray-600">
           Agent and developer routing API access stays <strong>free</strong>: no credit card, fair-use
-          limits with abuse protection only. Companies pay for <strong>catalog placement</strong> and
-          sponsorship — not for API quotas.
+          limits with abuse protection only. Companies pay a single monthly rate for{" "}
+          <strong>catalog placement</strong> — not for API quotas.
         </p>
 
         <section className="mt-16 rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/40 p-8 shadow-sm sm:p-10">
@@ -101,13 +76,13 @@ export default function PricingPage() {
 
           {stripeUrl && (
             <div className="mx-auto mt-8 flex max-w-xl flex-col items-center gap-3 rounded-2xl border border-violet-200 bg-violet-50/90 p-6 text-center">
-              <p className="text-sm font-medium text-violet-950">Provider listing — pay to get started</p>
+              <p className="text-sm font-medium text-violet-950">Pay to get started — {LISTING_PRICE}</p>
               <p className="text-xs text-violet-900/85">
-                One checkout for now. After payment,{" "}
+                After payment,{" "}
                 <Link href="/providers/join" className="font-semibold underline">
-                  submit details
+                  submit your listing
                 </Link>{" "}
-                with the <strong>same email</strong> so we can match you to the right tier.
+                with the <strong>same email</strong> so we can match your checkout.
               </p>
               <a
                 href={stripeUrl}
@@ -120,47 +95,34 @@ export default function PricingPage() {
             </div>
           )}
 
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            {SPONSOR_TIERS.map((t) => (
-              <div
-                key={t.name}
-                className={`flex flex-col rounded-2xl border p-6 shadow-sm ${
-                  t.highlight
-                    ? "border-indigo-300 bg-white ring-2 ring-indigo-200"
-                    : "border-gray-200 bg-white"
-                }`}
+          <div className="mx-auto mt-10 max-w-lg">
+            <div className="flex flex-col rounded-2xl border border-indigo-300 bg-white p-8 shadow-sm ring-2 ring-indigo-200">
+              <h3 className="text-lg font-bold text-gray-900">{LISTING.name}</h3>
+              <p className="mt-2 text-2xl font-semibold text-indigo-600">{LISTING.price}</p>
+              <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                {LISTING.bullets.map((b) => (
+                  <li key={b} className="flex gap-2">
+                    <span className="text-indigo-500" aria-hidden>
+                      ✓
+                    </span>
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                href="/providers/join"
+                className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
               >
-                <h3 className="text-lg font-bold text-gray-900">{t.name}</h3>
-                <p className="mt-2 text-2xl font-semibold text-indigo-600">{t.price}</p>
-                <ul className="mt-4 flex-1 space-y-2 text-sm text-gray-600">
-                  {t.bullets.map((b) => (
-                    <li key={b} className="flex gap-2">
-                      <span className="text-indigo-500" aria-hidden>
-                        ✓
-                      </span>
-                      <span>{b}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href={t.href}
-                  className={`mt-6 inline-flex justify-center rounded-full px-4 py-2.5 text-center text-sm font-semibold transition ${
-                    t.highlight
-                      ? "bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white hover:brightness-110"
-                      : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  {t.cta}
-                </Link>
-              </div>
-            ))}
+                Submit listing details
+              </Link>
+            </div>
           </div>
           <p className="mt-8 text-center text-xs text-gray-500">
             {stripeUrl ? (
               <>
                 Env:{" "}
                 <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>.
-                Custom tiers or invoices:{" "}
+                Custom billing:{" "}
                 <a href="mailto:support@useamply.com" className="text-indigo-600 underline">
                   support@useamply.com
                 </a>
@@ -168,7 +130,7 @@ export default function PricingPage() {
               </>
             ) : (
               <>
-                Add one Stripe Payment Link in Vercel:{" "}
+                Add your Stripe Payment Link in Vercel:{" "}
                 <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>{" "}
                 — see <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>.
               </>
