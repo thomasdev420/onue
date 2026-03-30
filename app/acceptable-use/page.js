@@ -29,8 +29,8 @@ export default function AcceptableUsePage() {
         <p className="mb-4 text-sm leading-relaxed">
           You may not falsify metrics, impersonate providers, or attempt to coerce routing outcomes through
           undisclosed side channels. Provider metrics must be accurate to the best of your knowledge when
-          submitted for editorial review. Paid placement is <strong>disclosed in the catalog</strong>{" "}
-          — you may not misrepresent organic vs sponsored placement.
+          submitted for editorial review. Paid placement is <strong>disclosed in the catalog</strong>. You
+          may not misrepresent organic vs sponsored placement.
         </p>
 
         <h2 className="mt-10 text-xl font-semibold text-gray-900">3. Competitive &amp; scraper conduct</h2>

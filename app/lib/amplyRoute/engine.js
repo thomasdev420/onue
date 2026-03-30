@@ -183,7 +183,7 @@ export function publicProviderSnapshot(providers, pid, compositeScore) {
     placement_disclosure:
       listing === 'organic'
         ? 'Metrics only; no paid placement.'
-        : 'Paid catalog placement — routing scores still use the same published metrics.',
+        : 'Paid catalog placement. Routing scores still use the same published metrics.',
   };
   if (compositeScore != null) out.live_composite_score = Math.round(compositeScore * 1e4) / 1e4;
   return out;

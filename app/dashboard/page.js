@@ -238,7 +238,7 @@ function DashboardContent() {
 
       <div className="max-w-3xl mx-auto px-2 mt-8 mb-12 text-center text-xs text-gray-400">
         Scan your site above for saved context, or run{' '}
-        <span className="text-gray-600 font-medium">AI Selection</span> for visibility scores — focused on
+        <span className="text-gray-600 font-medium">AI Selection</span> for visibility scores, focused on
         revenue you&apos;re not capturing when models pick competitors.
       </div>
     </AuthGuard>

@@ -56,7 +56,7 @@ export default function CatalogPage() {
               rel="noopener noreferrer"
               className="inline-flex rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
             >
-              Pay with Stripe — get listed
+              Pay with Stripe to get listed
             </a>
           ) : (
             <Link
@@ -132,7 +132,7 @@ export default function CatalogPage() {
                       {p.cost_per_1m_dims_usd}
                     </td>
                     <td className="px-4 py-3 tabular-nums text-gray-700 sm:px-6">
-                      {p.live_composite_score != null ? p.live_composite_score : "—"}
+                      {p.live_composite_score != null ? p.live_composite_score : "n/a"}
                     </td>
                   </tr>
                 );

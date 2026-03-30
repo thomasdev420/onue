@@ -97,7 +97,7 @@ export default function Phase0DemoClient() {
           >
             <h2 className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-emerald-800">Status</h2>
             <p className="mt-1 text-sm text-gray-800">
-              <span className="font-semibold text-emerald-800">Success.</span> HTTP 200 — live Pinecone pipeline
+              <span className="font-semibold text-emerald-800">Success.</span> HTTP 200, live Pinecone pipeline
               completed. See JSON below.
             </p>
           </section>

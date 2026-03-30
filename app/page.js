@@ -67,7 +67,7 @@ function LiveBenchmarkBadge() {
   const pingRingClass = stale ? "bg-amber-400" : "bg-emerald-400";
 
   const title = stale
-    ? "catalog_metrics_stale is true — refresh cron or run catalog:sync"
+    ? "catalog_metrics_stale is true. Refresh cron or run catalog:sync."
     : "metrics_as_of from GET /api/v1/status (Postgres catalog)";
 
   return (
@@ -340,7 +340,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* Header / Hero — single centered column (no split badge / headline row) */}
+        {/* Header / Hero: single centered column (no split badge / headline row) */}
         <header
           className="mb-14 w-full max-w-3xl px-2 text-center sm:mb-20 sm:px-4"
           style={{
@@ -392,8 +392,9 @@ export default function Home() {
               >
                 List your service
               </Link>
-            )}{" "}
-            — $249/mo catalog listing, transparent placement.
+            )}
+            {" "}
+            $249/mo catalog listing, transparent placement.
           </p>
         </header>
 
@@ -427,7 +428,7 @@ export default function Home() {
                   <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-600">Step 1 of 3</p>
                   <h3 className="mt-1 text-lg font-semibold text-gray-900">Get your free API key</h3>
                   <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                    Sign in with Google from the dashboard — your key is tied to your account.
+                    Sign in with Google from the dashboard. Your key is tied to your account.
                   </p>
                   {!isUserAuthenticated ? (
                     <button
@@ -462,7 +463,7 @@ export default function Home() {
                     <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-indigo-600">Step 2 of 3</p>
                     <h3 className="mt-1 text-lg font-semibold text-gray-900">Copy this curl</h3>
                     <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                      Same payload as the API console — replace <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">YOUR_API_KEY</code>.
+                      Same payload as the API console. Replace <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">YOUR_API_KEY</code>.
                     </p>
                   </div>
                   <div className="w-full min-w-0">
@@ -485,7 +486,8 @@ export default function Home() {
                   <h3 className="mt-1 text-lg font-semibold text-gray-900">Run it</h3>
                   <p className="mt-2 text-sm leading-relaxed text-gray-600">
                     You get JSON with <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">recommended</code>, rankings, economics, and{" "}
-                    <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">why</code> — wire it into your agent.
+                    <code className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.8125rem] text-gray-800">why</code>
+                    , then wire it into your agent.
                   </p>
                 </div>
               </div>
@@ -565,7 +567,7 @@ export default function Home() {
             <p className="mt-5 text-pretty text-base leading-relaxed text-gray-600 sm:text-lg sm:leading-relaxed">
               One request returns the best option with <strong className="text-gray-900">real price</strong>,{" "}
               <strong className="text-gray-900">real latency</strong>, and <strong className="text-gray-900">real success rate</strong>,
-              in <strong className="text-gray-900">milliseconds of server-side routing</strong>—often{" "}
+              in <strong className="text-gray-900">milliseconds of server-side routing</strong>, often{" "}
               <strong className="text-gray-900">under 200ms</strong> of handler work (<code className="text-sm">compute_ms</code> /{" "}
               <code className="text-sm">X-Amply-Compute-Ms</code>). Full HTTP round-trip depends on your network to the edge.
               Machine readable, ready to wire into your agent loop.
@@ -677,7 +679,7 @@ export default function Home() {
             Teams shipping agents
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-relaxed text-gray-500">
-            Builders using structured routing — more on{" "}
+            Builders using structured routing. More on{" "}
             <Link href="/about#testimonials" className="font-medium text-indigo-600 underline">
               About
             </Link>
@@ -691,7 +693,7 @@ export default function Home() {
                 org: "AI startup",
               },
               {
-                quote: "Finally JSON I can log and replay — not another paragraph from the model.",
+                quote: "Finally JSON I can log and replay, not another paragraph from the model.",
                 who: "Founder",
                 org: "B2B SaaS",
               },
@@ -707,7 +709,7 @@ export default function Home() {
               >
                 <p className="text-sm leading-relaxed text-gray-700">&ldquo;{t.quote}&rdquo;</p>
                 <footer className="mt-4 text-xs font-medium text-gray-500">
-                  — {t.who}, {t.org}
+                  {t.who}, {t.org}
                 </footer>
               </blockquote>
             ))}
@@ -732,7 +734,7 @@ export default function Home() {
               <thead>
                 <tr className="border-b border-indigo-100 bg-white/80">
                   <th className="px-4 py-4 font-semibold text-gray-900 sm:px-6" colSpan={2}>
-                    Developers &amp; agents — free forever
+                    Developers &amp; agents: free forever
                   </th>
                 </tr>
               </thead>
@@ -740,12 +742,12 @@ export default function Home() {
                 <tr className="bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Routing API</td>
                   <td className="px-4 py-3 sm:px-6">
-                    Unlimited fair use — no credit card. Abuse-protected; API key required.
+                    Unlimited fair use, no credit card. Abuse-protected; API key required.
                   </td>
                 </tr>
                 <tr className="bg-white/60">
                   <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Docs &amp; OpenAPI</td>
-                  <td className="px-4 py-3 sm:px-6">Included — same SLAs as the public API.</td>
+                  <td className="px-4 py-3 sm:px-6">Included: same SLAs as the public API.</td>
                 </tr>
               </tbody>
             </table>
@@ -778,7 +780,7 @@ export default function Home() {
                 rel="noopener noreferrer"
                 className="inline-flex rounded-full bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
               >
-                Pay with Stripe — get listed
+                Pay with Stripe to get listed
               </a>
             ) : (
               <Link
@@ -802,7 +804,7 @@ export default function Home() {
             </Link>
             {listingPay.external && (
               <Link href="/providers/join" className="text-sm font-medium text-gray-600 underline">
-                After checkout — submit listing details
+                After checkout, submit listing details
               </Link>
             )}
           </div>

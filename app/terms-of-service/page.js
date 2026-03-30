@@ -4,7 +4,7 @@ import MarketingNav from "@/app/components/marketing/MarketingNav";
 
 export const metadata = {
   title: "Terms of Service | Amply",
-  description: "Amply Terms of Service — developer API usage and provider listings.",
+  description: "Amply Terms of Service: developer API usage and provider listings.",
 };
 
 export default function TermsOfService() {
@@ -49,7 +49,7 @@ export default function TermsOfService() {
         <p className="mb-4 text-sm leading-relaxed">
           Paid <strong>catalog listings</strong> and sponsorships are <strong>visibility and go-to-market</strong>{" "}
           products. They do <strong>not</strong>, by themselves, guarantee inclusion in any particular routing
-          outcome — scoring is explained in our documentation and uses metrics we publish. Placement type is
+          outcome. Scoring is explained in our documentation and uses metrics we publish. Placement type is
           labeled in the <Link href="/catalog" className="text-indigo-600 underline">public catalog</Link> and
           API. Fees, renewals, and taxes are as stated at checkout or in an order form. Unless otherwise
           stated, listing fees are <strong>non-refundable</strong> after we begin fulfillment (e.g. review

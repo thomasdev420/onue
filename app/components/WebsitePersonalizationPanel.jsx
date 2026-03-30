@@ -7,7 +7,7 @@ import { Globe, CheckCircle2, AlertCircle, Sparkles, X } from 'lucide-react';
 import { loadUserWork, saveUserWork } from '../services/persistenceService';
 import { resetBusinessContextCache } from '../services/businessContextService';
 
-/** Matches /api/user/context dev behaviour — only used when NODE_ENV is development. */
+/** Matches /api/user/context dev behaviour; only used when NODE_ENV is development. */
 const DEV_WORK_USER_EMAIL = 'dev@local.com';
 
 /**
@@ -33,7 +33,7 @@ function buildMockScanResult(rawUrl) {
   const slug = host.split('.')[0] || 'brand';
   const title = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ');
   const canonical = {
-    name: `${title} — storefront`,
+    name: `${title}: storefront`,
     brand: title,
     category: 'E-commerce',
     niche: 'Digital commerce',

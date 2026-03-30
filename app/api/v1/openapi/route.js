@@ -18,7 +18,7 @@ function buildSpec(baseUrl) {
       version: AMPLY_PRODUCT_VERSION,
       description:
         'Machine-friendly vector routing: scores providers from catalog metrics (Supabase Postgres).\n\n' +
-        'Latency semantics: **Wall RTT** is full client round-trip (network + edge). **Server compute** is handler time only—use JSON `compute_ms` and the `X-Amply-Compute-Ms` response header (and `compute_*` fields from scripts/synthetic-probe.mjs) for SLO tracking; the ~200ms product bar applies to server compute, not necessarily to wall RTT from arbitrary clients or CI runners.',
+        'Latency semantics: **Wall RTT** is full client round-trip (network + edge). **Server compute** is handler time only. Use JSON `compute_ms` and the `X-Amply-Compute-Ms` response header (and `compute_*` fields from scripts/synthetic-probe.mjs) for SLO tracking. The ~200ms product bar applies to server compute, not necessarily to wall RTT from arbitrary clients or CI runners.',
     },
     servers: [{ url: baseUrl }],
     paths: {
@@ -61,7 +61,7 @@ function buildSpec(baseUrl) {
                   type: 'object',
                   required: ['task'],
                   properties: {
-                    task: { type: 'string', description: 'Workload description (1–8000 chars)' },
+                    task: { type: 'string', description: 'Workload description (1 to 8000 chars)' },
                     budget_usd: { type: 'number', minimum: 0 },
                     latency_target_ms: { type: 'number', minimum: 0 },
                     dimension: { type: 'integer', minimum: 1, maximum: 65536 },

@@ -15,7 +15,7 @@ export default function DocsPage() {
       <MarketingNav />
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-10 sm:px-8 sm:pb-28 sm:pt-14">
         <p className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm leading-relaxed text-emerald-950">
-          <strong>100% free for agent builders</strong> — no billing, no call quotas. Fair use with
+          <strong>100% free for agent builders</strong>, no billing, no call quotas. Fair use with
           abuse protection; providers pay for catalog placement, not you.
         </p>
         <p className="mt-6 text-sm font-medium text-indigo-600">Developer documentation</p>
@@ -24,7 +24,7 @@ export default function DocsPage() {
         </h1>
         <p className="mt-3 text-base leading-relaxed text-gray-600">
           Current release:{" "}
-          <code className="rounded bg-gray-200/80 px-1.5 py-0.5 font-mono text-sm">{amplyVersionLabel()}</code> — aligned
+          <code className="rounded bg-gray-200/80 px-1.5 py-0.5 font-mono text-sm">{amplyVersionLabel()}</code>, aligned
           with <a className="font-medium text-indigo-600 underline" href="/api/v1/status">GET /api/v1/status</a>.
         </p>
 
@@ -92,7 +92,7 @@ export default function DocsPage() {
           </pre>
           <ul className="mt-4 list-inside list-disc space-y-2 text-sm leading-relaxed text-gray-700">
             <li>
-              <strong>User keys</strong> — Sign in and create keys in the{" "}
+              <strong>User keys.</strong> Sign in and create keys in the{" "}
               <Link className="font-medium text-indigo-600 underline" href="/dashboard/api-keys">
                 dashboard
               </Link>
@@ -100,11 +100,11 @@ export default function DocsPage() {
               Secrets are stored as SHA-256 only; the full key is shown once at creation.
             </li>
             <li>
-              <strong>Server keys</strong> — Comma-separated <code className="font-mono text-xs">AMPLY_API_KEYS</code>{" "}
+              <strong>Server keys.</strong> Comma-separated <code className="font-mono text-xs">AMPLY_API_KEYS</code>{" "}
               (ops / shared secrets). If set, every request must present a valid env key <em>or</em> a valid user key.
             </li>
             <li>
-              <strong>Require Bearer</strong> — Set <code className="font-mono text-xs">AMPLY_REQUIRE_API_KEY=1</code> to
+              <strong>Require Bearer.</strong> Set <code className="font-mono text-xs">AMPLY_REQUIRE_API_KEY=1</code> to
               reject anonymous requests when you have no <code className="font-mono text-xs">AMPLY_API_KEYS</code> (e.g.
               production with user keys only).
             </li>
@@ -177,11 +177,11 @@ export default function DocsPage() {
           </p>
           <ul className="mt-4 space-y-3 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/40 p-5 text-sm leading-relaxed text-gray-800">
             <li>
-              <strong>TypeScript / JavaScript</strong> — <code className="font-mono">@amply/sdk</code> (npm) —{" "}
+              <strong>TypeScript / JavaScript:</strong> <code className="font-mono">@amply/sdk</code> (npm).{" "}
               <span className="text-gray-600">coming soon</span>
             </li>
             <li>
-              <strong>Python</strong> — <code className="font-mono">amply-sdk</code> (PyPI) —{" "}
+              <strong>Python:</strong> <code className="font-mono">amply-sdk</code> (PyPI).{" "}
               <span className="text-gray-600">coming soon</span>
             </li>
           </ul>

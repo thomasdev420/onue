@@ -1,5 +1,5 @@
 /**
- * Single Stripe Payment Link for provider catalog listings (NEXT_PUBLIC_* — Vercel, then redeploy).
+ * Single Stripe Payment Link for provider catalog listings (NEXT_PUBLIC_*; Vercel, then redeploy).
  * @returns {string} URL or ''
  */
 export function getStripeListingPaymentUrl() {

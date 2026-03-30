@@ -11,7 +11,7 @@ const TEAM = [
   {
     name: "Founding team",
     role: "Product & engineering",
-    bio: "Small team shipping the routing API, docs, and SDKs. We’re hiring—reach out if you care about agent infra.",
+    bio: "Small team shipping the routing API, docs, and SDKs. We're hiring; reach out if you care about agent infra.",
   },
   {
     name: "You?",
@@ -49,7 +49,7 @@ export default function AboutPage() {
         <h1 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">About Amply</h1>
         <p className="mt-6 text-lg leading-relaxed text-gray-700">
           Amply exists so agents don&apos;t have to guess which API to call. We return fast, machine-readable routing
-          decisions—price, latency, reliability, and a concise <em>why</em>—so your product can stay in the loop without
+          decisions: price, latency, reliability, and a concise <em>why</em>, so your product can stay in the loop without
           burning tokens on tool selection.
         </p>
 
@@ -86,7 +86,7 @@ export default function AboutPage() {
               >
                 <blockquote className="text-base leading-relaxed text-gray-800">&ldquo;{t.quote}&rdquo;</blockquote>
                 <footer className="mt-4 text-sm text-gray-500">
-                  — {t.name}, {t.company}
+                  {t.name}, {t.company}
                 </footer>
               </li>
             ))}

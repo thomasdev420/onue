@@ -6,7 +6,7 @@ import { getListingPayLink } from "@/app/lib/stripeListingUrls";
 export const metadata = {
   title: "Pricing | Amply",
   description:
-    "Free for agent builders — unlimited fair-use routing. Providers: one catalog listing price.",
+    "Free for agent builders: unlimited fair-use routing. Providers: one catalog listing price.",
 };
 
 const LISTING_PRICE = "$249/mo";
@@ -34,17 +34,17 @@ export default function PricingPage() {
         <p className="mx-auto mt-4 max-w-2xl text-center text-base leading-relaxed text-gray-600">
           Agent and developer routing API access stays <strong>free</strong>: no credit card, fair-use
           limits with abuse protection only. Companies pay a single monthly rate for{" "}
-          <strong>catalog placement</strong> — not for API quotas.
+          <strong>catalog placement</strong>, not for API quotas.
         </p>
 
         <section className="mt-16 rounded-3xl border border-indigo-200/80 bg-gradient-to-br from-white to-indigo-50/40 p-8 shadow-sm sm:p-10">
           <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">
-            Developers &amp; agents — free forever
+            Developers &amp; agents: free forever
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-gray-700 sm:text-base">
             Unlimited fair-use calls to <code className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-xs">POST /api/v1/route</code>{" "}
             and <code className="rounded bg-white/80 px-1.5 py-0.5 font-mono text-xs">GET /api/v1/status</code>. We may throttle
-            obvious abuse or require an API key — we do <strong>not</strong> meter normal agent workloads. No Stripe for API access.
+            obvious abuse or require an API key. We do <strong>not</strong> meter normal agent workloads. No Stripe for API access.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
@@ -64,14 +64,14 @@ export default function PricingPage() {
 
         <section className="mt-16" id="providers">
           <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
-            Providers &amp; infrastructure companies — get listed
+            Providers &amp; infrastructure companies: get listed
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-gray-600 sm:text-base">
             Appear where agents pick vector DBs, embeddings, and inference. Placement is labeled in the{" "}
             <Link href="/catalog" className="font-medium text-indigo-600 underline">
               public catalog
             </Link>{" "}
-            and API — organic metrics and paid placement are disclosed.
+            and API. Organic metrics and paid placement are disclosed.
           </p>
 
           <div className="mx-auto mt-10 max-w-lg">
@@ -95,7 +95,7 @@ export default function PricingPage() {
                   rel="noopener noreferrer"
                   className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
                 >
-                  Pay with Stripe — get listed
+                  Pay with Stripe to get listed
                 </a>
               ) : (
                 <Link
@@ -110,7 +110,7 @@ export default function PricingPage() {
                   href="/providers/join"
                   className="mt-3 block text-center text-xs font-medium text-indigo-700 underline"
                 >
-                  After checkout — submit your listing details
+                  After checkout, submit your listing details
                 </Link>
               )}
             </div>
@@ -130,7 +130,7 @@ export default function PricingPage() {
               <>
                 Add your Stripe Payment Link in Vercel:{" "}
                 <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>{" "}
-                — see <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>.
+                See <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>.
               </>
             )}
           </p>
@@ -140,7 +140,7 @@ export default function PricingPage() {
           <p className="font-semibold text-gray-900">Optional: priority routing add-on</p>
           <p className="mt-2 text-sm text-gray-600">
             If you need dedicated capacity or private poison, that&apos;s a separate enterprise
-            conversation — not required for normal API usage.
+            conversation, not required for normal API usage.
           </p>
           <a
             href="mailto:support@useamply.com?subject=Enterprise%20routing"

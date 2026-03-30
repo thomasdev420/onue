@@ -8,7 +8,7 @@ const LISTING_PRICE = "$249/mo";
 
 export const metadata = {
   title: "List your service | Amply",
-  description: "Submit provider details for catalog review — $249/mo listing, transparent placement.",
+  description: "Submit provider details for catalog review, $249/mo listing, transparent placement.",
 };
 
 export default function ProviderJoinPage() {
@@ -24,11 +24,11 @@ export default function ProviderJoinPage() {
         <p className="mt-4 text-sm leading-relaxed text-gray-600 sm:text-base">
           One catalog listing at <strong>$249/mo</strong>.{" "}
           {listingPay.external
-            ? "Checkout is only via Stripe — open the secure payment page, then complete the form below with the same email."
+            ? "Checkout is only via Stripe. Open the secure payment page, then complete the form below with the same email."
             : "We'll follow up with payment instructions, then you can submit the details here."}{" "}
           We&apos;ll update{" "}
           <Link href="/catalog" className="text-indigo-600 underline">the catalog</Link> within ~48h after
-          confirmation. Metrics used for routing stay auditable — see{" "}
+          confirmation. Metrics used for routing stay auditable; see{" "}
           <Link href="/for-providers" className="text-indigo-600 underline">
             For providers
           </Link>

@@ -27,7 +27,7 @@ export default function PrivacyPolicy() {
           </li>
           <li>
             <strong>API &amp; product use:</strong> request metadata, keys (hashed for user keys), rate-limit
-            counters, and operational logs — including structured logs for support and abuse prevention.
+            counters, and operational logs, including structured logs for support and abuse prevention.
           </li>
           <li>
             <strong>Provider leads:</strong> when you submit the &ldquo;List your service&rdquo; form, we

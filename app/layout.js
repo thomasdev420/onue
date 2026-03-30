@@ -138,7 +138,7 @@ const permanentMarker = Permanent_Marker({
 
 export async function generateMetadata() {
   return {
-    title: "Amply: agent routing API — sub-200ms server work",
+    title: "Amply: agent routing API, sub-200ms server work",
     description:
       "Machine-readable routing: price, latency, success rate from usage data. Typical server-side routing work is well under 200ms (see API compute_ms); HTTP round-trip adds network time. Free to start.",
     icons: {

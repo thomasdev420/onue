@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyBearer } from '@/app/lib/amplyRoute/auth';
+import { verifyRouteAccess } from '@/app/lib/amplyRoute/auth';
 import { amplyLog } from '@/app/lib/amplyRoute/amplyLog';
 import { checkV1RouteRateLimit } from '@/app/lib/amplyRoute/rateLimitV1Route';
 import {
@@ -69,7 +69,7 @@ export async function POST(request) {
     );
   }
 
-  const auth = verifyBearer(request);
+  const auth = await verifyRouteAccess(request);
   if (!auth.ok) {
     amplyLog({
       level: 'warn',
@@ -95,7 +95,7 @@ export async function POST(request) {
 
   const task = typeof body.task === 'string' ? body.task.trim() : '';
   if (!task || task.length > 8000) {
-    return badRequest('task is required (1–8000 characters)', requestId, t0);
+    return badRequest('task is required (1 to 8000 characters)', requestId, t0);
   }
 
   const budgetUsd = Number(body.budget_usd ?? 0.01);
@@ -112,7 +112,7 @@ export async function POST(request) {
   if (dimension != null) {
     dimension = Number(dimension);
     if (!Number.isInteger(dimension) || dimension < 1 || dimension > 65536) {
-      return badRequest('dimension must be an integer 1–65536 when provided', requestId, t0);
+      return badRequest('dimension must be an integer 1 to 65536 when provided', requestId, t0);
     }
   }
 

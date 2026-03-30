@@ -45,6 +45,6 @@ export async function POST(request) {
   return NextResponse.json({
     ok: true,
     detail:
-      'Received. We review listings within ~2 business days after payment or call — see email confirmation when Stripe/Calendly is connected.',
+      'Received. We review listings within ~2 business days after payment or call. Email confirmation applies when Stripe or Calendly is connected.',
   });
 }
