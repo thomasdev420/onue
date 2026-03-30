@@ -1,7 +1,7 @@
 import Link from "next/link";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
-import { getStripeListingUrl } from "@/app/lib/stripeListingUrls";
+import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
 
 export const metadata = {
   title: "Pricing | Amply",
@@ -11,7 +11,6 @@ export const metadata = {
 
 const SPONSOR_TIERS = [
   {
-    tierKey: "basic_listing",
     name: "Basic listing",
     price: "$199/mo",
     bullets: [
@@ -23,7 +22,6 @@ const SPONSOR_TIERS = [
     href: "/providers/join?tier=basic_listing",
   },
   {
-    tierKey: "featured",
     name: "Featured",
     price: "$499/mo",
     bullets: [
@@ -36,7 +34,6 @@ const SPONSOR_TIERS = [
     highlight: true,
   },
   {
-    tierKey: "sponsored_top3",
     name: "Sponsored top-3 spotlight",
     price: "From $1.2k/mo",
     bullets: [
@@ -49,23 +46,8 @@ const SPONSOR_TIERS = [
   },
 ];
 
-function SponsorPayBlock({ tierKey }) {
-  const payUrl = getStripeListingUrl(tierKey);
-  if (!payUrl) return null;
-  return (
-    <a
-      href={payUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mb-3 inline-flex w-full justify-center rounded-full bg-[#635bff] px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:brightness-110"
-    >
-      Pay with Stripe
-    </a>
-  );
-}
-
 export default function PricingPage() {
-  const anyStripe = SPONSOR_TIERS.some((t) => getStripeListingUrl(t.tierKey));
+  const stripeUrl = getStripeListingPaymentUrl();
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -117,6 +99,27 @@ export default function PricingPage() {
             and API — organic metrics and paid placement are disclosed.
           </p>
 
+          {stripeUrl && (
+            <div className="mx-auto mt-8 flex max-w-xl flex-col items-center gap-3 rounded-2xl border border-violet-200 bg-violet-50/90 p-6 text-center">
+              <p className="text-sm font-medium text-violet-950">Provider listing — pay to get started</p>
+              <p className="text-xs text-violet-900/85">
+                One checkout for now. After payment,{" "}
+                <Link href="/providers/join" className="font-semibold underline">
+                  submit details
+                </Link>{" "}
+                with the <strong>same email</strong> so we can match you to the right tier.
+              </p>
+              <a
+                href={stripeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex w-full max-w-sm justify-center rounded-full bg-[#635bff] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110 sm:max-w-none"
+              >
+                Pay with Stripe
+              </a>
+            </div>
+          )}
+
           <div className="mt-10 grid gap-6 lg:grid-cols-3">
             {SPONSOR_TIERS.map((t) => (
               <div
@@ -139,42 +142,35 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-6 flex flex-col">
-                  <SponsorPayBlock tierKey={t.tierKey} />
-                  <Link
-                    href={t.href}
-                    className={`inline-flex justify-center rounded-full px-4 py-2.5 text-center text-sm font-semibold transition ${
-                      t.highlight
-                        ? "bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white hover:brightness-110"
-                        : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
-                    }`}
-                  >
-                    {t.cta}
-                  </Link>
-                </div>
+                <Link
+                  href={t.href}
+                  className={`mt-6 inline-flex justify-center rounded-full px-4 py-2.5 text-center text-sm font-semibold transition ${
+                    t.highlight
+                      ? "bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white hover:brightness-110"
+                      : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                  }`}
+                >
+                  {t.cta}
+                </Link>
               </div>
             ))}
           </div>
           <p className="mt-8 text-center text-xs text-gray-500">
-            {anyStripe ? (
+            {stripeUrl ? (
               <>
-                After paying in Stripe, use{" "}
-                <Link href="/providers/join" className="text-indigo-600 underline">
-                  List your service
-                </Link>{" "}
-                with the same email so we can match your payment to the catalog. Env vars:{" "}
-                <code className="rounded bg-gray-100 px-1 font-mono">
-                  NEXT_PUBLIC_STRIPE_LISTING_*
-                </code>
+                Env:{" "}
+                <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>.
+                Custom tiers or invoices:{" "}
+                <a href="mailto:support@useamply.com" className="text-indigo-600 underline">
+                  support@useamply.com
+                </a>
                 .
               </>
             ) : (
               <>
-                Add Stripe Payment Link URLs in Vercel (
-                <code className="rounded bg-gray-100 px-1 font-mono">
-                  NEXT_PUBLIC_STRIPE_LISTING_BASIC_URL
-                </code>
-                , etc.) — see <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>.
+                Add one Stripe Payment Link in Vercel:{" "}
+                <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>{" "}
+                — see <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>.
               </>
             )}
           </p>

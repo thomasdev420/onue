@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { getStripeListingUrl } from "@/app/lib/stripeListingUrls";
+import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
 
 const TIERS = [
   { value: "unsure", label: "Not sure yet" },
@@ -27,10 +27,7 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
     [],
   );
 
-  const stripePayUrl = useMemo(() => {
-    if (!["basic_listing", "featured", "sponsored_top3"].includes(tier)) return "";
-    return getStripeListingUrl(tier);
-  }, [tier]);
+  const stripePayUrl = useMemo(() => getStripeListingPaymentUrl(), []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -102,22 +99,12 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
           ))}
         </select>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-800">Notes (optional)</label>
-        <textarea
-          rows={4}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-          placeholder="Regions, docs URL, metrics you want reflected…"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-      </div>
       {stripePayUrl && (
         <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-4 text-sm text-violet-950">
-          <p className="font-medium">Pay for this tier</p>
+          <p className="font-medium">Pay (listing deposit)</p>
           <p className="mt-1 text-xs text-violet-900/90">
-            Open Stripe in a new tab, complete checkout, then submit this form with the <strong>same email</strong>{" "}
-            so we can match payment to your listing.
+            One checkout for now. Pay in Stripe, then submit this form with the <strong>same email</strong> and the
+            tier you want — we&apos;ll match payment to catalog placement.
           </p>
           <a
             href={stripePayUrl}
@@ -129,6 +116,16 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
           </a>
         </div>
       )}
+      <div>
+        <label className="block text-sm font-medium text-gray-800">Notes (optional)</label>
+        <textarea
+          rows={4}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          placeholder="Regions, docs URL, metrics you want reflected…"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+      </div>
       <button
         type="submit"
         disabled={status?.kind === "loading"}
