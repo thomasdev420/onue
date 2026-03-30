@@ -17,13 +17,19 @@
     "check:v1-status": "node scripts/check-amply-v1-status.mjs",
     "debug:route-catalog": "node scripts/debug-route-catalog.mjs",
     "smoke:v1-route": "node scripts/smoke-post-v1-route.mjs",
+    "verify:local-v1": "npm run check:v1-status && npm run smoke:v1-route",
     "verify:deploy": "node scripts/verify-deployment.mjs",
     "check:gha-secrets": "node scripts/check-gha-secrets.mjs",
     "catalog:sync": "node scripts/catalog-sync.mjs",
     "catalog:refresh:remote": "node scripts/trigger-catalog-refresh.mjs",
     "check:catalog-fresh": "node scripts/check-catalog-fresh.mjs",
     "probe:synthetic": "node scripts/synthetic-probe.mjs",
-    "print:db-url": "node scripts/print-database-url-template.mjs"
+    "debug:amply-bearer": "node scripts/debug-amply-bearer-env.mjs",
+    "probe:synthetic:p95": "AMPLY_PROBE_ITERATIONS=60 AMPLY_PROBE_WARMUP=1 node scripts/synthetic-probe.mjs",
+    "print:db-url": "node scripts/print-database-url-template.mjs",
+    "amply:create-user-key": "node scripts/create-amply-user-api-key.mjs",
+    "amply:verify-bearer": "node scripts/verify-amply-bearer-local.mjs",
+    "amply:e2e": "node scripts/amply-e2e.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
