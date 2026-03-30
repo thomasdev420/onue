@@ -93,16 +93,8 @@ export default function PricingPage() {
                 href={listingPay.href}
                 className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
               >
-                {checkoutReady ? "Get your product listed" : "Submit listing details"}
+                Get your product listed
               </Link>
-              {checkoutReady && (
-                <Link
-                  href="/providers/join"
-                  className="mt-3 block text-center text-xs font-medium text-indigo-700 underline"
-                >
-                  After checkout, submit your listing details
-                </Link>
-              )}
             </div>
           </div>
           <p className="mt-8 text-center text-xs text-gray-500">

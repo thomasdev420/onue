@@ -11,7 +11,9 @@
  */
 import { spawnSync } from 'node:child_process';
 
-const REQUIRED = ['AMPLY_PROD_URL', 'AMPLY_API_KEYS'];
+const REQUIRED = ['AMPLY_PROD_URL'];
+/** Need at least one Bearer source for synthetic POST */
+const AUTH_ONE_OF = ['AMPLY_API_KEYS', 'AMPLY_ROUTE_BEARER_TOKEN'];
 const repo = process.env.GITHUB_REPOSITORY?.trim();
 
 const args = ['secret', 'list', '--json', 'name'];
@@ -25,7 +27,7 @@ if (r.error || r.status !== 0) {
   console.error(
     'Could not run `gh secret list`. Install the GitHub CLI, run `gh auth login`, and retry.\n',
     'Required secrets (Repository → Settings → Secrets and variables → Actions):',
-    REQUIRED.join(', '),
+    [...REQUIRED, `(${AUTH_ONE_OF.join(' or ')})`].join(', '),
     '\n',
     r.stderr?.trim() || r.error?.message || '',
     '\nDocs: deploy-setup.md § GitHub Actions — synthetic latency workflow',
@@ -43,6 +45,7 @@ try {
 
 const names = new Set(rows.map((row) => row.name).filter(Boolean));
 const missing = REQUIRED.filter((n) => !names.has(n));
+const hasAuth = AUTH_ONE_OF.some((n) => names.has(n));
 
 if (missing.length) {
   console.error(
@@ -53,4 +56,16 @@ if (missing.length) {
   process.exit(1);
 }
 
-console.log('OK: required Actions secrets are defined:', REQUIRED.join(', '));
+if (!hasAuth) {
+  console.error(
+    'Missing at least one of:',
+    AUTH_ONE_OF.join(', '),
+    '\n→ Needed for POST /api/v1/route in synthetic-latency workflow',
+  );
+  process.exit(1);
+}
+
+console.log(
+  'OK: required Actions secrets:',
+  [...REQUIRED, `one of ${AUTH_ONE_OF.join('/')}`].join('; '),
+);

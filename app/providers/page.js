@@ -32,14 +32,14 @@ const WHY = [
 const INCLUDED = [
   "Logo and one-line description on the public catalog",
   "Linked from GET /api/v1/providers with a clear placement label",
-  "Editorial review and publication within about two business days after payment and a complete intake",
+  "Editorial review and publication within about two business days after we confirm your details",
 ];
 
 const STEPS = [
   "Review what is included and how placement works on this page.",
   "Complete secure checkout with Stripe (monthly subscription at the price shown on the checkout page).",
-  "Submit the listing form using the same email as checkout so we can match payment to your company.",
-  "We publish or follow up if anything is missing for the review.",
+  "We email you at the address from checkout to collect what we need for the listing and answer questions.",
+  "We publish to the catalog or reply if anything is still missing for the review.",
 ];
 
 export default function ProvidersSalesPage() {
@@ -73,19 +73,13 @@ export default function ProvidersSalesPage() {
                 Continue to secure checkout
               </a>
             ) : (
-              <Link
-                href="/providers/join"
+              <a
+                href="mailto:support@useamply.com?subject=Catalog%20listing"
                 className="inline-flex justify-center rounded-full bg-gray-900 px-7 py-3.5 text-center text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
               >
-                Submit listing details
-              </Link>
+                Email to get listed
+              </a>
             )}
-            <Link
-              href="/providers/join"
-              className="inline-flex justify-center rounded-full border border-gray-300 bg-white px-7 py-3.5 text-center text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
-            >
-              Already paid? Send your details
-            </Link>
             <Link
               href="/for-providers"
               className="inline-flex justify-center text-sm font-medium text-indigo-600 underline underline-offset-2 sm:px-3"
@@ -96,7 +90,7 @@ export default function ProvidersSalesPage() {
 
           {!stripeUrl && (
             <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50/90 px-4 py-3 text-sm text-amber-950">
-              Live checkout is not configured in this environment. Use the form link above, or email{" "}
+              Live checkout is not wired in this environment. Use email above or{" "}
               <a href="mailto:support@useamply.com" className="font-semibold underline">
                 support@useamply.com
               </a>
@@ -184,12 +178,12 @@ export default function ProvidersSalesPage() {
                 Continue to secure checkout
               </a>
             ) : (
-              <Link
-                href="/providers/join"
+              <a
+                href="mailto:support@useamply.com?subject=Catalog%20listing"
                 className="inline-flex w-full max-w-sm justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-8 py-3.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 sm:w-auto"
               >
-                Submit listing details
-              </Link>
+                Email to get listed
+              </a>
             )}
             <Link
               href="/pricing"

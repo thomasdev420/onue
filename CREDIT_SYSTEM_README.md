@@ -88,7 +88,7 @@ Configurable pricing and feature access:
 | AI Chat | 1 | 1 | 1 | 1 |
 | Image Analysis | 2 | 1 | 1 | 1 |
 | Visual Analysis | 3 | 2 | 1 | 1 |
-| Content Creation | 3 | 2 | 1 | 1 |
+| Structured generation (bundled) | 3 | 2 | 1 | 1 |
 | Memory Processing | 1 | 1 | 1 | 1 |
 | Website Scraping | 2 | 1 | 1 | 1 |
 | Brand Analysis | 2 | 1 | 1 | 1 |

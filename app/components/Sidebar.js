@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSession, signOut, signIn } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, HelpCircle, Settings, ArrowLeft, Menu, Shield, Target } from 'lucide-react';
+import { Home, HelpCircle, Settings, ArrowLeft, Menu, Shield, Target, KeyRound } from 'lucide-react';
 import SidebarCreditDisplay from './SidebarCreditDisplay';
 
 export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#6366F1' }) {
@@ -60,6 +60,7 @@ export default function Sidebar({ isCollapsed, toggleSidebar, pageColor = '#6366
             <ul className="space-y-1 text-sm">
               <SidebarLink href="/dashboard" icon={<Home size={18} />} label="Home" currentPath={pathname} isCollapsed={isCollapsed} />
               <SidebarLink href="/dashboard/selection" icon={<Target size={18} />} label="AI Selection" currentPath={pathname} isCollapsed={isCollapsed} />
+              <SidebarLink href="/dashboard/api-keys" icon={<KeyRound size={18} />} label="API keys" currentPath={pathname} isCollapsed={isCollapsed} />
               <div className="mt-4" />
               <SidebarLink href="/dashboard/support" icon={<HelpCircle size={18} />} label="Support" currentPath={pathname} isCollapsed={isCollapsed} support />
               <SidebarLink href="/dashboard/settings" icon={<Settings size={18} />} label="Settings" currentPath={pathname} isCollapsed={isCollapsed} settings />

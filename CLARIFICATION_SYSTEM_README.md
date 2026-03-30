@@ -68,7 +68,7 @@ The system detects and handles various types of ambiguity:
 - **VAGUE_TOPIC**: "content", "marketing", "strategy"
 - **MISSING_DETAILS**: "create slides about business"
 - **MISSING_GOAL**: "I want to grow", "looking for ideas"
-- **MISSING_PLATFORM**: "social media content"
+- **MISSING_PLATFORM**: "unspecified distribution surface"
 
 ### Context-Specific
 - **MISSING_TARGET_AUDIENCE**: No audience specified
@@ -217,8 +217,8 @@ export const CLARIFICATION_QUESTIONS = {
 
 ## Examples
 
-### Example 1: Vague Content Request
-**User Input**: "create content"
+### Example 1: Vague generation request
+**User Input**: "create something"
 
 **System Response**: 
 ```
@@ -226,24 +226,24 @@ I'd love to help you create exactly what you need! To give you the most relevant
 
 Could you help me understand:
 
-1. What type of content are you looking to create? (e.g., slides, videos, social media posts)
+1. What type of output are you looking for? (e.g., slides, short-form storyboards, narrative variants)
 2. Could you specify the format and topic you have in mind?
 3. What's your target audience and main message?
 
 The more specific you can be, the better I can tailor my response to your needs.
 ```
 
-**User Clarification**: "I want educational slides about digital marketing for small business owners"
+**User Clarification**: "I want educational slides about category positioning for small business owners"
 
 **Enhanced Prompt**: 
 ```
-create content
+create slides
 
-Additional context: Topic: digital marketing, Goal: educational content, Target audience: small business owners, Format: slides
+Additional context: Topic: category positioning, Goal: educational narrative, Target audience: small business owners, Format: slides
 ```
 
 ### Example 2: Missing Business Context
-**User Input**: "help with marketing"
+**User Input**: "help with positioning"
 
 **System Response**:
 ```

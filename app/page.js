@@ -12,7 +12,7 @@ import AmplyApiConsole from "./components/AmplyApiConsole";
 import JsonExampleBlock from "./components/landing/JsonExampleBlock";
 import { HighlightBash } from "./components/landing/CodeHighlight";
 import { buildCurlSnippet, DEFAULT_TASK } from "@/app/lib/amplyCurlSnippet";
-import { getListingPayLink, isListingCheckoutConfigured } from "@/app/lib/stripeListingUrls";
+import { getListingPayLink } from "@/app/lib/stripeListingUrls";
 import { formatDistanceToNow } from "date-fns";
 
 function LiveBenchmarkBadge() {
@@ -153,7 +153,6 @@ export default function Home() {
   const router = useRouter();
   const quickstartCurl = useQuickstartCurl();
   const listingPay = useMemo(() => getListingPayLink(), []);
-  const checkoutReady = useMemo(() => isListingCheckoutConfigured(), []);
 
   const [showDevModal, setShowDevModal] = useState(false);
   const [devCode, setDevCode] = useState("");
@@ -381,7 +380,7 @@ export default function Home() {
               href={listingPay.href}
               className="font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 hover:text-indigo-700"
             >
-              {checkoutReady ? "Get your product listed" : "List your service"}
+              Get your product listed
             </Link>
             {" "}
             $249/mo catalog listing, transparent placement.
@@ -767,7 +766,7 @@ export default function Home() {
               href={listingPay.href}
               className="inline-flex rounded-full bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
             >
-              {checkoutReady ? "Get your product listed" : "List your service"}
+              Get your product listed
             </Link>
             <Link
               href="/for-providers"
@@ -781,11 +780,6 @@ export default function Home() {
             <Link href="/catalog" className="text-sm font-medium text-indigo-600 underline">
               Public catalog
             </Link>
-            {checkoutReady && (
-              <Link href="/providers/join" className="text-sm font-medium text-gray-600 underline">
-                After checkout, submit listing details
-              </Link>
-            )}
           </div>
         </section>
 

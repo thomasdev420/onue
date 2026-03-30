@@ -79,6 +79,7 @@ export async function GET() {
         catalog_metrics_age_hours: staleness.catalog_metrics_age_hours,
         catalog_metrics_stale: staleness.catalog_metrics_stale,
         catalog_metrics_stale_after_hours: staleness.catalog_metrics_stale_after_hours,
+        user_api_keys_store_ready: hasSupabaseUrl && hasServiceRoleKey,
       },
     },
     { headers: withV1TraceHeaders(corsHeaders, { requestId, computeMs }) },

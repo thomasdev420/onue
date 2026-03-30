@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Unified Content Engine is a comprehensive service that generates complete slide content including text and images in one streamlined process. It combines AI-powered content generation with intelligent image selection to create engaging, visually consistent slides.
+The Unified Content Engine is the server-side orchestrator for **structured slide payloads**: it pairs LLM-generated copy with retrieval-ranked brand assets so founders ship consistent, machine-summarizable narratives (aligned with AI-mediated discovery, not “social scheduling” as a product story).
 
 ## Key Features
 
@@ -27,7 +27,7 @@ The Unified Content Engine is a comprehensive service that generates complete sl
 ### 1. **Keyword Extraction**
 The system analyzes the user's prompt to extract:
 - Primary image category (e.g., "luxury", "technology", "business")
-- Specific keywords (e.g., "iman gadzhi" → ["iman", "gadzhi", "entrepreneur", "luxury", "wealth"])
+- Specific keywords (e.g., "iman gadzhi" maps to ["iman", "gadzhi", "entrepreneur", "luxury", "wealth"])
 
 ### 2. **Image Selection Process**
 1. **Primary Search**: Look for images matching specific keywords + category keywords
@@ -38,27 +38,27 @@ The system analyzes the user's prompt to extract:
 3. **Best Match Selection**: Score and select the most relevant available image
 
 ### 3. **AI-Powered Fallback Examples**
-- **"iman gadzhi"** → No specific images → AI reasoning → "luxury" (wealth, entrepreneurship, success)
-- **"elon musk"** → No specific images → AI reasoning → "technology" (innovation, space, future)
-- **"kylie jenner"** → No specific images → AI reasoning → "luxury" (fashion, wealth, influence)
-- **"meditation"** → No specific images → AI reasoning → "lifestyle" (wellness, peace, mindfulness)
+- **"iman gadzhi"**: no specific images, then AI reasoning, then "luxury" (wealth, entrepreneurship, success)
+- **"elon musk"**: no specific images, then AI reasoning, then "technology" (innovation, space, future)
+- **"kylie jenner"**: no specific images, then AI reasoning, then "luxury" (fashion, wealth, influence)
+- **"meditation"**: no specific images, then AI reasoning, then "lifestyle" (wellness, peace, mindfulness)
 
 ## AI-Powered Intelligence
 
 The system leverages GPT-4o-mini's vast contextual knowledge for dynamic reasoning:
 
 ### Dynamic Entity Recognition
-- **People**: Entrepreneurs, celebrities, athletes, influencers, business leaders
+- **People**: Entrepreneurs, celebrities, athletes, public figures, business leaders
 - **Companies**: Tech companies, luxury brands, startups, corporations
 - **Concepts**: Abstract ideas, cultural phenomena, trends, movements
 - **Places**: Cities, countries, landmarks, cultural locations
 
 ### Intelligent Reasoning Examples
-- **"iman gadzhi"** → AI recognizes wealth, entrepreneurship, luxury lifestyle → selects "luxury"
-- **"elon musk"** → AI recognizes innovation, technology, space exploration → selects "technology"
-- **"kylie jenner"** → AI recognizes fashion, wealth, social media influence → selects "luxury"
-- **"meditation"** → AI recognizes wellness, mindfulness, personal growth → selects "lifestyle"
-- **"sustainable living"** → AI recognizes environmental consciousness → selects "nature"
+- **"iman gadzhi"**: AI recognizes wealth, entrepreneurship, luxury lifestyle; selects "luxury"
+- **"elon musk"**: AI recognizes innovation, technology, space exploration; selects "technology"
+- **"kylie jenner"**: AI recognizes fashion, wealth, public influence signals; selects "luxury"
+- **"meditation"**: AI recognizes wellness, mindfulness, personal growth; selects "lifestyle"
+- **"sustainable living"**: AI recognizes environmental consciousness; selects "nature"
 
 ## API Usage
 

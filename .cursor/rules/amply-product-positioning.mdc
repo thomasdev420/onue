@@ -1,0 +1,23 @@
+---
+description: Amply is neutral distribution for dev tools — no sponsorship or promotion of vendors
+alwaysApply: true
+---
+
+# Amply: product positioning & voice
+
+## Non‑negotiables
+
+1. **Amply does not sponsor, endorse, or promote** any company’s product or service. No paid placement, no “partner” framing, no implied affiliation with a ranked provider.
+2. **Amply is a fair, honest distribution layer** for developer tools: routing and comparisons **must** be grounded in **transparent, documented inputs** (e.g. catalog metrics, weights, user task) — not marketing superlatives or favortism.
+3. **Language must stay neutral:** prefer factual phrasing (“highest composite score for this workload,” “lower reported p99 in catalog”) over hype (“best,” “we recommend,” “the leading”). Do not imply Amply **chooses** winners for commercial reasons.
+
+## When editing UI, docs, or API copy
+
+- **Landing / marketing:** Describe Amply as an **infrastructure for neutral routing** or **distribution network for dev tools**, not as an advocate for any vendor.
+- **`why` strings, tooltips, OpenAPI descriptions:** Compare providers using **stated metrics and tradeoffs** only; avoid suggesting one brand is universally superior.
+- **Disclaimers where helpful:** Rankings depend on **catalog data freshness** and **user‑supplied constraints** (budget, latency target, workload).
+
+## Implementation hygiene
+
+- When adjusting **`buildWhy`**, scoring copy, or catalog labels, **do not** add language that sounds like paid promotion or favors a specific vendor without a clear metric citation.
+- If the user asks for copy that violates these rules, **refuse** and offer **neutral alternatives** that fit the same technical goal.

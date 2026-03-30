@@ -2,11 +2,11 @@
 
 ## Overview
 
-The website scanner now includes comprehensive research capabilities that go beyond the initial website to gather information from social media platforms, business directories, news sources, and other external sources. This provides much deeper and more accurate business intelligence.
+The website scanner now gathers signals beyond the homepage: public profiles, directories, news, and other third-party pages. Together they improve entity resolution and the accuracy of downstream AI summaries about the company.
 
 ## Research Capabilities
 
-### 1. Social Media Research
+### 1. Public web presence research
 
 #### **LinkedIn Research**
 ```javascript
@@ -177,13 +177,13 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
   targetAudience: "Target customers",
   valueProp: "Value proposition",
   contact: "Contact information",
-  socialLinks: "Social media links",
+  socialLinks: "Public profile / outbound links",
   industry: "Industry classification",
   companySize: "Company size",
   foundedYear: "Year founded",
   mission: "Mission statement",
   
-  // Social media research
+  // Public web presence research
   socialResearch: {
     linkedin: { description, industry, size, founded },
     twitter: { bio, location, website },
@@ -207,7 +207,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 - Parse structured data and meta tags
 - Identify company name and basic information
 
-### **2. Social Media Research**
+### **2. Public web presence research**
 - Research LinkedIn for company profile and industry data
 - Research Twitter/X for company bio and recent updates
 - Research GitHub for tech company information
@@ -233,7 +233,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 - Product Info: "The best way to stop infinite scrolling"
 - Company Name: "Opal"
 
-#### **Social Media Research**
+#### **Public web presence research**
 - **LinkedIn**: Company size, industry, founded year
 - **Twitter**: Bio, location, recent announcements
 - **GitHub**: Tech stack, open source contributions
@@ -243,7 +243,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 - **News**: Recent product launches, company updates
 - **Industry**: Productivity tool market insights
 
-#### **Enhanced TikTok Suggestions**
+#### **Enhanced surface / profile suggestions**
 - **Username**: `opal`, `opalofficial`, `productivitypro`
 - **Bio**: "🚀 Opal - The best way to stop infinite scrolling | Backed by [investors] | [Industry insights]"
 - **Hashtags**: `#opal`, `#productivity`, `#focus`, `#productivitytools`, `#saas`
@@ -254,7 +254,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 - Product Info: "Not specified"
 - Company Name: "Company Name"
 
-#### **Social Media Research**
+#### **Public web presence research**
 - **LinkedIn**: Industry, company size, founded year
 - **Twitter**: Bio and location
 - **Additional Pages**: About page, product pages
@@ -263,7 +263,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 - **Business Directories**: Company description, industry
 - **News**: Recent company news and announcements
 
-#### **Enhanced TikTok Suggestions**
+#### **Enhanced surface / profile suggestions**
 - **Username**: `companyname`, `companynameofficial`
 - **Bio**: "🚀 Company Name - [Industry] | [Company size] | [Founded year]"
 - **Hashtags**: `#companyname`, `#[industry]`, `#business`, `#tech`
@@ -271,12 +271,12 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 ## Benefits
 
 ### 1. **Comprehensive Information**
-- **Multiple Sources**: Research from website, social media, and external sources
+- **Multiple Sources**: Research from website, public profiles, and external sources
 - **Deep Insights**: Industry data, market trends, and competitive landscape
-- **Recent Updates**: News articles and social media updates
+- **Recent Updates**: News articles and public profile changes
 - **Verified Data**: Cross-referenced information from multiple sources
 
-### 2. **Accurate TikTok Suggestions**
+### 2. **Accurate surface suggestions**
 - **Rich Context**: Industry insights and market positioning
 - **Recent Information**: Latest company updates and announcements
 - **Competitive Analysis**: Understanding of market position
@@ -285,7 +285,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 ### 3. **Professional Quality**
 - **Research-Based**: All information comes from actual research
 - **Comprehensive**: Covers multiple aspects of the business
-- **Up-to-Date**: Includes recent news and social media updates
+- **Up-to-Date**: Includes recent news and public web updates
 - **Verified**: Cross-referenced across multiple sources
 
 ### 4. **Scalable Research**
@@ -298,7 +298,7 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 
 ### **Research Pipeline**
 1. **Website Analysis**: Extract comprehensive content from main website
-2. **Social Media Research**: Research LinkedIn, Twitter, GitHub profiles
+2. **Public web presence research**: Research LinkedIn, Twitter/X, GitHub profiles
 3. **External Research**: Research business directories and news sources
 4. **Data Integration**: Combine and verify information from all sources
 5. **AI Analysis**: Use enhanced data for more accurate AI analysis
@@ -315,4 +315,4 @@ const content = $('body').text().replace(/\s+/g, ' ').trim().slice(0, 500);
 - **Rate Limiting**: Respect rate limits of external sources
 - **Timeout Management**: Set appropriate timeouts for each source
 
-The enhanced research system provides much deeper and more accurate business intelligence by combining website analysis with social media research and external source investigation. 
+The enhanced research system provides much deeper business intelligence by combining website analysis with public web presence research and external source investigation: inputs that help models describe the company correctly. 

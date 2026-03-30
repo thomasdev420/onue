@@ -172,9 +172,9 @@ console.log(isPrivateWindow());
 ### Log Analysis
 
 Look for these patterns in logs:
-- High retry counts → Network or server issues
-- Frequent private window detection → Expected behavior
-- Session refresh failures → Auth configuration issues
+- High retry counts: network or server issues
+- Frequent private window detection: expected behavior
+- Session refresh failures: auth configuration issues
 
 ## 🎯 Success Criteria
 

@@ -11,13 +11,11 @@ export function getStripeListingPaymentUrl() {
 }
 
 /**
- * First step for providers: sales page at /providers when checkout is configured, else intake only.
- * Stripe opens from that page (or from /providers/join if no Payment Link).
+ * Provider funnel entry: sales page at /providers (Stripe checkout from there).
  * @returns {{ href: string }}
  */
 export function getListingPayLink() {
-  if (getStripeListingPaymentUrl()) return { href: "/providers" };
-  return { href: "/providers/join" };
+  return { href: "/providers" };
 }
 
 /** True when NEXT_PUBLIC_STRIPE_LISTING_URL (or legacy basic URL) is set. */

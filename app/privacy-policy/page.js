@@ -30,8 +30,9 @@ export default function PrivacyPolicy() {
             counters, and operational logs, including structured logs for support and abuse prevention.
           </li>
           <li>
-            <strong>Provider leads:</strong> when you submit the &ldquo;List your service&rdquo; form, we
-            process company name, email, product name, and optional message for sales and fulfillment.
+            <strong>Provider checkout:</strong> when you purchase a catalog listing through Stripe, we
+            process billing and account details Stripe shares with us (such as email and company where
+            available) to fulfill your listing and contact you about it.
           </li>
           <li>
             <strong>Technical data:</strong> IP, user agent, approximate region via edge/CDN headers where

@@ -53,10 +53,10 @@ Your automated image labeling system has passed **ALL TESTS** and is ready for i
    - Generates comprehensive labels automatically
    - Stores everything in database permanently
 
-3. **User Content Generation** (Perfect Matching):
-   - Users request content (slides, videos, etc.)
-   - System finds perfect images using AI matching
-   - Delivers high-quality, relevant content
+3. **Founder generative workflows** (Perfect Matching):
+   - Users request structured outputs (slides, video storyboards, etc.)
+   - System finds the best-matching brand assets via AI scoring
+   - Delivers high-quality, on-narrative generations
 
 ---
 
@@ -75,10 +75,10 @@ Your automated image labeling system has passed **ALL TESTS** and is ready for i
 - **Scalability**: Ready for thousands of images
 - **Reliability**: 100% uptime in testing
 
-### **Content Generation Performance:**
+### **Generation & retrieval performance:**
 - **Image Matching**: Multi-layered relevance scoring
 - **Selection Algorithm**: Category + Keywords + Quality + Usage tracking
-- **API Response**: Fast, reliable content generation
+- **API Response**: Fast, reliable structured generation
 - **Error Handling**: Robust fallback systems
 
 ---
@@ -100,14 +100,14 @@ Your automated image labeling system has passed **ALL TESTS** and is ready for i
 3. **Monitor Results**:
    - Check database for labeled images
    - Verify AI-generated labels quality
-   - Test user content generation
+   - Test user generation + image retrieval
 
 ---
 
 ## 🔧 **MINOR SETUP REQUIRED**
 
 ### **Storage Bucket Creation** (2 minutes):
-1. Go to Supabase Dashboard → Storage
+1. Go to Supabase Dashboard, then Storage
 2. Create bucket named `user-images`
 3. Set permissions to public
 4. Configure file types: JPG, PNG, GIF, WebP
@@ -124,7 +124,7 @@ Your automated image labeling system has passed **ALL TESTS** and is ready for i
 - **Permanent Storage**: Labels never need to be regenerated
 
 ### **For Users:**
-- **Perfect Image Matches**: AI finds most relevant images for their content
+- **Perfect Image Matches**: AI finds the most relevant assets for each generation request
 - **High Quality**: Only selects images with quality scores above threshold
 - **Variety**: Prevents overuse of same images
 - **Contextual**: Images match mood, style, and topic perfectly
@@ -144,6 +144,6 @@ Your automated image labeling system is **100% functional** and ready for immedi
 
 **You can start uploading stock photos immediately!**
 
-The AI will automatically analyze and label all your images, providing users with perfect image matches for their content creation needs. This system will save you countless hours of manual work while delivering superior results for your users.
+The AI will automatically analyze and label images so retrieval can pair visuals with on-brand, AI-discoverable founder narratives. This system reduces manual tagging while keeping asset libraries machine-legible.
 
-**🚀 Ready to revolutionize your content creation workflow!** 
+**🚀 Ready to tighten your founder discovery stack!** 

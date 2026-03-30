@@ -3,7 +3,8 @@
 #
 # Required repository secrets (Settings → Secrets and variables → Actions):
 #   AMPLY_PROD_URL     — e.g. https://www.useamply.com
-#   AMPLY_API_KEYS     — same comma-separated keys as Vercel production (POST /api/v1/route)
+#   AMPLY_API_KEYS     — comma-separated server keys and/or POST probe (or single amply_sk_ user key)
+#   AMPLY_ROUTE_BEARER_TOKEN — optional; if set, preferred over AMPLY_API_KEYS for Bearer (user key)
 #
 # Confirm in GitHub: repo → Settings → Secrets and variables → Actions — both names must be listed.
 # Full checklist: deploy-setup.md § "GitHub Actions — synthetic latency workflow".
@@ -37,15 +38,17 @@ jobs:
         env:
           AMPLY_PROD_URL: ${{ secrets.AMPLY_PROD_URL }}
           AMPLY_API_KEYS: ${{ secrets.AMPLY_API_KEYS }}
+          AMPLY_ROUTE_BEARER_TOKEN: ${{ secrets.AMPLY_ROUTE_BEARER_TOKEN }}
           AMPLY_PROBE_ITERATIONS: '60'
+          AMPLY_PROBE_WARMUP: '1'
         run: |
           if [ -z "$AMPLY_PROD_URL" ]; then
             echo '::error::Missing repository secret AMPLY_PROD_URL. GitHub → Settings → Secrets and variables → Actions → New repository secret.'
             exit 1
           fi
-          if [ -z "$AMPLY_API_KEYS" ]; then
-            echo '::error::Missing repository secret AMPLY_API_KEYS (same value as Vercel AMPLY_API_KEYS).'
+          if [ -z "$AMPLY_API_KEYS" ] && [ -z "$AMPLY_ROUTE_BEARER_TOKEN" ]; then
+            echo '::error::Need AMPLY_API_KEYS and/or AMPLY_ROUTE_BEARER_TOKEN (Bearer for POST /api/v1/route).'
             exit 1
           fi
-          echo '::notice::Required Actions secrets are present. Probing production (host value is masked in logs).'
+          echo '::notice::Probing production (host masked in logs).'
           npm run probe:synthetic -- "$AMPLY_PROD_URL"

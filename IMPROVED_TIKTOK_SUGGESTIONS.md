@@ -1,8 +1,8 @@
-# Improved TikTok Suggestions System
+# Surface suggestion system (legacy filename: `IMPROVED_TIKTOK_SUGGESTIONS.md`)
 
 ## Overview
 
-The TikTok suggestions system has been significantly enhanced to generate more accurate, product-specific suggestions instead of generic business-focused content. The system now analyzes product features, benefits, and target users to create relevant TikTok content.
+This pipeline generates **product-grounded public-surface hints** (handles, bios, hashtags) from scraped site context so founders present a consistent entity story: signals that LLMs and search features often ingest when summarizing a company. It is **not** framed as a “social media marketing” product internally; the goal is **AI-discoverable clarity**.
 
 ## Key Improvements
 
@@ -99,7 +99,7 @@ const extractTargetUsers = (targetAudience, productInfo) => {
   if (text.includes('business') || text.includes('company')) return 'businesses';
   if (text.includes('startup') || text.includes('entrepreneur')) return 'startups';
   if (text.includes('student') || text.includes('education')) return 'students';
-  if (text.includes('marketer') || text.includes('marketing')) return 'marketers';
+  if (text.includes('marketer') || text.includes('growth')) return 'operators';
   if (text.includes('designer') || text.includes('creative')) return 'designers';
   if (text.includes('freelancer') || text.includes('remote')) return 'freelancers';
   if (text.includes('team') || text.includes('collaboration')) return 'teams';
@@ -144,7 +144,7 @@ if (domainLower.includes('scroll') || titleLower.includes('scroll') || descLower
   productType = 'Productivity Tool';
   productInfo = 'Tool that helps users stop infinite scrolling and focus on important tasks by blocking distracting websites and apps.';
   keyProducts = 'scroll blocking, focus tools, productivity features';
-  valueProp = 'Stop wasting time on social media and focus on what matters most.';
+  valueProp = 'Make your product story obvious to humans and AI assistants, not buried in vague buzzwords.';
 }
 ```
 
@@ -188,27 +188,27 @@ if (domainLower.includes('scroll') || titleLower.includes('scroll') || descLower
 - **Target-Aware**: Tailored to specific user segments
 - **Feature-Rich**: Incorporates actual product features
 
-### 2. Better TikTok Performance
+### 2. Better surface alignment
 - **Relevant Hashtags**: Industry and feature-specific hashtags
 - **Engaging Bios**: Problem-solution focused descriptions
 - **Memorable Usernames**: Product and feature-based naming
-- **Viral Potential**: Content that resonates with target audience
+- **Retrieval-friendly phrasing**: Copy a model could quote without hallucinating
 
 ### 3. Improved User Experience
 - **Actionable Content**: Specific suggestions users can implement
 - **Relevant Information**: Content that matches the actual product
 - **Professional Quality**: High-quality, targeted suggestions
-- **Time-Saving**: Ready-to-use TikTok content
+- **Time-Saving**: Ready-to-use surface snippets derived from real product facts
 
 ## Future Enhancements
 
 1. **Industry-Specific Templates**: Custom templates for different industries
 2. **Trending Hashtag Integration**: Include currently trending hashtags
-3. **Competitor Analysis**: Analyze competitor TikTok content
+3. **Competitor Analysis**: Compare how peers describe the same category (public sources)
 4. **A/B Testing**: Test different bio and hashtag combinations
 5. **Seasonal Content**: Adjust suggestions based on seasons/events
-6. **Video Content Ideas**: Generate TikTok video concepts
-7. **Engagement Optimization**: Focus on high-engagement content types
+6. **Short-form storyboards**: Generate hook-level concepts grounded in product truth
+7. **Clarity optimization**: Favor specific claims over engagement bait
 8. **Localization**: Support for different languages and regions
 
-The improved TikTok suggestions system now provides much more accurate and product-specific content that will perform better on TikTok and resonate with the target audience. 
+The pipeline now yields more accurate, product-specific surface text, better for consistent founder positioning and for systems that summarize what you do. 

@@ -1,25 +1,30 @@
 /**
- * POST /api/v1/route smoke test (dev server must be running).
- * Uses AMPLY_API_KEYS from .env if set: picks first key for Authorization.
+ * POST /api/v1/route smoke test (dev server must be running unless AMPLY_STATUS_URL points elsewhere).
+ * Bearer: AMPLY_ROUTE_BEARER_TOKEN / AMPLY_DEV_ROUTE_TOKEN / first AMPLY_API_KEYS (see scripts/lib/resolveAmplyBearer.mjs).
  * Usage: npm run smoke:v1-route
  */
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveAmplyBearerFromEnv } from './lib/resolveAmplyBearer.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+const envPath =
+  process.env.DOTENV_CONFIG_PATH?.trim() || path.join(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
 
 const base = (process.env.AMPLY_STATUS_URL || 'http://localhost:3000').replace(/\/$/, '');
 const url = `${base}/api/v1/route`;
 
-const keys = (process.env.AMPLY_API_KEYS || '')
-  .split(',')
-  .map((k) => k.trim())
-  .filter(Boolean);
+const bearer = resolveAmplyBearerFromEnv();
 const headers = { 'Content-Type': 'application/json' };
-if (keys.length) {
-  headers.Authorization = `Bearer ${keys[0]}`;
+if (bearer) {
+  headers.Authorization = `Bearer ${bearer}`;
+} else if (process.env.AMPLY_REQUIRE_API_KEY?.trim() === '1') {
+  console.error(
+    'Missing Bearer: set AMPLY_ROUTE_BEARER_TOKEN or AMPLY_DEV_ROUTE_TOKEN (user key), or AMPLY_API_KEYS, then retry.',
+  );
+  process.exit(1);
 }
 
 const body = {

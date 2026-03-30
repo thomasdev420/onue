@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Iteration Engine is an AI-powered learning system that continuously improves content generation based on user feedback and performance metrics. It analyzes what works and what doesn't on TikTok, then applies those learnings to generate better content in future iterations.
+The Iteration Engine is an AI-powered learning loop that tightens generative outputs from user feedback and quality ratings. It tracks which narratives, hooks, and structures read as specific versus generic, then biases future runs toward founder stories models can summarize faithfully.
 
 ## Key Features
 
@@ -205,14 +205,14 @@ CREATE TABLE user_learning_data (
 - **Data-Driven**: Evidence-based content improvement
 - **Scalable**: Learning scales across all users
 - **Adaptive**: Responds to changing trends
-- **Efficient**: Reduces manual content creation
+- **Efficient**: Reduces manual prompt iteration
 
 ## Future Enhancements
 
 ### **Advanced Learning**
 - **Industry-Specific Patterns**: Learn from industry trends
 - **Seasonal Adjustments**: Adapt to seasonal content patterns
-- **Viral Pattern Recognition**: Identify viral content elements
+- **High-signal pattern recognition**: Identify narrative elements that models summarize well
 - **A/B Testing**: Automated content testing
 
 ### **Enhanced Analytics**
@@ -247,4 +247,4 @@ CREATE TABLE user_learning_data (
 - Cached learning data for performance
 - Asynchronous learning updates
 
-This iteration engine creates a continuous learning loop that improves content performance over time, making the system smarter and more effective at generating TikTok-ready content. 
+This iteration engine creates a continuous learning loop that improves narrative clarity over time, making the system better at producing machine-legible founder positioning, not chasing platform vanity metrics. 

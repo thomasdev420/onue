@@ -7,7 +7,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+const envPath =
+  process.env.DOTENV_CONFIG_PATH?.trim() || path.join(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
 
 const base = (process.env.AMPLY_STATUS_URL || 'http://localhost:3000').replace(/\/$/, '');
 const url = `${base}/api/v1/status`;

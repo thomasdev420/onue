@@ -17,17 +17,16 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### Optional — provider listings (one Stripe Payment Link + Calendly)
-Create **one Payment link** in [Stripe Dashboard](https://dashboard.stripe.com) (e.g. listing deposit or default tier) → copy the `https://buy.stripe.com/...` URL. In Vercel → **Environment Variables** (Production + Preview if needed):
+### Optional — provider listings (one Stripe Payment Link)
+Create **one Payment link** in [Stripe Dashboard](https://dashboard.stripe.com) → copy the `https://buy.stripe.com/...` URL. In Vercel → **Environment Variables** (Production + Preview if needed):
 
 ```
 NEXT_PUBLIC_STRIPE_LISTING_URL=https://buy.stripe.com/...
-NEXT_PUBLIC_CALENDLY_PROVIDER_URL=https://calendly.com/your-org/...
 ```
 
 (Optional legacy: **`NEXT_PUBLIC_STRIPE_LISTING_BASIC_URL`** is still read if **`NEXT_PUBLIC_STRIPE_LISTING_URL`** is empty.)
 
-Redeploy after saving — **`NEXT_PUBLIC_*`** is baked in at build time. **`/pricing`** and **`/providers/join`** show **Pay with Stripe** when the URL is set.
+Redeploy after saving — **`NEXT_PUBLIC_*`** is baked in at build time. **`/providers`** (and **`/pricing`**) link to checkout when the URL is set. Legacy **`/providers/join`** redirects to **`/providers`**.
 
 ### Optional Variables (For full functionality)
 ```

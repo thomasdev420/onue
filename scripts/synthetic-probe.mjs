@@ -7,17 +7,21 @@
  *   AMPLY_PROBE_ITERATIONS=40 AMPLY_PROBE_WARMUP=1 npm run probe:synthetic -- https://...
  *
  * Optional:
- *   AMPLY_API_KEYS — Bearer for POST /api/v1/route (comma-separated; first key used)
- *   AMPLY_PROBE_ITERATIONS (default 30)
- *   AMPLY_PROBE_FAIL_COMPUTE_P95_MS — exit 1 if server compute p95 exceeds this (optional)
- *   AMPLY_PROBE_FAIL_WALL_P95_MS — exit 1 if wall RTT p95 exceeds this on status or route (optional)
+ *   Bearer: AMPLY_ROUTE_BEARER_TOKEN / AMPLY_DEV_ROUTE_TOKEN / first AMPLY_API_KEYS (see scripts/lib/resolveAmplyBearer.mjs)
+ *   AMPLY_PROBE_ITERATIONS (default 40)
+ *   AMPLY_PROBE_ROUTE_MINIMAL=1 — small JSON body (lower upload / parse cost; same catalog path)
+ *   AMPLY_PROBE_FAIL_COMPUTE_P95_MS — exit 1 if server compute p95 exceeds this (optional; SLO bar applies to server work)
+ *   AMPLY_PROBE_FAIL_WALL_P95_MS — exit 1 if wall RTT p95 exceeds this (optional; includes your network + edge)
  */
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveAmplyBearerFromEnv } from './lib/resolveAmplyBearer.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+const envPath =
+  process.env.DOTENV_CONFIG_PATH?.trim() || path.join(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
 
 const fromArg = process.argv[2];
 const baseRaw = fromArg || process.env.AMPLY_PROD_URL;
@@ -38,14 +42,11 @@ try {
   process.exit(1);
 }
 
-const keys = (process.env.AMPLY_API_KEYS || '')
-  .split(',')
-  .map((k) => k.trim())
-  .filter(Boolean);
+const routeBearer = resolveAmplyBearerFromEnv();
 
 const iterations = Math.max(
   5,
-  parseInt(process.env.AMPLY_PROBE_ITERATIONS || '30', 10) || 30,
+  parseInt(process.env.AMPLY_PROBE_ITERATIONS || '40', 10) || 40,
 );
 const skipWarmup = process.env.AMPLY_PROBE_WARMUP === '0';
 const failComputeP95 = process.env.AMPLY_PROBE_FAIL_COMPUTE_P95_MS
@@ -57,21 +58,33 @@ const failWallP95 = process.env.AMPLY_PROBE_FAIL_WALL_P95_MS
 
 function authHeaders(extra = {}) {
   const h = { ...extra };
-  if (keys.length) h.Authorization = `Bearer ${keys[0]}`;
+  if (routeBearer) h.Authorization = `Bearer ${routeBearer}`;
   return h;
 }
 
-const routeBody = JSON.stringify({
+const routeBodyFull = JSON.stringify({
   task: 'store 100k 1536-dim vectors with metadata filters and similarity search',
   dimension: 1536,
   workload_type: 'hybrid',
   filter_complexity: 'high',
 });
 
+const routeBodyMinimal = JSON.stringify({
+  task: 'latency_probe',
+});
+
+const routeBody =
+  process.env.AMPLY_PROBE_ROUTE_MINIMAL?.trim() === '1' ? routeBodyMinimal : routeBodyFull;
+
+/** Linear interpolation (R8), common for p95 / p99 latency reports. */
 function percentile(sorted, p) {
   if (!sorted.length) return null;
-  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
-  return sorted[idx];
+  if (sorted.length === 1) return sorted[0];
+  const k = (sorted.length - 1) * (p / 100);
+  const f = Math.floor(k);
+  const c = Math.ceil(k);
+  if (f === c) return sorted[f];
+  return sorted[f] + (sorted[c] - sorted[f]) * (k - f);
 }
 
 async function timedFetch(url, init = {}) {
@@ -80,8 +93,23 @@ async function timedFetch(url, init = {}) {
   const wallMs = performance.now() - t0;
   const computeHdr = res.headers.get('x-amply-compute-ms');
   const reqId = res.headers.get('x-amply-request-id');
-  const computeMs = computeHdr != null && computeHdr !== '' ? Number(computeHdr) : null;
-  return { res, wallMs, computeMs: Number.isFinite(computeMs) ? computeMs : null, reqId };
+  let computeMs = computeHdr != null && computeHdr !== '' ? Number(computeHdr) : null;
+  if (!Number.isFinite(computeMs)) computeMs = null;
+
+  const ct = (res.headers.get('content-type') || '').toLowerCase();
+  if (computeMs == null && ct.includes('application/json')) {
+    try {
+      const text = await res.clone().text();
+      const j = JSON.parse(text);
+      if (typeof j.compute_ms === 'number' && Number.isFinite(j.compute_ms)) {
+        computeMs = j.compute_ms;
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return { res, wallMs, computeMs, reqId };
 }
 
 function r4(n) {
@@ -114,7 +142,7 @@ let coldRouteWall = null;
 if (!skipWarmup) {
   const s0 = await timedFetch(`${base}/api/v1/status`);
   coldStatusWall = s0.wallMs;
-  if (keys.length) {
+  if (routeBearer) {
     const r0 = await timedFetch(`${base}/api/v1/route`, {
       method: 'POST',
       headers: authHeaders({ 'Content-Type': 'application/json' }),
@@ -142,8 +170,10 @@ for (let i = 0; i < iterations; i++) {
 
 let routeWalls = [];
 let routeCompute = [];
-if (!keys.length) {
-  console.warn('\n(no AMPLY_API_KEYS — skipping POST /api/v1/route probe; set key for full stats)\n');
+if (!routeBearer) {
+  console.warn(
+    '\n(no Bearer — skipping POST /api/v1/route; set AMPLY_ROUTE_BEARER_TOKEN or AMPLY_API_KEYS in .env)\n',
+  );
 } else {
   routeWalls = [];
   routeCompute = [];
@@ -165,6 +195,7 @@ if (!keys.length) {
 console.log('\n=== Amply synthetic probe ===');
 console.log('base:', base);
 console.log('iterations (per endpoint):', iterations);
+console.log('route body:', process.env.AMPLY_PROBE_ROUTE_MINIMAL?.trim() === '1' ? 'minimal' : 'full');
 if (!skipWarmup) {
   console.log(
     'cold_start_hint: first request wall RTT (includes DNS/TLS/Vercel cold start if any):',
@@ -177,8 +208,20 @@ if (!skipWarmup) {
 
 const st = summarize('GET /api/v1/status', statusWalls, statusCompute);
 let rt = null;
-if (keys.length) {
+if (routeBearer) {
   rt = summarize('POST /api/v1/route', routeWalls, routeCompute);
+}
+
+const sloMs = 200;
+if (rt?.compute_p95_ms != null) {
+  console.log(
+    `\n--- SLO check (~${sloMs}ms server compute on POST /route) ---\npost /api/v1/route compute_p95_ms=${rt.compute_p95_ms} → ${rt.compute_p95_ms <= sloMs ? 'within' : 'above'} ${sloMs}ms bar (same-region probe recommended; Vercel iad1 vs DB region adds RTT to wall_ms)`,
+  );
+}
+if (st.compute_p95_ms != null) {
+  console.log(
+    `GET /api/v1/status compute_p95_ms=${st.compute_p95_ms} → ${st.compute_p95_ms <= sloMs ? 'within' : 'above'} ${sloMs}ms bar`,
+  );
 }
 
 const machine = {
@@ -198,6 +241,10 @@ const machine = {
     wall_ms_includes:
       'DNS, TLS, client_to_edge_rtt, cold_start_jitter — GitHub Actions runners are often US-based',
     compare_across_deploys: 'compute_p95_ms',
+    vercel_region_default: 'iad1 (see vercel.json); align DB pooler region where possible',
+    catalog_cache:
+      'Warm instances may cache PG catalog reads (AMPLY_CATALOG_CACHE_MS); compute_p95 can reflect cache hits',
+    payload: process.env.AMPLY_PROBE_ROUTE_MINIMAL?.trim() === '1' ? 'minimal' : 'full',
   },
 };
 console.log('\n--- machine ---');
