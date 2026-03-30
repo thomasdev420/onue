@@ -1,7 +1,7 @@
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
 import Link from "next/link";
-import { getListingPayLink } from "@/app/lib/stripeListingUrls";
+import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
 import ProviderJoinForm from "./ProviderJoinForm";
 
 const LISTING_PRICE = "$249/mo";
@@ -12,7 +12,7 @@ export const metadata = {
 };
 
 export default function ProviderJoinPage() {
-  const listingPay = getListingPayLink();
+  const stripeUrl = getStripeListingPaymentUrl();
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -23,7 +23,7 @@ export default function ProviderJoinPage() {
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-gray-600 sm:text-base">
           One catalog listing at <strong>$249/mo</strong>.{" "}
-          {listingPay.external
+          {stripeUrl
             ? "Checkout is only via Stripe. Open the secure payment page, then complete the form below with the same email."
             : "We'll follow up with payment instructions, then you can submit the details here."}{" "}
           We&apos;ll update{" "}
@@ -34,11 +34,11 @@ export default function ProviderJoinPage() {
           </Link>
           .
         </p>
-        {listingPay.external && (
+        {stripeUrl && (
           <div className="mt-8 rounded-2xl border border-violet-200 bg-violet-50/90 p-6 text-center">
             <p className="text-sm font-medium text-violet-950">Pay {LISTING_PRICE} on Stripe first</p>
             <a
-              href={listingPay.href}
+              href={stripeUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-4 inline-flex w-full max-w-md justify-center rounded-full bg-[#635bff] px-6 py-3 text-sm font-semibold text-white hover:brightness-110"

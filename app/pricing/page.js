@@ -1,7 +1,7 @@
 import Link from "next/link";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
-import { getListingPayLink } from "@/app/lib/stripeListingUrls";
+import { getListingPayLink, isListingCheckoutConfigured } from "@/app/lib/stripeListingUrls";
 
 export const metadata = {
   title: "Pricing | Amply",
@@ -23,6 +23,7 @@ const LISTING = {
 
 export default function PricingPage() {
   const listingPay = getListingPayLink();
+  const checkoutReady = isListingCheckoutConfigured();
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -88,24 +89,13 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              {listingPay.external ? (
-                <a
-                  href={listingPay.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
-                >
-                  Pay with Stripe to get listed
-                </a>
-              ) : (
-                <Link
-                  href="/providers/join"
-                  className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
-                >
-                  Submit listing details
-                </Link>
-              )}
-              {listingPay.external && (
+              <Link
+                href={listingPay.href}
+                className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
+              >
+                {checkoutReady ? "Get your product listed" : "Submit listing details"}
+              </Link>
+              {checkoutReady && (
                 <Link
                   href="/providers/join"
                   className="mt-3 block text-center text-xs font-medium text-indigo-700 underline"
@@ -116,7 +106,7 @@ export default function PricingPage() {
             </div>
           </div>
           <p className="mt-8 text-center text-xs text-gray-500">
-            {listingPay.external ? (
+            {checkoutReady ? (
               <>
                 Env:{" "}
                 <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>.

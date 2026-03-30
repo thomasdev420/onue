@@ -59,6 +59,11 @@ export default function MarketingFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/providers" className={linkClass}>
+                  Get listed
+                </Link>
+              </li>
+              <li>
                 <Link href="/catalog" className={linkClass}>
                   Catalog
                 </Link>

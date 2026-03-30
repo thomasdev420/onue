@@ -1,7 +1,7 @@
 import Link from "next/link";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
-import { getListingPayLink } from "@/app/lib/stripeListingUrls";
+import { getListingPayLink, isListingCheckoutConfigured } from "@/app/lib/stripeListingUrls";
 
 export const metadata = {
   title: "For providers | Amply",
@@ -11,6 +11,7 @@ export const metadata = {
 
 export default function ForProvidersPage() {
   const listingPay = getListingPayLink();
+  const checkoutReady = isListingCheckoutConfigured();
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -54,30 +55,19 @@ export default function ForProvidersPage() {
         </ul>
 
         <div className="mt-10 flex flex-wrap gap-4">
-          {listingPay.external ? (
-            <a
-              href={listingPay.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-6 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110"
-            >
-              Pay with Stripe to get listed
-            </a>
-          ) : (
-            <Link
-              href={listingPay.href}
-              className="inline-flex rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-6 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110"
-            >
-              List your service
-            </Link>
-          )}
+          <Link
+            href={listingPay.href}
+            className="inline-flex rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-6 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110"
+          >
+            {checkoutReady ? "Get your product listed" : "List your service"}
+          </Link>
           <Link
             href="/pricing#providers"
             className="inline-flex rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50"
           >
             View pricing
           </Link>
-          {listingPay.external && (
+          {checkoutReady && (
             <Link
               href="/providers/join"
               className="inline-flex rounded-full border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50"

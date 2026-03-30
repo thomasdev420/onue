@@ -68,6 +68,9 @@ export default function MarketingNav() {
           <Link href="/for-providers" className={linkClass}>
             For providers
           </Link>
+          <Link href="/providers" className={linkClass}>
+            Get listed
+          </Link>
           <Link href="/catalog" className={linkClass}>
             Catalog
           </Link>
@@ -104,6 +107,9 @@ export default function MarketingNav() {
           </Link>
           <Link href="/for-providers" className={linkClass}>
             For providers
+          </Link>
+          <Link href="/providers" className={linkClass}>
+            Get listed
           </Link>
           <Link href="/catalog" className={linkClass}>
             Catalog

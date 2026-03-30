@@ -104,6 +104,10 @@ export default function ProviderJoinForm() {
         <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{status.detail}</p>
       )}
       <p className="text-center text-xs text-gray-500">
+        <Link href="/providers" className="text-indigo-600 underline">
+          Listing overview
+        </Link>
+        {" · "}
         <Link href="/pricing#providers" className="text-indigo-600 underline">
           Pricing
         </Link>

@@ -11,11 +11,16 @@ export function getStripeListingPaymentUrl() {
 }
 
 /**
- * Primary “get listed / pay” href: Stripe checkout when configured, else intake form (no Payment Link yet).
- * @returns {{ href: string, external: boolean }}
+ * First step for providers: sales page at /providers when checkout is configured, else intake only.
+ * Stripe opens from that page (or from /providers/join if no Payment Link).
+ * @returns {{ href: string }}
  */
 export function getListingPayLink() {
-  const stripe = getStripeListingPaymentUrl();
-  if (stripe) return { href: stripe, external: true };
-  return { href: "/providers/join", external: false };
+  if (getStripeListingPaymentUrl()) return { href: "/providers" };
+  return { href: "/providers/join" };
+}
+
+/** True when NEXT_PUBLIC_STRIPE_LISTING_URL (or legacy basic URL) is set. */
+export function isListingCheckoutConfigured() {
+  return Boolean(getStripeListingPaymentUrl());
 }
