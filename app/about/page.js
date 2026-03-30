@@ -15,7 +15,7 @@ const TEAM = [
   },
   {
     name: "You?",
-    role: "Early engineer / GTM",
+    role: "Engineer / GTM",
     bio: "We list real names and photos as we grow; for now we’d rather ship than polish the org chart.",
   },
 ];

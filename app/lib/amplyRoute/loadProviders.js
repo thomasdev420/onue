@@ -36,6 +36,7 @@ function rowToProvider(row) {
       row.revenue_captured_usd != null ? Number(row.revenue_captured_usd) : null,
     missed_opportunity_usd:
       row.missed_opportunity_usd != null ? Number(row.missed_opportunity_usd) : null,
+    catalog_listing: row.catalog_listing || 'organic',
   };
 }
 
@@ -74,7 +75,7 @@ export async function loadProviders(admin) {
   const { data, error } = await admin
     .from('amply_route_providers')
     .select(
-      'id, display_name, p99_latency_ms, cost_per_1m_dims_usd, success_rate_last_24h, success_rate_last_7d, win_rate, revenue_captured_usd, missed_opportunity_usd, metrics_as_of, updated_at',
+      'id, display_name, p99_latency_ms, cost_per_1m_dims_usd, success_rate_last_24h, success_rate_last_7d, win_rate, revenue_captured_usd, missed_opportunity_usd, metrics_as_of, updated_at, catalog_listing',
     )
     .eq('is_active', true)
     .order('id');

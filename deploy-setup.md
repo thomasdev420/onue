@@ -156,6 +156,8 @@ GITHUB_REPOSITORY=owner/repo npm run check:gha-secrets   # if not default remote
 
 ### Apply to production Postgres
 
+0. **Listing disclosure column (one-time):** run `database_migration_amply_route_catalog_listing.sql` so `GET /api/v1/providers` and `/catalog` can return `catalog_listing` (`organic` vs paid tiers). New installs: `database_setup_amply_route.sql` already includes the column.
+
 1. **On deploy (Vercel):** `vercel.json` registers **`GET /api/cron/catalog-refresh`** on a schedule. **Hobby (free) plans only allow at most once per day**; this repo uses **`0 9 * * *`** (≈09:00 UTC daily). **Pro** allows more frequent crons (e.g. every few hours). The **Observability → Cron Jobs** table may look **empty or redacted on Hobby**; that does not stop the route from working—use **`curl`** (below) to run it anytime.  
 2. **Env on Vercel:** set **`CRON_SECRET`** (opaque string, e.g. `openssl rand -hex 24`). Vercel sends `Authorization: Bearer <CRON_SECRET>` when the cron runs.  
 3. **`DATABASE_URL`** (or pooler URL) must already be set so the handler can upsert `amply_route_providers`.
@@ -175,18 +177,6 @@ This upserts all rows from the JSON and sets **`metrics_as_of`** / **`updated_at
 **Alert when prod is stale:** GitHub Actions workflow **`catalog-freshness.yml`** (schedule + `workflow_dispatch`) runs **`npm run check:catalog-fresh`** against **`AMPLY_PROD_URL`**. Add that repository secret; a red run means **`catalog_metrics_stale`** is still true (fix cron, run `catalog:sync`, or ship new JSON).
 
 **Strict deploy verify (optional):** `AMPLY_VERIFY_FAIL_ON_STALE=1 npm run verify:deploy -- https://…` fails if stale.
-
-### Public playground (`POST /api/playground`)
-
-The homepage “try it” box calls **`/api/playground`**, which proxies to **`/api/v1/route`** using a **server-side** key (never exposed to the browser).
-
-**Vercel env:**
-
-| Variable | Purpose |
-|---------|---------|
-| **`AMPLY_PUBLIC_ORIGIN`** | e.g. `https://www.useamply.com` — base URL for the server-to-server `fetch` to `/api/v1/route`. If unset, `VERCEL_URL` is used (may be `*.vercel.app` instead of your custom domain). |
-| **`AMPLY_PLAYGROUND_API_KEY`** | Optional. If unset, the **first** `AMPLY_API_KEYS` value is used. |
-| **`AMPLY_PLAYGROUND_RATE_LIMIT_PER_MIN`** | Optional. Default **15** requests/min/IP for the playground only. |
 
 ### Editing metrics honestly
 

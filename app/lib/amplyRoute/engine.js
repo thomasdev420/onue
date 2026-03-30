@@ -170,6 +170,7 @@ export function buildWhy(providers, winner, runnerUp, dimension, workloadType) {
 
 export function publicProviderSnapshot(providers, pid, compositeScore) {
   const row = providers[pid];
+  const listing = row.catalog_listing || 'organic';
   const out = {
     id: pid,
     display_name: row.display_name,
@@ -178,6 +179,11 @@ export function publicProviderSnapshot(providers, pid, compositeScore) {
     success_rate_last_24h: row.success_rate_last_24h,
     success_rate_last_7d: row.success_rate_last_7d,
     win_rate: row.win_rate,
+    catalog_listing: listing,
+    placement_disclosure:
+      listing === 'organic'
+        ? 'Metrics only; no paid placement.'
+        : 'Paid catalog placement — routing scores still use the same published metrics.',
   };
   if (compositeScore != null) out.live_composite_score = Math.round(compositeScore * 1e4) / 1e4;
   return out;

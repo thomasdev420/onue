@@ -54,6 +54,16 @@ export default function MarketingFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/for-providers" className={linkClass}>
+                  For providers
+                </Link>
+              </li>
+              <li>
+                <Link href="/catalog" className={linkClass}>
+                  Catalog
+                </Link>
+              </li>
+              <li>
                 <Link href="/dashboard" className={linkClass}>
                   Dashboard
                 </Link>
@@ -81,6 +91,16 @@ export default function MarketingFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/acceptable-use" className={linkClass}>
+                  Acceptable Use
+                </Link>
+              </li>
+              <li>
+                <Link href="/sla" className={linkClass}>
+                  SLA
+                </Link>
+              </li>
+              <li>
                 <a href="mailto:support@useamply.com" className={linkClass}>
                   Support
                 </a>
@@ -93,18 +113,8 @@ export default function MarketingFooter() {
             <h3 className={headingClass}>Developer</h3>
             <ul className="space-y-3">
               <li>
-                <Link href="/docs/quickstart" className={linkClass}>
-                  Quickstart
-                </Link>
-              </li>
-              <li>
                 <Link href="/docs" className={linkClass}>
                   Documentation
-                </Link>
-              </li>
-              <li>
-                <Link href="/changelog" className={linkClass}>
-                  Changelog & roadmap
                 </Link>
               </li>
               <li>

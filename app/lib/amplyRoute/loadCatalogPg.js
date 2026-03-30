@@ -19,6 +19,7 @@ function rowToProvider(row) {
       row.revenue_captured_usd != null ? Number(row.revenue_captured_usd) : null,
     missed_opportunity_usd:
       row.missed_opportunity_usd != null ? Number(row.missed_opportunity_usd) : null,
+    catalog_listing: row.catalog_listing || 'organic',
   };
 }
 
@@ -50,7 +51,8 @@ export async function loadProvidersFromDatabaseUrl(connectionString) {
     `SELECT id, display_name, p99_latency_ms, cost_per_1m_dims_usd,
             success_rate_last_24h, success_rate_last_7d, win_rate,
             revenue_captured_usd, missed_opportunity_usd,
-            metrics_as_of, updated_at
+            metrics_as_of, updated_at,
+            COALESCE(catalog_listing, 'organic') AS catalog_listing
      FROM amply_route_providers
      WHERE is_active = true
      ORDER BY id`,

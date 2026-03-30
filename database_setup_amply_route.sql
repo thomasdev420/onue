@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS amply_route_providers (
     missed_opportunity_usd NUMERIC,
     metrics_as_of TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    catalog_listing TEXT NOT NULL DEFAULT 'organic'
+        CHECK (catalog_listing IN ('organic', 'basic_listing', 'featured', 'sponsored_top3'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_amply_route_providers_active ON amply_route_providers (is_active) WHERE is_active = true;

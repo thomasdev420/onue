@@ -14,7 +14,11 @@ export default function DocsPage() {
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
       <main className="mx-auto max-w-3xl px-5 pb-20 pt-10 sm:px-8 sm:pb-28 sm:pt-14">
-        <p className="text-sm font-medium text-indigo-600">Developer documentation</p>
+        <p className="rounded-xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm leading-relaxed text-emerald-950">
+          <strong>100% free for agent builders</strong> — no billing, no call quotas. Fair use with
+          abuse protection; providers pay for catalog placement, not you.
+        </p>
+        <p className="mt-6 text-sm font-medium text-indigo-600">Developer documentation</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           Amply API
         </h1>
@@ -51,11 +55,6 @@ export default function DocsPage() {
               </a>
             </li>
             <li>
-              <Link className="hover:text-indigo-700" href="/docs/quickstart">
-                Quickstart
-              </Link>
-            </li>
-            <li>
               <a className="hover:text-indigo-700" href="#sdks">
                 SDKs
               </a>
@@ -75,12 +74,8 @@ export default function DocsPage() {
             workload hints), and receive a ranked recommendation with economics, latency signals, and a machine-readable{" "}
             <code className="rounded bg-gray-100 px-1 font-mono text-[0.9em]">why</code>. Integrate from any stack with{" "}
             <code className="rounded bg-gray-100 px-1 font-mono text-[0.9em]">fetch</code>,{" "}
-            <code className="rounded bg-gray-100 px-1 font-mono text-[0.9em]">curl</code>, or the official SDKs (v0.1) below. Start with
-            the{" "}
-            <Link className="font-medium text-indigo-600 underline" href="/docs/quickstart">
-              quickstart guide
-            </Link>
-            .
+            <code className="rounded bg-gray-100 px-1 font-mono text-[0.9em]">curl</code>, or the SDKs below once
+            published.
           </p>
           <p className="mt-4 leading-relaxed text-gray-700">
             Base URL (production): <code className="break-all rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm">https://www.useamply.com/api/v1</code>
@@ -175,43 +170,28 @@ export default function DocsPage() {
         </section>
 
         <section id="sdks" className="scroll-mt-28 border-t border-gray-200/90 pt-12">
-          <h2 className="text-xl font-bold text-gray-900">SDKs (v0.1)</h2>
+          <h2 className="text-xl font-bold text-gray-900">SDKs</h2>
           <p className="mt-3 leading-relaxed text-gray-700">
-            Thin official clients around <code className="rounded bg-gray-100 px-1 font-mono text-sm">POST /api/v1/route</code>. Source
-            lives in the monorepo; publish to npm/PyPI when you&apos;re ready. Same examples as the{" "}
-            <Link className="font-medium text-indigo-600 underline" href="/docs/quickstart">
-              quickstart
-            </Link>
-            .
+            Official client libraries are in active development. Until they ship, use any HTTP client against{" "}
+            <code className="rounded bg-gray-100 px-1 font-mono text-sm">POST /api/v1/route</code>.
           </p>
-          <ul className="mt-4 space-y-3 rounded-xl border border-indigo-200/90 bg-indigo-50/40 p-5 text-sm leading-relaxed text-gray-800">
+          <ul className="mt-4 space-y-3 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/40 p-5 text-sm leading-relaxed text-gray-800">
             <li>
-              <strong>JavaScript / TypeScript</strong> — package name <code className="font-mono">amply-sdk</code>
-              <br />
-              <code className="mt-1 inline-block text-xs">npm install amply-sdk</code> ·{" "}
-              <a
-                className="font-medium text-indigo-600 underline"
-                href="https://github.com/thomasdev420/onue/tree/main/packages/amply-sdk"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                packages/amply-sdk
-              </a>
+              <strong>TypeScript / JavaScript</strong> — <code className="font-mono">@amply/sdk</code> (npm) —{" "}
+              <span className="text-gray-600">coming soon</span>
             </li>
             <li>
-              <strong>Python</strong> — package name <code className="font-mono">amply-sdk</code> (stdlib HTTP)
-              <br />
-              <code className="mt-1 inline-block text-xs">pip install amply-sdk</code> (after publish) ·{" "}
-              <a
-                className="font-medium text-indigo-600 underline"
-                href="https://github.com/thomasdev420/onue/tree/main/packages/amply-sdk-python"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                packages/amply-sdk-python
-              </a>
+              <strong>Python</strong> — <code className="font-mono">amply-sdk</code> (PyPI) —{" "}
+              <span className="text-gray-600">coming soon</span>
             </li>
           </ul>
+          <p className="mt-4 text-sm text-gray-600">
+            Want early access?{" "}
+            <Link href="/about" className="font-medium text-indigo-600 underline">
+              Contact us
+            </Link>{" "}
+            via the About page.
+          </p>
         </section>
 
         <section id="limits" className="scroll-mt-28 border-t border-gray-200/90 pt-12">

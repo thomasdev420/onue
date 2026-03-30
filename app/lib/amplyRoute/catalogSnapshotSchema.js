@@ -70,6 +70,11 @@ export function parseAndValidateCatalogSnapshot(raw) {
 
     const is_active = r.is_active !== false;
 
+    const LISTING = new Set(['organic', 'basic_listing', 'featured', 'sponsored_top3']);
+    let catalog_listing =
+      typeof r.catalog_listing === 'string' ? r.catalog_listing.trim() : 'organic';
+    if (!LISTING.has(catalog_listing)) catalog_listing = 'organic';
+
     out.push({
       id,
       display_name,
@@ -82,6 +87,7 @@ export function parseAndValidateCatalogSnapshot(raw) {
       win_rate: wr,
       revenue_captured_usd: rev,
       missed_opportunity_usd: miss,
+      catalog_listing,
     });
   }
 

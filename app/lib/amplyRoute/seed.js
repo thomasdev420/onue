@@ -19,6 +19,7 @@ export const SEEDED_PROVIDERS = Object.fromEntries(
       success_rate_last_7d: p.success_rate_last_7d,
       revenue_captured_usd: p.revenue_captured_usd,
       missed_opportunity_usd: p.missed_opportunity_usd,
+      catalog_listing: p.catalog_listing || 'organic',
     },
   ]),
 );

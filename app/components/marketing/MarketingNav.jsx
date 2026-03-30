@@ -59,17 +59,17 @@ export default function MarketingNav() {
           <Link href="/#use-cases" className={linkClass}>
             Use Cases
           </Link>
-          <Link href="/docs/quickstart" className={linkClass}>
-            Quickstart
-          </Link>
           <Link href="/docs" className={linkClass}>
             Docs
           </Link>
-          <Link href="/changelog" className={linkClass}>
-            Changelog
-          </Link>
           <Link href="/pricing" className={linkClass}>
             Pricing
+          </Link>
+          <Link href="/for-providers" className={linkClass}>
+            For providers
+          </Link>
+          <Link href="/catalog" className={linkClass}>
+            Catalog
           </Link>
           <Link href="/about" className={linkClass}>
             About
@@ -96,17 +96,17 @@ export default function MarketingNav() {
           <Link href="/#use-cases" className={linkClass}>
             Use Cases
           </Link>
-          <Link href="/docs/quickstart" className={linkClass}>
-            Quickstart
-          </Link>
           <Link href="/docs" className={linkClass}>
             Docs
           </Link>
-          <Link href="/changelog" className={linkClass}>
-            Changelog
-          </Link>
           <Link href="/pricing" className={linkClass}>
             Pricing
+          </Link>
+          <Link href="/for-providers" className={linkClass}>
+            For providers
+          </Link>
+          <Link href="/catalog" className={linkClass}>
+            Catalog
           </Link>
           <Link href="/about" className={linkClass}>
             About
