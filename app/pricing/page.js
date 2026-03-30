@@ -95,8 +95,29 @@ export default function PricingPage() {
               >
                 Get your product listed
               </Link>
+              <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50/90 p-4 text-left text-sm text-gray-700">
+                <p className="font-semibold text-gray-900">First week after checkout</p>
+                <ul className="mt-2 list-disc space-y-1.5 pl-5">
+                  <li>
+                    We email you at the address Stripe collected to ask for logo, one-line description,
+                    and company details.
+                  </li>
+                  <li>
+                    When we have everything, editorial review and catalog publication usually finish within
+                    about two business days.
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
+          <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-gray-500">
+            Developer routing API: fair use with optional per-IP limits. Live values in{" "}
+            <a href="/api/v1/status" className="font-mono text-indigo-600 underline">
+              GET /api/v1/status
+            </a>{" "}
+            under <code className="rounded bg-gray-100 px-1 font-mono">rate_limit</code> and{" "}
+            <code className="rounded bg-gray-100 px-1 font-mono">auth_mode</code>.
+          </p>
           <p className="mt-8 text-center text-xs text-gray-500">
             {checkoutReady ? (
               <>

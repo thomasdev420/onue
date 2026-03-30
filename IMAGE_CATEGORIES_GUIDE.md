@@ -51,17 +51,17 @@ The image selection system now includes **25 specialized categories** to provide
 
 ## 📱 **Social & Communication Categories**
 
-### **social_media** (taxonomy key: community & comms visuals)
+### **Social Media**
 - **Keywords**: social, media, network, connection, communication, community
-- **Use Cases**: Community proof, customer stories, partner ecosystems (signals humans and LLMs associate with traction)
-- **Example Content**: "BUILDING TRUST THROUGH REAL CUSTOMER VOICES"
+- **Use Cases**: Social media marketing, networking, community building
+- **Example Content**: "BUILDING A STRONG SOCIAL MEDIA PRESENCE"
 
-## 📢 **Positioning & narrative categories**
+## 📢 **Marketing & Advertising Categories**
 
-### **marketing** (taxonomy key: offer / GTM visuals)
+### **Marketing**
 - **Keywords**: marketing, advertising, promotion, brand, campaign, strategy
-- **Use Cases**: Offer clarity, launch narratives, category education assets
-- **Example Content**: "POSITIONING YOUR PRODUCT SO ASSISTANTS CAN EXPLAIN IT ACCURATELY"
+- **Use Cases**: Marketing strategies, advertising campaigns, branding
+- **Example Content**: "DIGITAL MARKETING STRATEGIES THAT CONVERT"
 
 ## 🌟 **Lifestyle & Personal Categories**
 
@@ -75,7 +75,7 @@ The image selection system now includes **25 specialized categories** to provide
 ### **Luxury**
 - **Keywords**: luxury, premium, exclusive, high-end, sophisticated, elegant, prestigious, upscale
 - **Use Cases**: Luxury brands, premium products, high-end services
-- **Example Content**: "THE CRAFT OF HIGH-TRUST PREMIUM POSITIONING"
+- **Example Content**: "THE ART OF LUXURY BRAND MARKETING"
 
 ## 🌿 **Nature & Environment Categories**
 
@@ -109,14 +109,14 @@ The image selection system now includes **25 specialized categories** to provide
 
 ### **Travel**
 - **Keywords**: travel, adventure, exploration, journey, destination, tourism, vacation
-- **Use Cases**: Travel industry, adventure content, hospitality positioning
+- **Use Cases**: Travel industry, adventure content, tourism marketing
 - **Example Content**: "TRAVEL TRENDS SHAPING THE TOURISM INDUSTRY"
 
 ## 🍽️ **Food & Dining Categories**
 
 ### **Food**
 - **Keywords**: food, dining, restaurant, culinary, gastronomy, cuisine, cooking
-- **Use Cases**: Food industry, hospitality storytelling, culinary content
+- **Use Cases**: Food industry, restaurant marketing, culinary content
 - **Example Content**: "THE RISE OF FOOD DELIVERY SERVICES"
 
 ## 👗 **Fashion & Style Categories**
@@ -145,7 +145,7 @@ The image selection system now includes **25 specialized categories** to provide
 ### **Abstract**
 - **Keywords**: abstract, conceptual, minimal, geometric, modern, contemporary, artistic
 - **Use Cases**: Abstract concepts, modern design, artistic content
-- **Example Content**: "THE PSYCHOLOGY OF COLOR IN PRODUCT STORYTELLING"
+- **Example Content**: "THE PSYCHOLOGY OF COLOR IN MARKETING"
 
 ## 🏭 **Industrial & Manufacturing Categories**
 
@@ -195,7 +195,7 @@ Users can manually select images through the ContentModal:
 - **Business**: Corporate presentations and workplace content
 - **Technology**: Digital transformation and tech industry
 - **Success**: Achievement and goal-setting content
-- **Luxury**: High-end brand positioning
+- **Luxury**: High-end brand marketing
 - **Nature**: Environmental and sustainability topics
 
 ### **Niche Categories**
@@ -238,13 +238,13 @@ const matchingImages = libraryImages.filter(img =>
 1. **Category Analytics**: Track which categories perform best
 2. **Smart Suggestions**: AI suggests categories based on content
 3. **Custom Categories**: Users can create their own categories
-4. **Category Performance**: Metrics on image retrieval success by category
+4. **Category Performance**: Metrics on image engagement by category
 
 ### **Integration Opportunities**
 1. **Brand Guidelines**: Match categories to brand preferences
 2. **Seasonal Categories**: Time-based category suggestions
 3. **Industry-Specific**: Predefined categories for different industries
-4. **A/B Testing**: Test different categories for retrieval quality
+4. **A/B Testing**: Test different categories for engagement
 
 ## 📝 **Best Practices**
 

@@ -63,7 +63,7 @@ Your automated image labeling system has been thoroughly tested and is ready for
 ### **Storage Bucket Creation**
 The `user-images` storage bucket needs to be created in your Supabase dashboard:
 
-1. **Go to Supabase Dashboard**, then Storage
+1. **Go to Supabase Dashboard** → Storage
 2. **Create new bucket** named `user-images`
 3. **Set permissions** to public
 4. **Configure file types**: JPG, PNG, GIF, WebP
@@ -96,7 +96,7 @@ The `user-images` storage bucket needs to be created in your Supabase dashboard:
 ## 📈 **System Capabilities**
 
 ### **For You (Admin):**
-- **Zero Manual Work**: Upload images, then AI labels everything
+- **Zero Manual Work**: Upload images → AI labels everything
 - **Scalable**: Handle thousands of images effortlessly
 - **Consistent Quality**: Every image gets detailed, professional labels
 - **Permanent Storage**: Labels never need to be regenerated
@@ -112,7 +112,7 @@ The `user-images` storage bucket needs to be created in your Supabase dashboard:
 ## 🔧 **Next Steps**
 
 1. **Create Storage Bucket** (5 minutes):
-   - Supabase Dashboard, then Storage, then create `user-images` bucket
+   - Supabase Dashboard → Storage → Create `user-images` bucket
 
 2. **Start Uploading** (Immediate):
    - Go to bulk upload page
@@ -128,6 +128,6 @@ The `user-images` storage bucket needs to be created in your Supabase dashboard:
 
 ## 🎉 **System Status: PRODUCTION READY**
 
-Your automated image labeling system is **100% functional** and ready for production use. The AI will analyze and label uploads so assets map cleanly to founder narratives assistants can summarize.
+Your automated image labeling system is **100% functional** and ready for production use. The AI will automatically analyze and label all your uploaded images, providing users with perfect image matches for their content creation needs.
 
 **You can start uploading stock photos immediately!** 

@@ -10,7 +10,7 @@ The website scanner has been significantly enhanced to extract more comprehensiv
 - **Enhanced AI Analysis**: Uses GPT-4o-mini for intelligent content analysis
 - **Structured Data Parsing**: Extracts JSON-LD and microdata
 - **Contact Information**: Automatically finds emails, phones, and addresses
-- **Public profile links**: Detects and extracts outbound profile URLs
+- **Social Media Links**: Detects and extracts social media profiles
 - **Business Intelligence**: Extracts industry, company size, founding year, and mission
 
 ### 2. Improved Accuracy
@@ -36,7 +36,7 @@ The website scanner has been significantly enhanced to extract more comprehensiv
 - **Founded Year**: Year of establishment
 - **Mission Statement**: Company mission
 - **Contact Information**: Email, phone, address
-- **Profile links**: Facebook, Twitter/X, LinkedIn, etc.
+- **Social Media Links**: Facebook, Twitter, LinkedIn, etc.
 
 ## Technical Implementation
 
@@ -53,7 +53,7 @@ async function extractComprehensiveBusinessData(html, url, domain, title, metaDe
   // 2. Extract contact information
   const contactInfo = extractContactInfo($, domain);
   
-  // 3. Extract public profile links
+  // 3. Extract social media links
   const socialLinks = extractSocialLinks($);
   
   // 4. Extract structured data
@@ -103,7 +103,7 @@ function extractContactInfo($, domain) {
 }
 ```
 
-### Public profile detection
+### Social Media Detection
 
 ```javascript
 function extractSocialLinks($) {
@@ -117,7 +117,7 @@ function extractSocialLinks($) {
     'github.com': 'github'
   };
   
-  // Scan all links for known profile hosts
+  // Scan all links for social media platforms
   $('a[href]').each((i, el) => {
     const href = $(el).attr('href');
     // Match against social platforms
@@ -208,7 +208,7 @@ const response = await fetchWithTimeout(normalizedUrl, {
 - 📊 Company Size: [company size]
 - 📅 Founded: [founding year]
 - 🎯 Mission: [mission statement]
-- 📱 Public profiles: [platforms detected]
+- 📱 Social Media: [social platforms]
 
 ## Benefits
 
@@ -221,7 +221,7 @@ const response = await fetchWithTimeout(normalizedUrl, {
 ### 2. Comprehensive Information
 - **Business Intelligence**: Industry, size, founding year, mission
 - **Contact Details**: Email, phone, address extraction
-- **Public presence**: Profile URL detection
+- **Social Presence**: Social media profile detection
 - **Enhanced Metadata**: Rich business context
 
 ### 3. Better User Experience
@@ -287,4 +287,4 @@ console.log(data.socialLinks); // { facebook: "...", twitter: "..." }
 7. **Caching System**: Cache results for improved performance
 8. **Machine Learning**: Train custom models for specific industries
 
-The improved website scanner provides a much more comprehensive business intelligence baseline: structured facts and public-profile signals that downstream models can use to describe a company accurately for AI-mediated discovery. 
+The improved website scanner provides a much more comprehensive and accurate business intelligence system, enabling users to quickly gather detailed information about any business website for effective content creation and marketing strategies. 

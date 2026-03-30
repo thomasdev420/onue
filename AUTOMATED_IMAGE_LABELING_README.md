@@ -226,9 +226,9 @@ The system uses 25 predefined categories:
    - Watch real-time progress
    - Review results and labeled images
 
-3. **Use in generative workflows**
+3. **Use in Content Creation**
    - Images automatically appear in slide creation
-   - AI matches images based on narrative intent
+   - AI matches images based on content
    - High-quality, relevant image suggestions
 
 ## 📊 **Analytics and Monitoring**
@@ -261,7 +261,7 @@ Provides:
 ### **Integration Opportunities**
 1. **Brand Guidelines**: Import brand colors, styles, and preferences
 2. **Content Templates**: Pre-define image requirements for templates
-3. **Performance Tracking**: Monitor which images perform best in generations
+3. **Performance Tracking**: Monitor which images perform best in content
 4. **User Feedback**: Allow users to improve AI labeling
 
 ## 💡 **Best Practices**
@@ -278,11 +278,11 @@ Provides:
 - Monitor quality scores and adjust if needed
 - Review and approve AI-generated labels
 
-### **Asset library strategy**
+### **Content Strategy**
 - Maintain category balance across your library
-- Regularly upload new images to keep retrieval fresh
+- Regularly upload new images to keep content fresh
 - Use quality scores to identify your best images
-- Leverage use case suggestions for narrative planning
+- Leverage use case suggestions for content planning
 
 ## 🛠 **Troubleshooting**
 
@@ -309,4 +309,4 @@ Provides:
 - Monitor database query performance
 - Optimize image storage and delivery
 
-This automated system transforms the tedious process of image labeling into a seamless, AI-powered experience that keeps brand assets easy to retrieve for discovery-focused generations. 
+This automated system transforms the tedious process of image labeling into a seamless, AI-powered experience that delivers superior results for content creation. 

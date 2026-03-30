@@ -158,6 +158,34 @@ export default function ProvidersSalesPage() {
           </div>
         </section>
 
+        <section className="mx-auto max-w-3xl px-5 py-12 sm:px-8">
+          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Your first week after checkout</h2>
+          <ul className="mt-4 list-disc space-y-2 pl-5 text-sm leading-relaxed text-gray-700 sm:text-base">
+            <li>
+              We contact you at the email from Stripe, usually within one business day, for logo,
+              one-line copy, and company details.
+            </li>
+            <li>
+              After we have what we need, catalog updates typically go live within about two business
+              days.
+            </li>
+          </ul>
+        </section>
+
+        <section className="border-t border-gray-200/80 bg-white/50 py-12 sm:py-14">
+          <div className="mx-auto max-w-3xl px-5 sm:px-8">
+            <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Case studies</h2>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600 sm:text-base">
+              We are lining up the first public write-ups with teams shipping on Amply. If you want
+              co-marketing or a named story, email{" "}
+              <a href="mailto:support@useamply.com" className="font-semibold text-indigo-600 underline">
+                support@useamply.com
+              </a>
+              .
+            </p>
+          </div>
+        </section>
+
         <section className="mx-auto max-w-3xl px-5 py-16 text-center sm:px-8 sm:py-20">
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Ready to list?</h2>
           <p className="mx-auto mt-3 max-w-xl text-sm text-gray-600 sm:text-base">

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide establishes the priority order for interpreting user context and intent in Amply. The system must always prioritize explicit user input over metadata or inferred information so generations stay faithful to what the founder asked for, especially when shaping AI-discoverable positioning.
+This guide establishes the priority order for interpreting user context and intent in the Swiftreel application. The system must always prioritize explicit user input over metadata or inferred information to ensure accurate and relevant responses.
 
 ## Priority Hierarchy (Highest to Lowest)
 
@@ -10,15 +10,15 @@ This guide establishes the priority order for interpreting user context and inte
 - **What it includes**: Direct user requests, prompts, questions, and commands
 - **Examples**: 
   - "Create slides about dog training"
-  - "I need positioning tips for my restaurant"
-  - "Generate slides about fitness"
+  - "I need marketing tips for my restaurant"
+  - "Generate content about fitness"
 - **Rule**: The user's explicit request is ALWAYS the primary directive
 
 ### 2. **QUESTIONNAIRE RESPONSES** (Second Priority)
 - **What it includes**: Personalization answers from the onboarding process
 - **Examples**:
-  - Interests: "B2B SaaS, climate tech, AI tooling"
-  - Goals: "Show up in AI answers for my category"
+  - Interests: "marketing, memes, AI"
+  - Goals: "Grow my TikTok following"
   - Role: "Founder, Marketer, Creator"
   - Experience Level: "Beginner, Intermediate, Expert"
   - Time Commitment: "2-3 hours per week"
@@ -49,15 +49,15 @@ This guide establishes the priority order for interpreting user context and inte
 #### Example 1: IT Company vs Cycling Email
 - **User states in questionnaire**: "I run an IT company"
 - **User email**: "cycling@company.com"
-- **User request**: "Create slides about software development"
+- **User request**: "Create content about software development"
 - **Correct interpretation**: Recognize they run an IT business and create software development content
 - **Incorrect interpretation**: Assume they are a cyclist and create cycling content
 
 #### Example 2: Restaurant Request vs Developer Role
 - **User role**: "Developer"
-- **User request**: "Give me positioning tips for my restaurant"
-- **Correct interpretation**: Provide restaurant positioning tips
-- **Incorrect interpretation**: Provide developer-focused slides
+- **User request**: "Give me marketing tips for my restaurant"
+- **Correct interpretation**: Provide restaurant marketing tips
+- **Incorrect interpretation**: Provide developer-focused content
 
 #### Example 3: Dog Training vs Business Context
 - **Business type**: "Technology Consulting"
@@ -69,7 +69,7 @@ This guide establishes the priority order for interpreting user context and inte
 
 #### Example 1: Email Override
 - **User email**: "tech@company.com"
-- **User request**: "Create slides about dog training"
+- **User request**: "Create content about dog training"
 - **Incorrect interpretation**: Create tech-related content instead
 - **Correct interpretation**: Create dog training content
 
@@ -87,11 +87,11 @@ This guide establishes the priority order for interpreting user context and inte
 3. **Tertiary**: Reference business context when relevant
 4. **Never**: Let metadata influence the core response
 
-### For structured generation
-1. **Primary**: Generate output that matches the user's specific request
+### For Content Generation
+1. **Primary**: Generate content that matches the user's specific request
 2. **Secondary**: Use personalization data to adjust complexity and style
 3. **Tertiary**: Incorporate business context for relevance
-4. **Never**: Generate output based on metadata alone
+4. **Never**: Generate content based on metadata alone
 
 ### For Slide Creation
 1. **Primary**: Create slides about the topic the user requested
@@ -121,9 +121,9 @@ The context priority system is implemented through:
 - **Not Expected**: AI assumes tech business based on email
 
 ### Test Case 3: Metadata Ignored
-- **Setup**: User with "cycling@company.com" email asks for "positioning advice"
-- **Expected**: AI provides general positioning advice
-- **Not Expected**: AI assumes cycling niche without being told
+- **Setup**: User with "cycling@company.com" email asks for "marketing advice"
+- **Expected**: AI provides general marketing advice
+- **Not Expected**: AI provides cycling-specific marketing advice
 
 ## Maintenance and Updates
 
@@ -134,4 +134,4 @@ The context priority system is implemented through:
 
 ## Conclusion
 
-The context priority system ensures that Amply always respects the user's explicit intent while using additional context to enhance personalization, which is critical when founders are iterating on how assistants should describe them. 
+The context priority system ensures that Swiftreel always respects the user's explicit intent while using additional context to enhance personalization. This creates a more accurate and user-friendly experience where the AI responds to what users actually want, not what it thinks they might want based on metadata. 

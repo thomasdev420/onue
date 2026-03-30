@@ -2,7 +2,7 @@
 
 ## Overview
 
-The AI Memory System is a learning and preference layer for Amply: it stores, ranks, and reapplies founder-specific context so generations stay aligned with how you want to be discovered and described by AI systems.
+The AI Memory System is a comprehensive learning and preference management system that makes Swiftreel's AI feel smarter with every interaction. It stores, learns from, and applies user preferences, creative directions, and interaction patterns across sessions.
 
 ## Key Features
 
@@ -44,7 +44,7 @@ Memories are ranked by priority (1-5):
 When a user interacts with the AI, the system automatically analyzes their input for meaningful insights:
 
 ```javascript
-// Example: User says "I want our positioning to feel as decisive as Nike's Just Do It"
+// Example: User says "I want to create a marketing campaign like Nike's Just Do It"
 // System extracts:
 {
   category: 'creative_preferences',
@@ -251,6 +251,6 @@ A: High-priority memories are kept indefinitely. Low-priority memories are clean
 
 ## Conclusion
 
-The AI Memory System turns episodic chats into durable founder context, so each run reinforces the same crisp product story assistants could cite, not a one-off social post.
+The AI Memory System transforms Swiftreel from a simple content creation tool into an intelligent assistant that learns and adapts to each user's unique preferences and goals. By prioritizing explicit user input while leveraging learned preferences, it provides a personalized experience that improves with every interaction.
 
 The system respects user privacy, maintains performance, and continuously evolves to provide better, more relevant assistance while always putting the user's current needs first. 

@@ -3,7 +3,7 @@
 ## **IMMEDIATE STEPS TO FIX:**
 
 ### 1. **Check Your Vercel Environment Variables**
-Go to your Vercel dashboard, then Project Settings, then Environment Variables, and ensure you have:
+Go to your Vercel dashboard → Project Settings → Environment Variables and ensure you have:
 
 ```
 NEXTAUTH_SECRET=your_32_character_secret_key_here
@@ -20,7 +20,7 @@ openssl rand -base64 32
 
 ### 3. **Update Google OAuth Redirect URIs**
 In your Google Cloud Console:
-1. Go to APIs & Services, then Credentials
+1. Go to APIs & Services → Credentials
 2. Edit your OAuth 2.0 Client ID
 3. Add these Authorized redirect URIs:
    ```

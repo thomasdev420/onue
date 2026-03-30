@@ -200,7 +200,10 @@ export default function DocsPage() {
             Optional per-IP rate limits may be enabled via{" "}
             <code className="font-mono text-sm">AMPLY_V1_RATE_LIMIT_PER_MIN</code>. When active, expect{" "}
             <code className="font-mono">429</code> responses. Invalid or missing auth returns{" "}
-            <code className="font-mono">401</code> if API keys are required.
+            <code className="font-mono">401</code> if API keys are required. The same limits surface in
+            machine-readable form: open <a href="/api/v1/status">/api/v1/status</a> and read{" "}
+            <code className="font-mono text-sm">rate_limit</code> (enabled flag and requests per minute)
+            plus <code className="font-mono text-sm">auth_mode</code>.
           </p>
           <p className="mt-4 text-sm text-gray-600">
             Operational status: <a href="/api/v1/status">/api/v1/status</a> ·{" "}

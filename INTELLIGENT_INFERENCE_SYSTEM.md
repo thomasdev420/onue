@@ -12,24 +12,24 @@ The system now includes intelligent inference capabilities that allow the AI to 
 - **Indicators**: `.io` domains, mentions of "software", "platform", "SaaS"
 - **Inference**: Industry = "Technology"
 - **Examples**: 
-  - `company.io`: Technology
-  - "Software platform for businesses": Technology
-  - "SaaS solution": Technology
+  - `company.io` → Technology
+  - "Software platform for businesses" → Technology
+  - "SaaS solution" → Technology
 
 #### **E-commerce Companies**
 - **Indicators**: "shop" in domain, mentions of "store", "retail", "shopping"
 - **Inference**: Industry = "Retail" or "E-commerce"
 - **Examples**:
-  - `shop.company.com`: Retail
-  - "Online store": E-commerce
-  - "Retail platform": Retail
+  - `shop.company.com` → Retail
+  - "Online store" → E-commerce
+  - "Retail platform" → Retail
 
 #### **Consulting Companies**
 - **Indicators**: "agency", "consulting", "services"
 - **Inference**: Industry = "Consulting"
 - **Examples**:
-  - "Growth advisory firm": Consulting
-  - "Business consulting": Consulting
+  - "Marketing agency" → Consulting
+  - "Business consulting" → Consulting
 
 ### 2. Company Type Inference
 
@@ -139,7 +139,7 @@ The system now includes intelligent inference capabilities that allow the AI to 
 
 ### **Consulting Company Example**
 
-**Input**: `agency.company.com` with description "Growth advisory firm for businesses"
+**Input**: `agency.company.com` with description "Marketing agency for businesses"
 
 **Inferences**:
 - Industry: "Consulting" (based on "agency")
@@ -162,7 +162,7 @@ INTELLIGENT INFERENCE GUIDELINES:
 - **Company Size Inference**: If they mention "startup", "small team", infer "Startup". If they mention "enterprise", infer "Enterprise"
 ```
 
-### **Public surface suggestions inference**
+### **TikTok Suggestions Inference**
 
 ```javascript
 // Intelligent inference based on product type and industry
@@ -219,7 +219,7 @@ if (domainLower.includes('.io') || combinedText.includes('saas') || combinedText
 ### 3. **Better User Experience**
 - **More Complete Profiles**: Provides comprehensive business information
 - **Accurate Categorization**: Properly categorizes businesses by type and industry
-- **Relevant Suggestions**: Generates more relevant handles/bios/hashtags from product truth
+- **Relevant Suggestions**: Generates more relevant TikTok suggestions
 - **Professional Quality**: High-quality, intelligent business analysis
 
 ### 4. **Scalable Intelligence**

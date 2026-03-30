@@ -1,10 +1,10 @@
-# Amply
+# SwiftReel - Content Creation Platform
 
-A modern, secure Next.js application that helps founders sharpen how they show up in AI-mediated discovery: clearer positioning, consistent entity signals, and structured generative assets that models can summarize accurately.
+A modern, secure, and performant content creation platform built with Next.js 15, React 19, and Supabase.
 
-## Features
+##Features
 
-- **Founder discovery stack**: Structured generation workflows, asset libraries, and context pipelines aimed at AI-readable brand narratives (not a “social media suite” in product positioning)
+- **Content Creation**: Create slides, memes, and videos with an intuitive editor
 - **Auto-Save**: Automatic saving with debounced persistence
 - **File Upload**: Secure file upload with validation
 - **Authentication**: Google OAuth and development login
@@ -199,10 +199,10 @@ npm start
 - `POST /api/auth/signout` - Sign out
 - `GET /api/auth/session` - Get current session
 
-### Generative asset endpoints
-- `GET /api/content/images` - List user images for retrieval / matching
+### Content Endpoints
+- `GET /api/content/images` - Get user images
 - `POST /api/content/upload` - Upload file
-- `DELETE /api/content/:id` - Delete asset
+- `DELETE /api/content/:id` - Delete content
 
 ## 🤝 Contributing
 

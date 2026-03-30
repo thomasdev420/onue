@@ -2,7 +2,7 @@
 
 ## Overview
 
-The website scanner and public-surface suggestion pipeline have been overhauled to use a research-based approach that avoids assumptions and only extracts factual information explicitly stated on websites.
+The website scanner and TikTok suggestions system has been completely overhauled to use a research-based approach that avoids assumptions and only extracts factual information explicitly stated on websites.
 
 ## Key Improvements
 
@@ -34,10 +34,10 @@ const productText = $('.product, .service, .solution, .offer').text().replace(/\
 
 #### **Enhanced Data Sources**
 - **Meta Tags**: Extract all meta tags for additional context
-- **Open Graph Data**: Use public sharing meta tags
+- **Open Graph Data**: Use social media meta tags
 - **Structured Data**: Parse JSON-LD and microdata
 - **Contact Information**: Extract emails, phones, addresses
-- **Profile Links**: Find public profile URLs
+- **Social Links**: Find social media profiles
 - **All Links**: Analyze link text for context
 
 ### 3. Improved AI Prompts
@@ -62,7 +62,7 @@ CRITICAL RULES:
 - Use exact language from the website when possible
 - If something is unclear or not stated, don't guess
 
-### 4. Conservative surface suggestions
+### 4. Conservative TikTok Suggestions
 
 #### **Feature Extraction**
 ```javascript
@@ -220,7 +220,7 @@ function fallbackExtraction(domain, title, metaDescription, contactInfo, socialL
 
 #### **Before (Assumptions)**
 - Product Info: "Tool that prevents infinite scrolling and helps users focus by blocking distracting websites and apps"
-- Value Prop: "Make your product legible to humans and AI assistants alike"
+- Value Prop: "Stop wasting time on social media and focus on what matters most"
 - Username: `scrollblockingpro`, `focusapp`
 - Bio: "🚀 Opal - scroll blocking + focus tools for developers"
 
@@ -259,7 +259,7 @@ function fallbackExtraction(domain, title, metaDescription, contactInfo, socialL
 - **Professional Quality**: High-quality, research-based content
 
 ### 3. **Better User Experience**
-- **Accurate Suggestions**: Handle/bio/hashtag ideas grounded in real product information
+- **Accurate Suggestions**: TikTok suggestions based on real product information
 - **Relevant Content**: Content that actually matches the product
 - **Actionable Information**: Users can rely on the extracted data
 - **Time-Saving**: No need to verify or correct assumptions
@@ -277,7 +277,7 @@ function fallbackExtraction(domain, title, metaDescription, contactInfo, socialL
 - **Structured Data**: Parses JSON-LD and microdata for additional context
 - **Meta Tags**: Uses Open Graph and Twitter Card data
 - **Contact Information**: Extracts emails, phones, addresses using regex
-- **Profile Links**: Finds public profile URLs automatically
+- **Social Links**: Finds social media profiles automatically
 
 ### **Conservative AI Analysis**
 - **Explicit Instructions**: AI is told to only extract stated information
@@ -285,7 +285,7 @@ function fallbackExtraction(domain, title, metaDescription, contactInfo, socialL
 - **Fallback Handling**: Graceful degradation when information is limited
 - **Error Prevention**: Multiple validation layers to prevent assumptions
 
-### **Research-based surface generation**
+### **Research-Based TikTok Generation**
 - **Feature Detection**: Only uses explicitly stated features
 - **Benefit Extraction**: Uses actual value propositions from websites
 - **Target User Analysis**: Only identifies users explicitly mentioned

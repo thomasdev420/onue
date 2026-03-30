@@ -34,18 +34,18 @@ The Enhanced Image Selection System combines AI-powered visual analysis with use
 
 ### 1. **Initial Selection Process**
 ```
-User Prompt, Category Detection, Keyword Extraction, Image Query, Selection
+User Prompt → Category Detection → Keyword Extraction → Image Query → Selection
 ```
 
 ### 2. **Visual Analysis Integration**
 ```
-Keyword match found? Yes: use keyword selection.
-                      No: visual analysis, relevance scoring, best match
+Keyword Match Found? → Yes: Use Keyword Selection
+                      No: → Visual Analysis → Relevance Scoring → Best Match
 ```
 
 ### 3. **Feedback Loop**
 ```
-Image selected, user feedback, database storage, future improvements
+Image Selected → User Feedback → Database Storage → Future Improvements
 ```
 
 ## Technical Implementation

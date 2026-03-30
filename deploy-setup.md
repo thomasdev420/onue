@@ -28,6 +28,31 @@ NEXT_PUBLIC_STRIPE_LISTING_URL=https://buy.stripe.com/...
 
 Redeploy after saving — **`NEXT_PUBLIC_*`** is baked in at build time. **`/providers`** (and **`/pricing`**) link to checkout when the URL is set. Legacy **`/providers/join`** redirects to **`/providers`**.
 
+### Optional — Stripe webhook (listing notifications)
+
+In Stripe → **Developers** → **Webhooks** → add endpoint:
+
+`https://<useamply.com>/api/webhooks/stripe-listing`
+
+Subscribe to at least **`checkout.session.completed`** and **`invoice.paid`** (subscriptions). Copy the **Signing secret** (`whsec_…`).
+
+Vercel env (server only, never `NEXT_PUBLIC_`):
+
+```
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_SECRET_KEY=sk_live_...   # or sk_test_…; used by the Stripe SDK for signature verification setup
+```
+
+Optional email ping via [Resend](https://resend.com) (same envelope as other transactional mail):
+
+```
+RESEND_API_KEY=re_...
+RESEND_FROM=Amply <listings@your-domain.com>
+LISTING_NOTIFY_EMAIL=you@your-company.com
+```
+
+Without Resend, events still appear as structured **`stripe_listing_webhook`** lines in Vercel logs. Fulfillment checklist: **`docs/operations/PROVIDER_LISTING_FULFILLMENT.md`**.
+
 ### Optional Variables (For full functionality)
 ```
 GOOGLE_CLIENT_ID=your_google_client_id

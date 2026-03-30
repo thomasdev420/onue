@@ -34,11 +34,11 @@ The integrated onboarding flow combines website scanning and personalization int
 - **Contextual Integration**: Questions now reference the scanned website data
 - **Dynamic Questions**: Questions adapt based on extracted company information
 - **Questions**:
-  - What narrative formats should we emphasize for [Company Name]?
-  - What's your main discovery goal for [Company Name] (e.g., cited by AI assistants, clearer category placement)?
+  - What type of content would work best for [Company Name]?
+  - What's your main goal for [Company Name] on social media?
   - What is your role in the business?
-  - How familiar are you with iterating public positioning based on analytics?
-  - How much time can you dedicate to refining positioning weekly?
+  - What is your experience with social media marketing?
+  - How much time can you dedicate to content creation weekly?
   - Who is [Company Name]'s target audience?
 - **Contextual Introduction**: Shows a summary of the scanned website data
 - **UI**: Step-by-step question flow with progress indicators
@@ -51,10 +51,10 @@ The integrated onboarding flow combines website scanning and personalization int
 
 ### 6. Video Creation Step
 - **Format Options**:
-  - **UGC-style**: Authentic “founder voice” short-form layout
+  - **UGC-style**: User-generated content style videos
   - **Hook & Demo**: Attention-grabbing hook with product demonstration
   - **Veo 3-style**: Advanced AI-generated video format
-- **Action**: User selects preferred format to start structured generation
+- **Action**: User selects preferred format to start creating
 
 ## Technical Implementation
 
@@ -127,9 +127,9 @@ Click the "Setup Website" button in the dashboard to manually trigger the flow.
 ## Future Enhancements
 
 1. **Real Website Scraping**: Replace simulation with actual web scraping
-2. **AI extraction**: Use models to extract more accurate product facts for discovery context
+2. **AI Content Analysis**: Use AI to extract more accurate product information
 3. **Logo Detection**: Automatically detect and extract company logos
-4. **Public profile linking**: Optional URLs for entity resolution
+4. **Social Media Integration**: Link to social media profiles
 5. **Competitor Analysis**: Compare with similar businesses
 6. **Progressive Enhancement**: Allow users to update individual sections later
 

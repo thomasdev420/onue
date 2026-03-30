@@ -54,7 +54,7 @@ This implementation ensures that first-time users must complete the onboarding f
    - Business information entry
    - Campaign choice (optional)
    - Content categories (if creating campaign)
-   - Public-surface handle/bio suggestions (when enabled in flow)
+   - TikTok account suggestions (if creating campaign)
 6. **Access Granted**: Only after completion can user access dashboard
 
 ### Returning Users
