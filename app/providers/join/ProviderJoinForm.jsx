@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { getStripeListingUrl } from "@/app/lib/stripeListingUrls";
 
 const TIERS = [
   { value: "unsure", label: "Not sure yet" },
@@ -25,6 +26,11 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
     () => process.env.NEXT_PUBLIC_CALENDLY_PROVIDER_URL?.trim() || "",
     [],
   );
+
+  const stripePayUrl = useMemo(() => {
+    if (!["basic_listing", "featured", "sponsored_top3"].includes(tier)) return "";
+    return getStripeListingUrl(tier);
+  }, [tier]);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -106,6 +112,23 @@ export default function ProviderJoinForm({ initialTier = "unsure" }) {
           onChange={(e) => setMessage(e.target.value)}
         />
       </div>
+      {stripePayUrl && (
+        <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-4 text-sm text-violet-950">
+          <p className="font-medium">Pay for this tier</p>
+          <p className="mt-1 text-xs text-violet-900/90">
+            Open Stripe in a new tab, complete checkout, then submit this form with the <strong>same email</strong>{" "}
+            so we can match payment to your listing.
+          </p>
+          <a
+            href={stripePayUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex w-full justify-center rounded-full bg-[#635bff] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
+          >
+            Pay with Stripe
+          </a>
+        </div>
+      )}
       <button
         type="submit"
         disabled={status?.kind === "loading"}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
+import { getStripeListingUrl } from "@/app/lib/stripeListingUrls";
 
 export const metadata = {
   title: "Pricing | Amply",
@@ -10,6 +11,7 @@ export const metadata = {
 
 const SPONSOR_TIERS = [
   {
+    tierKey: "basic_listing",
     name: "Basic listing",
     price: "$199/mo",
     bullets: [
@@ -17,10 +19,11 @@ const SPONSOR_TIERS = [
       "Linked from GET /api/v1/providers with placement badge",
       "48h review after payment",
     ],
-    cta: "Pay & submit details",
+    cta: "Submit listing details",
     href: "/providers/join?tier=basic_listing",
   },
   {
+    tierKey: "featured",
     name: "Featured",
     price: "$499/mo",
     bullets: [
@@ -28,11 +31,12 @@ const SPONSOR_TIERS = [
       "Featured row on /catalog + homepage “supported by” rotation",
       "Quarterly metrics refresh collaboration",
     ],
-    cta: "Pay & submit details",
+    cta: "Submit listing details",
     href: "/providers/join?tier=featured",
     highlight: true,
   },
   {
+    tierKey: "sponsored_top3",
     name: "Sponsored top-3 spotlight",
     price: "From $1.2k/mo",
     bullets: [
@@ -40,12 +44,28 @@ const SPONSOR_TIERS = [
       "Co-marketing on agent-facing docs",
       "Direct line for catalog updates",
     ],
-    cta: "Talk to us",
+    cta: "Submit listing details",
     href: "/providers/join?tier=sponsored_top3",
   },
 ];
 
+function SponsorPayBlock({ tierKey }) {
+  const payUrl = getStripeListingUrl(tierKey);
+  if (!payUrl) return null;
+  return (
+    <a
+      href={payUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mb-3 inline-flex w-full justify-center rounded-full bg-[#635bff] px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:brightness-110"
+    >
+      Pay with Stripe
+    </a>
+  );
+}
+
 export default function PricingPage() {
+  const anyStripe = SPONSOR_TIERS.some((t) => getStripeListingUrl(t.tierKey));
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -119,23 +139,44 @@ export default function PricingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link
-                  href={t.href}
-                  className={`mt-6 inline-flex justify-center rounded-full px-4 py-2.5 text-center text-sm font-semibold transition ${
-                    t.highlight
-                      ? "bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white hover:brightness-110"
-                      : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
-                  }`}
-                >
-                  {t.cta}
-                </Link>
+                <div className="mt-6 flex flex-col">
+                  <SponsorPayBlock tierKey={t.tierKey} />
+                  <Link
+                    href={t.href}
+                    className={`inline-flex justify-center rounded-full px-4 py-2.5 text-center text-sm font-semibold transition ${
+                      t.highlight
+                        ? "bg-gradient-to-r from-[#3953e6] to-[#36aeea] text-white hover:brightness-110"
+                        : "border border-gray-300 bg-white text-gray-900 hover:bg-gray-50"
+                    }`}
+                  >
+                    {t.cta}
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
           <p className="mt-8 text-center text-xs text-gray-500">
-            Stripe Checkout links can be wired via env — see{" "}
-            <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>. Until then, the
-            join flow collects details and we invoice manually.
+            {anyStripe ? (
+              <>
+                After paying in Stripe, use{" "}
+                <Link href="/providers/join" className="text-indigo-600 underline">
+                  List your service
+                </Link>{" "}
+                with the same email so we can match your payment to the catalog. Env vars:{" "}
+                <code className="rounded bg-gray-100 px-1 font-mono">
+                  NEXT_PUBLIC_STRIPE_LISTING_*
+                </code>
+                .
+              </>
+            ) : (
+              <>
+                Add Stripe Payment Link URLs in Vercel (
+                <code className="rounded bg-gray-100 px-1 font-mono">
+                  NEXT_PUBLIC_STRIPE_LISTING_BASIC_URL
+                </code>
+                , etc.) — see <code className="rounded bg-gray-100 px-1 font-mono">env.example</code>.
+              </>
+            )}
           </p>
         </section>
 
