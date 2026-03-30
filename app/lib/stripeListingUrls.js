@@ -9,3 +9,13 @@ export function getStripeListingPaymentUrl() {
     "";
   return raw;
 }
+
+/**
+ * Primary “get listed / pay” href: Stripe checkout when configured, else intake form (no Payment Link yet).
+ * @returns {{ href: string, external: boolean }}
+ */
+export function getListingPayLink() {
+  const stripe = getStripeListingPaymentUrl();
+  if (stripe) return { href: stripe, external: true };
+  return { href: "/providers/join", external: false };
+}

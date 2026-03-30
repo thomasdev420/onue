@@ -12,6 +12,7 @@ import AmplyApiConsole from "./components/AmplyApiConsole";
 import JsonExampleBlock from "./components/landing/JsonExampleBlock";
 import { HighlightBash } from "./components/landing/CodeHighlight";
 import { buildCurlSnippet, DEFAULT_TASK } from "@/app/lib/amplyCurlSnippet";
+import { getListingPayLink } from "@/app/lib/stripeListingUrls";
 import { formatDistanceToNow } from "date-fns";
 
 function LiveBenchmarkBadge() {
@@ -151,6 +152,7 @@ export default function Home() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const quickstartCurl = useQuickstartCurl();
+  const listingPay = useMemo(() => getListingPayLink(), []);
 
   const [showDevModal, setShowDevModal] = useState(false);
   const [devCode, setDevCode] = useState("");
@@ -374,12 +376,23 @@ export default function Home() {
           </div>
           <p className="mx-auto mt-5 max-w-2xl text-center text-sm text-gray-600">
             <span className="font-medium text-gray-800">Infrastructure vendor?</span>{" "}
-            <Link
-              href="/providers/join"
-              className="font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 hover:text-indigo-700"
-            >
-              List your service
-            </Link>{" "}
+            {listingPay.external ? (
+              <a
+                href={listingPay.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 hover:text-indigo-700"
+              >
+                Pay &amp; get listed (Stripe)
+              </a>
+            ) : (
+              <Link
+                href={listingPay.href}
+                className="font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 hover:text-indigo-700"
+              >
+                List your service
+              </Link>
+            )}{" "}
             — $249/mo catalog listing, transparent placement.
           </p>
         </header>
@@ -758,12 +771,23 @@ export default function Home() {
           </div>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/providers/join"
-              className="inline-flex rounded-full bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
-            >
-              List your service
-            </Link>
+            {listingPay.external ? (
+              <a
+                href={listingPay.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex rounded-full bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
+              >
+                Pay with Stripe — get listed
+              </a>
+            ) : (
+              <Link
+                href={listingPay.href}
+                className="inline-flex rounded-full bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
+              >
+                List your service
+              </Link>
+            )}
             <Link
               href="/for-providers"
               className="inline-flex rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
@@ -776,6 +800,11 @@ export default function Home() {
             <Link href="/catalog" className="text-sm font-medium text-indigo-600 underline">
               Public catalog
             </Link>
+            {listingPay.external && (
+              <Link href="/providers/join" className="text-sm font-medium text-gray-600 underline">
+                After checkout — submit listing details
+              </Link>
+            )}
           </div>
         </section>
 

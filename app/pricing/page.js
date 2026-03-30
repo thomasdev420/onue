@@ -1,7 +1,7 @@
 import Link from "next/link";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
-import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
+import { getListingPayLink } from "@/app/lib/stripeListingUrls";
 
 export const metadata = {
   title: "Pricing | Amply",
@@ -22,7 +22,7 @@ const LISTING = {
 };
 
 export default function PricingPage() {
-  const stripeUrl = getStripeListingPaymentUrl();
+  const listingPay = getListingPayLink();
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
@@ -74,27 +74,6 @@ export default function PricingPage() {
             and API — organic metrics and paid placement are disclosed.
           </p>
 
-          {stripeUrl && (
-            <div className="mx-auto mt-8 flex max-w-xl flex-col items-center gap-3 rounded-2xl border border-violet-200 bg-violet-50/90 p-6 text-center">
-              <p className="text-sm font-medium text-violet-950">Pay to get started — {LISTING_PRICE}</p>
-              <p className="text-xs text-violet-900/85">
-                After payment,{" "}
-                <Link href="/providers/join" className="font-semibold underline">
-                  submit your listing
-                </Link>{" "}
-                with the <strong>same email</strong> so we can match your checkout.
-              </p>
-              <a
-                href={stripeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex w-full max-w-sm justify-center rounded-full bg-[#635bff] px-5 py-2.5 text-sm font-semibold text-white hover:brightness-110 sm:max-w-none"
-              >
-                Pay with Stripe
-              </a>
-            </div>
-          )}
-
           <div className="mx-auto mt-10 max-w-lg">
             <div className="flex flex-col rounded-2xl border border-indigo-300 bg-white p-8 shadow-sm ring-2 ring-indigo-200">
               <h3 className="text-lg font-bold text-gray-900">{LISTING.name}</h3>
@@ -109,16 +88,35 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href="/providers/join"
-                className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
-              >
-                Submit listing details
-              </Link>
+              {listingPay.external ? (
+                <a
+                  href={listingPay.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
+                >
+                  Pay with Stripe — get listed
+                </a>
+              ) : (
+                <Link
+                  href="/providers/join"
+                  className="mt-6 inline-flex justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
+                >
+                  Submit listing details
+                </Link>
+              )}
+              {listingPay.external && (
+                <Link
+                  href="/providers/join"
+                  className="mt-3 block text-center text-xs font-medium text-indigo-700 underline"
+                >
+                  After checkout — submit your listing details
+                </Link>
+              )}
             </div>
           </div>
           <p className="mt-8 text-center text-xs text-gray-500">
-            {stripeUrl ? (
+            {listingPay.external ? (
               <>
                 Env:{" "}
                 <code className="rounded bg-gray-100 px-1 font-mono">NEXT_PUBLIC_STRIPE_LISTING_URL</code>.

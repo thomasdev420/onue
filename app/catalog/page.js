@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
+import { getListingPayLink } from "@/app/lib/stripeListingUrls";
 
 const LISTING_LABELS = {
   organic: { label: "Organic", className: "bg-slate-100 text-slate-800" },
@@ -15,6 +16,7 @@ const LISTING_LABELS = {
 export default function CatalogPage() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
+  const listingPay = useMemo(() => getListingPayLink(), []);
 
   const load = useCallback(async () => {
     try {
@@ -47,12 +49,31 @@ export default function CatalogPage() {
           staleness in <code className="font-mono text-xs">GET /api/v1/status</code>.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="/providers/join"
-            className="inline-flex rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
-          >
-            List your service
-          </Link>
+          {listingPay.external ? (
+            <a
+              href={listingPay.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+            >
+              Pay with Stripe — get listed
+            </a>
+          ) : (
+            <Link
+              href={listingPay.href}
+              className="inline-flex rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+            >
+              List your service
+            </Link>
+          )}
+          {listingPay.external && (
+            <Link
+              href="/providers/join"
+              className="inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+            >
+              Submit details after paying
+            </Link>
+          )}
           <a
             href="/api/v1/providers"
             className="inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"

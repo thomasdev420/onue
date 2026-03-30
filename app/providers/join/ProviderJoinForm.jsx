@@ -2,9 +2,6 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
-
-const LISTING_PRICE_LABEL = "$249/mo";
 
 export default function ProviderJoinForm() {
   const [company, setCompany] = useState("");
@@ -17,8 +14,6 @@ export default function ProviderJoinForm() {
     () => process.env.NEXT_PUBLIC_CALENDLY_PROVIDER_URL?.trim() || "",
     [],
   );
-
-  const stripePayUrl = useMemo(() => getStripeListingPaymentUrl(), []);
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -76,23 +71,6 @@ export default function ProviderJoinForm() {
           onChange={(e) => setProviderName(e.target.value)}
         />
       </div>
-      {stripePayUrl && (
-        <div className="rounded-xl border border-violet-200 bg-violet-50/80 p-4 text-sm text-violet-950">
-          <p className="font-medium">Pay — {LISTING_PRICE_LABEL} listing</p>
-          <p className="mt-1 text-xs text-violet-900/90">
-            Check out in Stripe first, then submit this form with the <strong>same email</strong> so we can
-            match your payment.
-          </p>
-          <a
-            href={stripePayUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex w-full justify-center rounded-full bg-[#635bff] px-4 py-2.5 text-center text-sm font-semibold text-white hover:brightness-110"
-          >
-            Pay with Stripe
-          </a>
-        </div>
-      )}
       <div>
         <label className="block text-sm font-medium text-gray-800">Notes (optional)</label>
         <textarea
