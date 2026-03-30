@@ -380,7 +380,7 @@ export default function Home() {
             >
               List your service
             </Link>{" "}
-            — $199/mo catalog listing, transparent placement.
+            — $249/mo catalog listing, transparent placement.
           </p>
         </header>
 
@@ -750,7 +750,7 @@ export default function Home() {
               <tbody className="divide-y divide-gray-100 text-gray-700">
                 <tr className="transition hover:bg-gray-50/50">
                   <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">Catalog listing</td>
-                  <td className="px-4 py-3 sm:px-6">$199/mo</td>
+                  <td className="px-4 py-3 sm:px-6">$249/mo</td>
                   <td className="px-4 py-3 sm:px-6">Public catalog + API placement badge, 48h review</td>
                 </tr>
               </tbody>

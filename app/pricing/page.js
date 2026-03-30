@@ -9,7 +9,7 @@ export const metadata = {
     "Free for agent builders — unlimited fair-use routing. Providers: one catalog listing price.",
 };
 
-const LISTING_PRICE = "$199/mo";
+const LISTING_PRICE = "$249/mo";
 
 const LISTING = {
   name: "Catalog listing",

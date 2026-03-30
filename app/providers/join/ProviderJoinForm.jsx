@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
 
-const LISTING_PRICE_LABEL = "$199/mo";
+const LISTING_PRICE_LABEL = "$249/mo";
 
 export default function ProviderJoinForm() {
   const [company, setCompany] = useState("");

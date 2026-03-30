@@ -5,7 +5,7 @@ import ProviderJoinForm from "./ProviderJoinForm";
 
 export const metadata = {
   title: "List your service | Amply",
-  description: "Submit provider details for catalog review — $199/mo listing, transparent placement.",
+  description: "Submit provider details for catalog review — $249/mo listing, transparent placement.",
 };
 
 export default function ProviderJoinPage() {
@@ -18,7 +18,7 @@ export default function ProviderJoinPage() {
           List your service
         </h1>
         <p className="mt-4 text-sm leading-relaxed text-gray-600 sm:text-base">
-          One catalog listing at <strong>$199/mo</strong>. Pay via Stripe (if shown below), then submit this
+          One catalog listing at <strong>$249/mo</strong>. Pay via Stripe (if shown below), then submit this
           form with the same email. We&apos;ll update{" "}
           <Link href="/catalog" className="text-indigo-600 underline">the catalog</Link> within ~48h after
           confirmation. Metrics used for routing stay auditable — see{" "}
