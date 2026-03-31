@@ -38,8 +38,8 @@ export default function PricingTable({ showHeaderPrice = true, className = "" })
       </div>
       <p className="mt-4 text-center text-xs leading-relaxed text-gray-500">{PRICING_DISCLAIMER}</p>
       <p className="mt-2 text-center text-xs text-gray-500">
-        <Link href="/docs/quickstart" className="font-medium text-indigo-600 underline">
-          Quickstart
+        <Link href="/docs" className="font-medium text-indigo-600 underline">
+          Documentation
         </Link>{" "}
         ·{" "}
         <Link href="/about" className="font-medium text-indigo-600 underline">

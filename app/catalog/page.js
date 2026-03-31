@@ -37,27 +37,65 @@ export default function CatalogPage() {
   return (
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900">
       <MarketingNav />
-      <main className="mx-auto max-w-5xl px-5 pb-24 pt-10 sm:px-8 sm:pb-32 sm:pt-14">
+      <main className="mx-auto max-w-5xl px-4 pt-8 sm:px-8 sm:pt-14 pb-[max(6rem,env(safe-area-inset-bottom,0px))] sm:pb-[max(8rem,env(safe-area-inset-bottom,0px))]">
         <p className="text-sm font-medium text-indigo-600">Public catalog</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
           Routing catalog &amp; placement disclosure
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-relaxed text-gray-600 sm:text-base">
-          Every row below matches <code className="font-mono text-xs">GET /api/v1/providers</code>.
-          <strong> Placement</strong> shows whether a provider is organic (metrics only) or on a paid
-          listing tier. <strong>Benchmark freshness</strong> comes from the same timestamps Amply uses for
-          staleness in <code className="font-mono text-xs">GET /api/v1/status</code>.
+          This is the catalog agents and systems actually read when they route work—not a browse-only list.
+          Each row is backed by{" "}
+          <code className="font-mono text-xs">GET /api/v1/providers</code>; placement shows organic or paid
+          listing tier; freshness matches{" "}
+          <code className="font-mono text-xs">GET /api/v1/status</code>.
         </p>
-        <div className="mt-4 flex flex-wrap gap-3">
+        <div
+          className="mt-8 max-w-2xl rounded-2xl border border-gray-200/80 bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06)] sm:p-8"
+          aria-labelledby="catalog-value-heading"
+        >
+          <p
+            id="catalog-value-heading"
+            className="text-[15px] font-medium leading-snug tracking-tight text-gray-900 sm:text-base"
+          >
+            Show up when something gets chosen—not when someone scrolls
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600">
+            Listing puts your service in the path of real demand: the moment an agent or system picks
+            infrastructure, your surface is machine-readable, callable through Amply&apos;s APIs, and framed
+            the same way as every other row.
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600">
+            We host the catalog, normalize how it&apos;s represented, and ship it to the integrations that
+            consume it—distribution infrastructure, not a hand-curated directory.
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-gray-600">
+            Rank is merit-based and data-driven for everyone. Payment affects how you&apos;re listed and
+            disclosed here; it does not buy a better rank.
+          </p>
+          <p className="mt-6 border-t border-gray-100 pt-5 text-xs leading-relaxed text-gray-500">
+            <Link href="/acceptable-use" className="font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
+              Acceptable use
+            </Link>
+            <span className="mx-2 text-gray-300">·</span>
+            <Link href="/terms-of-service" className="font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
+              Terms
+            </Link>
+            <span className="mx-2 text-gray-300">·</span>
+            <Link href="/docs" className="font-medium text-gray-700 underline decoration-gray-300 underline-offset-2 hover:text-gray-900">
+              API docs
+            </Link>
+          </p>
+        </div>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Link
             href={listingPay.href}
-            className="inline-flex rounded-full bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
+            className="inline-flex min-h-[44px] touch-manipulation items-center justify-center rounded-full bg-gray-900 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-gray-800"
           >
             Get your product listed
           </Link>
           <a
             href="/api/v1/providers"
-            className="inline-flex rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900 hover:bg-gray-50"
+            className="inline-flex min-h-[44px] touch-manipulation items-center justify-center rounded-full border border-gray-300 bg-white px-5 py-2.5 text-center text-sm font-semibold text-gray-900 hover:bg-gray-50"
           >
             Raw JSON
           </a>
@@ -96,17 +134,13 @@ export default function CatalogPage() {
                 const meta = LISTING_LABELS[listing] ?? LISTING_LABELS.organic;
                 return (
                   <tr key={p.id} className="hover:bg-gray-50/50">
-                    <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">
-                      {p.display_name}
-                      <span className="mt-0.5 block font-mono text-xs text-gray-400">{p.id}</span>
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900 sm:px-6">{p.display_name}</td>
                     <td className="px-4 py-3 sm:px-6">
                       <span
                         className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${meta.className}`}
                       >
                         {meta.label}
                       </span>
-                      <span className="mt-1 block text-xs text-gray-500">{p.placement_disclosure}</span>
                     </td>
                     <td className="px-4 py-3 tabular-nums text-gray-700 sm:px-6">{p.p99_latency_ms}</td>
                     <td className="px-4 py-3 tabular-nums text-gray-700 sm:px-6">

@@ -33,7 +33,7 @@ export default function MarketingNav() {
         onClick={handleGoogleSignIn}
         className="inline-flex min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(57,83,230,0.35)] transition hover:scale-[1.02] hover:brightness-[1.03] active:scale-[0.98] sm:px-5"
       >
-        Get API key
+        get API key
       </button>
     );
   }, [session, handleGoogleSignIn]);
@@ -64,7 +64,7 @@ export default function MarketingNav() {
           <Link href="/docs" className={linkClassDesktop}>
             Docs
           </Link>
-          <Link href="/pricing" className={linkClassDesktop}>
+          <Link href="/#pricing" className={linkClassDesktop}>
             Pricing
           </Link>
           <Link href="/providers" className={linkClassDesktop}>
@@ -101,7 +101,7 @@ export default function MarketingNav() {
           <Link href="/docs" className={`${linkClass} snap-start`}>
             Docs
           </Link>
-          <Link href="/pricing" className={`${linkClass} snap-start`}>
+          <Link href="/#pricing" className={`${linkClass} snap-start`}>
             Pricing
           </Link>
           <Link href="/providers" className={`${linkClass} snap-start`}>

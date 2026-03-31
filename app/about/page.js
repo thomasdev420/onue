@@ -113,7 +113,7 @@ export default function AboutPage() {
               Read the docs
             </Link>
             <Link
-              href="/pricing"
+              href="/#pricing"
               className="inline-flex rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-5 py-2 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
             >
               View pricing

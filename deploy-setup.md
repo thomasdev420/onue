@@ -26,7 +26,7 @@ NEXT_PUBLIC_STRIPE_LISTING_URL=https://buy.stripe.com/...
 
 (Optional legacy: **`NEXT_PUBLIC_STRIPE_LISTING_BASIC_URL`** is still read if **`NEXT_PUBLIC_STRIPE_LISTING_URL`** is empty.)
 
-Redeploy after saving — **`NEXT_PUBLIC_*`** is baked in at build time. **`/providers`** (and **`/pricing`**) link to checkout when the URL is set. Legacy **`/providers/join`** redirects to **`/providers`**.
+Redeploy after saving — **`NEXT_PUBLIC_*`** is baked in at build time. **`/providers`** (and homepage **`/#pricing`**) link to checkout when the URL is set. Legacy **`/providers/join`** redirects to **`/providers`**. **`/pricing`** redirects to **`/#pricing`**.
 
 ### Optional — Stripe webhook (listing notifications)
 

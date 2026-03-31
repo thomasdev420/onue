@@ -105,25 +105,29 @@ export const authOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      console.log("🔐 Sign in attempt:", {
-        user: user?.email,
-        provider: account?.provider,
-        account: account ? "present" : "missing",
-        timestamp: new Date().toISOString(),
-        userAgent:
-          typeof window !== "undefined" ? window.navigator.userAgent : "server",
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("🔐 Sign in attempt:", {
+          user: user?.email,
+          provider: account?.provider,
+          account: account ? "present" : "missing",
+          timestamp: new Date().toISOString(),
+          userAgent:
+            typeof window !== "undefined" ? window.navigator.userAgent : "server",
+        });
+      }
       return true;
     },
     async jwt({ token, user, account }) {
-      console.log("🔄 JWT callback:", {
-        token: token ? "present" : "missing",
-        user: user ? "present" : "missing",
-        account: account ? "present" : "missing",
-        timestamp: new Date().toISOString(),
-        tokenSub: token?.sub,
-        userEmail: user?.email,
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("🔄 JWT callback:", {
+          token: token ? "present" : "missing",
+          user: user ? "present" : "missing",
+          account: account ? "present" : "missing",
+          timestamp: new Date().toISOString(),
+          tokenSub: token?.sub,
+          userEmail: user?.email,
+        });
+      }
       if (account) {
         token.accessToken = account.access_token;
         token.provider = account.provider;
@@ -131,14 +135,16 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log("📋 Session callback:", {
-        session: session ? "present" : "missing",
-        token: token ? "present" : "missing",
-        userEmail: session?.user?.email,
-        timestamp: new Date().toISOString(),
-        tokenSub: token?.sub,
-        sessionUser: session?.user ? "present" : "missing",
-      });
+      if (process.env.NODE_ENV !== "production") {
+        console.log("📋 Session callback:", {
+          session: session ? "present" : "missing",
+          token: token ? "present" : "missing",
+          userEmail: session?.user?.email,
+          timestamp: new Date().toISOString(),
+          tokenSub: token?.sub,
+          sessionUser: session?.user ? "present" : "missing",
+        });
+      }
       if (token) {
         session.user.id = token.sub;
         session.accessToken = token.accessToken;
@@ -147,14 +153,17 @@ export const authOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      console.log("🔄 Redirect callback:", {
+      const devLog = (...a) => {
+        if (process.env.NODE_ENV !== "production") console.log(...a);
+      };
+      devLog("🔄 Redirect callback:", {
         url,
         baseUrl,
         timestamp: new Date().toISOString(),
       });
       if (url.startsWith("/")) {
         const redirectUrl = `${baseUrl}${url}`;
-        console.log("📍 Redirecting to:", redirectUrl);
+        devLog("📍 Redirecting to:", redirectUrl);
         return redirectUrl;
       }
       if (
@@ -167,14 +176,16 @@ export const authOptions = {
           const urlOrigin = new URL(url).origin;
           const baseUrlOrigin = new URL(baseUrl).origin;
           if (urlOrigin === baseUrlOrigin) {
-            console.log("📍 Redirecting to same origin:", url);
+            devLog("📍 Redirecting to same origin:", url);
             return url;
           }
         } catch (error) {
-          console.warn("⚠️ Invalid URL in redirect callback:", error);
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("⚠️ Invalid URL in redirect callback:", error);
+          }
         }
       }
-      console.log("📍 Default redirect to baseUrl:", baseUrl);
+      devLog("📍 Default redirect to baseUrl:", baseUrl);
       return baseUrl;
     },
   },

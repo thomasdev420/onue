@@ -28,6 +28,14 @@ export default function DocsPage() {
           with <a className="font-medium text-indigo-600 underline" href="/api/v1/status">GET /api/v1/status</a>.
         </p>
 
+        <p className="mt-6 text-sm text-gray-700">
+          New here? Start with the{" "}
+          <a className="font-semibold text-indigo-600 underline hover:text-indigo-700" href="#overview">
+            overview
+          </a>{" "}
+          below.
+        </p>
+
         <nav
           className="mt-8 rounded-2xl border border-gray-200 bg-white p-5 text-sm leading-relaxed text-gray-700 shadow-sm"
           aria-label="On this page"
@@ -207,7 +215,7 @@ export default function DocsPage() {
           </p>
           <p className="mt-4 text-sm text-gray-600">
             Operational status: <a href="/api/v1/status">/api/v1/status</a> ·{" "}
-            <Link className="font-medium text-indigo-600" href="/pricing">
+            <Link className="font-medium text-indigo-600" href="/#pricing">
               Pricing & quotas
             </Link>
           </p>

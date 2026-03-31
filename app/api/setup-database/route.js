@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { guardInternalToolsRoute } from '@/app/lib/internalSetupAuth';
 
-export async function POST() {
+export async function POST(request) {
+  const denied = guardInternalToolsRoute(request);
+  if (denied) return denied;
+
   console.log('🔧 Setting up enhanced database schema...');
   
   const results = {

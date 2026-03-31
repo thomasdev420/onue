@@ -77,8 +77,8 @@ export default function CodeSnippetTabs({ baseUrl: baseUrlProp }) {
         Install:{" "}
         <code className="text-slate-400">npm install amply-sdk</code> ·{" "}
         <code className="text-slate-400">pip install amply-sdk</code> (see{" "}
-        <a href="/docs/quickstart" className="text-cyan-400 underline">
-          Quickstart
+        <a href="/docs" className="text-cyan-400 underline">
+          Documentation
         </a>
         )
       </p>

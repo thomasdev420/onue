@@ -1,4 +1,4 @@
-/** Single source for marketing pricing tables (homepage + /pricing). */
+/** Single source for marketing pricing tables (homepage `#pricing`). */
 
 export const PRICING_DISCLAIMER =
   "Design partner pricing — quotas are our targets while usage metering and Stripe checkout roll out. Overage may be invoiced during the pilot; fair-use limits apply to prevent abuse.";

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '../../../supabaseClient';
+import { guardInternalToolsRoute } from '@/app/lib/internalSetupAuth';
 
-export async function GET() {
+export async function GET(request) {
+  const denied = guardInternalToolsRoute(request);
+  if (denied) return denied;
+
   try {
     const supabase = getSupabase();
     

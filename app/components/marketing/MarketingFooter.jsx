@@ -12,11 +12,8 @@ export default function MarketingFooter() {
 
   return (
     <footer className="mt-auto w-full bg-transparent">
-      <div className="mx-auto max-w-7xl px-4 pb-12 pt-10 sm:px-6 sm:pb-14 lg:px-8 lg:pb-16 lg:pt-12">
-        <div
-          className="mb-10 h-0.5 w-full rounded-full bg-gradient-to-r from-stone-200/50 via-stone-500/85 to-stone-200/50 shadow-[0_1px_0_rgba(255,255,255,0.6)] lg:mb-12"
-          aria-hidden
-        />
+      <div className="mx-auto max-w-7xl px-4 pb-[max(3rem,env(safe-area-inset-bottom,0px))] pt-10 sm:px-6 sm:pb-14 lg:px-8 lg:pb-16 lg:pt-12">
+        <div className="mb-10 h-[2px] w-full rounded-full bg-gray-300 lg:mb-12" aria-hidden />
         <div className="grid grid-cols-2 gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 lg:gap-8 xl:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1 lg:col-span-1">
@@ -44,23 +41,13 @@ export default function MarketingFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/phase0-demo" className={linkClass}>
-                  Phase 0 demo
-                </Link>
-              </li>
-              <li>
-                <Link href="/pricing" className={linkClass}>
+                <Link href="/#pricing" className={linkClass}>
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/for-providers" className={linkClass}>
-                  For providers
-                </Link>
-              </li>
-              <li>
                 <Link href="/providers" className={linkClass}>
-                  Get listed
+                  For providers
                 </Link>
               </li>
               <li>
@@ -124,7 +111,7 @@ export default function MarketingFooter() {
               </li>
               <li>
                 <a href="/api/v1/openapi" className={linkClass}>
-                  API reference
+                  OpenAPI
                 </a>
               </li>
               <li>
@@ -133,9 +120,9 @@ export default function MarketingFooter() {
                 </a>
               </li>
               <li>
-                <a href="/api/v1/openapi" className={linkClass}>
-                  OpenAPI (JSON)
-                </a>
+                <Link href="/phase0-demo" className={linkClass}>
+                  Pinecone Phase 0 demo
+                </Link>
               </li>
             </ul>
           </div>

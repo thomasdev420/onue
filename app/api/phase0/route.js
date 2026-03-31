@@ -9,7 +9,10 @@
  */
 
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
 import { Pinecone } from '@pinecone-database/pinecone';
+import { authOptions } from '@/app/lib/authOptions';
+import { verifyRouteAccess } from '@/app/lib/amplyRoute/auth';
 
 /** Node runtime required for Pinecone SDK (not Edge). */
 export const runtime = 'nodejs';
@@ -28,8 +31,42 @@ const ESTIMATED_COST_PER_1M_OPS_USD = 12.4;
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Accept',
+  'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
 };
+
+/**
+ * Demo endpoint costs Pinecone quota and mutates the index — must not be anonymous in production.
+ * Allowed: Bearer v1 API key, dashboard user key, AMPLY_PHASE0_SECRET, or signed-in NextAuth session (same-origin).
+ */
+async function assertPhase0Access(request) {
+  if (process.env.NODE_ENV !== 'production') return;
+
+  const phaseSecret = process.env.AMPLY_PHASE0_SECRET?.trim();
+  const authHeader = request.headers.get('authorization') || '';
+  const m = /^Bearer\s+(.+)$/i.exec(authHeader);
+  const token = m ? m[1].trim() : null;
+
+  if (phaseSecret && token === phaseSecret) return;
+
+  if (token) {
+    const auth = await verifyRouteAccess(request);
+    if (!auth.ok) {
+      const err = new Error(auth.error || 'Unauthorized');
+      err.statusCode = 401;
+      throw err;
+    }
+    return;
+  }
+
+  const session = await getServerSession(authOptions);
+  if (session?.user?.email) return;
+
+  const err = new Error(
+    'Sign in or send Authorization: Bearer (v1 API key, user key, or AMPLY_PHASE0_SECRET).',
+  );
+  err.statusCode = 401;
+  throw err;
+}
 
 function randomUnitVector(dim) {
   const v = Array.from({ length: dim }, () => Math.random() * 2 - 1);
@@ -201,8 +238,9 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: corsHeaders });
 }
 
-export async function POST() {
+export async function POST(request) {
   try {
+    await assertPhase0Access(request);
     const payload = await runPhase0Pipeline();
     return NextResponse.json(payload, { status: 200, headers: corsHeaders });
   } catch (e) {
@@ -215,6 +253,6 @@ export async function POST() {
   }
 }
 
-export async function GET() {
-  return POST();
+export async function GET(request) {
+  return POST(request);
 }

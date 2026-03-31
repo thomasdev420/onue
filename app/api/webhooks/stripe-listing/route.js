@@ -5,10 +5,10 @@ import { amplyLog } from '@/app/lib/amplyRoute/amplyLog';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** @returns {Stripe} */
+/** @returns {Stripe | null} */
 function stripeClient() {
-  const key =
-    process.env.STRIPE_SECRET_KEY?.trim() || 'sk_test_0000000000000000000000000000000000000000000000000000';
+  const key = process.env.STRIPE_SECRET_KEY?.trim();
+  if (!key) return null;
   return new Stripe(key, { apiVersion: '2025-02-24.acacia' });
 }
 
@@ -40,9 +40,18 @@ export async function POST(request) {
     return NextResponse.json({ ok: false, detail: 'invalid body' }, { status: 400 });
   }
 
+  const stripe = stripeClient();
+  if (!stripe) {
+    amplyLog({
+      level: 'warn',
+      msg: 'stripe_listing_webhook.misconfigured',
+      detail: 'STRIPE_SECRET_KEY unset (needed to construct Stripe client for webhook verification)',
+    });
+    return NextResponse.json({ ok: false, detail: 'Stripe API not configured' }, { status: 503 });
+  }
+
   let event;
   try {
-    const stripe = stripeClient();
     event = await stripe.webhooks.constructEventAsync(rawBody, sig, webhookSecret);
   } catch (e) {
     amplyLog({

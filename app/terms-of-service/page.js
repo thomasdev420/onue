@@ -41,7 +41,7 @@ export default function TermsOfService() {
           to fair use and the Acceptable Use Policy. We may require registration, API keys, or rate limits to
           protect reliability. We may change technical limits or require upgraded paths for abuse, but we do
           not charge <em>per-call metered fees</em> for standard developer usage as described on our{" "}
-          <Link href="/pricing" className="text-indigo-600 underline">Pricing</Link> page unless we notify you
+          <Link href="/#pricing" className="text-indigo-600 underline">Pricing</Link> section unless we notify you
           in advance of a materially different commercial model.
         </p>
 

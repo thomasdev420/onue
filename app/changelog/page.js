@@ -11,7 +11,7 @@ const ENTRIES = [
   {
     date: "2026-03-29",
     title: "SDKs v0.1 (JS + Python)",
-    body: "Published minimal clients for POST /api/v1/route in packages/amply-sdk and packages/amply-sdk-python. Docs quickstart and homepage tabs match the same examples.",
+    body: "Published minimal clients for POST /api/v1/route in packages/amply-sdk and packages/amply-sdk-python. Docs and homepage tabs match the same examples.",
   },
   {
     date: "2026-03-29",
@@ -21,7 +21,7 @@ const ENTRIES = [
   {
     date: "2026-03-29",
     title: "Pricing clarity",
-    body: "Concrete design-partner quotas (10k free / 100k Pro) and overage copy on /pricing and the homepage table.",
+    body: "Concrete design-partner quotas (10k free / 100k Pro) and overage copy on the homepage pricing table.",
   },
   {
     date: "2026-03-29",

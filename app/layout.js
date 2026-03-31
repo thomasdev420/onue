@@ -136,6 +136,12 @@ const permanentMarker = Permanent_Marker({
   subsets: ["latin"],
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export async function generateMetadata() {
   return {
     title: "Amply: agent routing API, sub-200ms server work",

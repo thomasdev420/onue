@@ -259,7 +259,7 @@ export default function Home() {
         onClick={handleGoogleSignIn}
         className="inline-flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-3 py-2.5 text-xs font-semibold text-white shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition hover:scale-[1.02] hover:brightness-[1.03] active:scale-[0.98] sm:min-h-[52px] sm:px-8 sm:py-3 sm:text-base"
       >
-        Get API key
+        get API key
       </button>
     );
   }, [isUserAuthenticated, handleGoogleSignIn]);
@@ -370,20 +370,12 @@ export default function Home() {
           <div className="mx-auto mt-8 grid w-full max-w-3xl grid-cols-2 items-stretch gap-3 sm:mt-10 sm:gap-4">
             <div className="min-w-0">{primaryCta}</div>
             <Link
-              href="/docs/quickstart"
+              href={listingPay.href}
               className="inline-flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white px-2.5 py-2.5 text-center text-xs font-medium leading-snug text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[52px] sm:px-7 sm:py-3 sm:text-base sm:leading-relaxed"
             >
-              <span className="text-balance">API quickstart</span>
+              <span className="text-balance">Get your product listed</span>
             </Link>
           </div>
-          <p className="mx-auto mt-5 max-w-2xl text-center text-sm">
-            <Link
-              href={listingPay.href}
-              className="-mx-1 inline-flex min-h-[44px] items-center justify-center px-1 py-2 font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 touch-manipulation hover:text-indigo-700"
-            >
-              Get your product listed
-            </Link>
-          </p>
         </header>
 
         {/* Live in 60 Seconds */}
@@ -424,7 +416,7 @@ export default function Home() {
                       onClick={handleGoogleSignIn}
                       className="mt-4 inline-flex rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:scale-[1.02] hover:brightness-[1.03]"
                     >
-                      Get API key
+                      get API key
                     </button>
                   ) : (
                     <a

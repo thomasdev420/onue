@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { guardInternalToolsRoute } from '@/app/lib/internalSetupAuth';
 
-export async function GET() {
+export async function GET(request) {
+  const denied = guardInternalToolsRoute(request);
+  if (denied) return denied;
+
   try {
     // Use service role key for admin operations
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
