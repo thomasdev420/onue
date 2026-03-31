@@ -21,7 +21,7 @@ export default function MarketingNav() {
       return (
         <Link
           href="/dashboard"
-          className="inline-flex min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(57,83,230,0.35)] transition hover:scale-[1.02] hover:brightness-[1.03] active:scale-[0.98] sm:px-5"
+          className="whitespace-nowrap rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(57,83,230,0.35)] transition hover:scale-[1.02] hover:brightness-[1.03] active:scale-[0.98] sm:px-5"
         >
           Dashboard
         </Link>
@@ -31,20 +31,18 @@ export default function MarketingNav() {
       <button
         type="button"
         onClick={handleGoogleSignIn}
-        className="inline-flex min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center whitespace-nowrap rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2.5 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(57,83,230,0.35)] transition hover:scale-[1.02] hover:brightness-[1.03] active:scale-[0.98] sm:px-5"
+        className="whitespace-nowrap rounded-full bg-gradient-to-r from-[#3953e6] to-[#36aeea] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_rgba(57,83,230,0.35)] transition hover:scale-[1.02] hover:brightness-[1.03] active:scale-[0.98] sm:px-5"
       >
         Get API key
       </button>
     );
   }, [session, handleGoogleSignIn]);
 
-  const linkClass =
-    "shrink-0 whitespace-nowrap py-2 transition hover:text-gray-900 touch-manipulation max-md:inline-flex max-md:min-h-[44px] max-md:items-center";
-  const linkClassDesktop = "shrink-0 whitespace-nowrap transition hover:text-gray-900";
+  const linkClass = "shrink-0 whitespace-nowrap transition hover:text-gray-900";
 
   return (
-    <header className="sticky top-0 z-[100] w-full border-b border-gray-200/90 bg-[#FAF9F6]/95 pt-safe shadow-sm backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-3 py-2 sm:gap-3 sm:px-6 sm:py-3">
+    <header className="sticky top-0 z-[100] w-full border-b border-gray-200/90 bg-[#FAF9F6]/95 shadow-sm backdrop-blur-md">
+      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <Link
           href="/"
           className="shrink-0 text-lg font-bold tracking-tight text-gray-900 transition hover:text-indigo-700 sm:text-xl"
@@ -52,28 +50,31 @@ export default function MarketingNav() {
           Amply
         </Link>
         <nav
-          className="mx-1 hidden min-w-0 flex-1 items-center justify-center gap-4 overflow-x-auto py-1 text-sm font-medium text-gray-600 md:flex md:gap-6 lg:gap-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-2 hidden min-w-0 flex-1 items-center justify-center gap-4 overflow-x-auto py-1 text-sm font-medium text-gray-600 md:flex md:gap-6 lg:gap-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Primary"
         >
-          <Link href="/#product" className={linkClassDesktop}>
+          <Link href="/#product" className={linkClass}>
             Product
           </Link>
-          <Link href="/#use-cases" className={linkClassDesktop}>
+          <Link href="/#use-cases" className={linkClass}>
             Use Cases
           </Link>
-          <Link href="/docs" className={linkClassDesktop}>
+          <Link href="/docs" className={linkClass}>
             Docs
           </Link>
-          <Link href="/pricing" className={linkClassDesktop}>
+          <Link href="/pricing" className={linkClass}>
             Pricing
           </Link>
-          <Link href="/providers" className={linkClassDesktop}>
+          <Link href="/for-providers" className={linkClass}>
             For providers
           </Link>
-          <Link href="/catalog" className={linkClassDesktop}>
+          <Link href="/providers" className={linkClass}>
+            Get listed
+          </Link>
+          <Link href="/catalog" className={linkClass}>
             Catalog
           </Link>
-          <Link href="/about" className={linkClassDesktop}>
+          <Link href="/about" className={linkClass}>
             About
           </Link>
         </nav>
@@ -89,28 +90,31 @@ export default function MarketingNav() {
       </div>
       <div className="border-t border-gray-200/70 md:hidden">
         <nav
-          className="mx-auto flex max-w-6xl snap-x snap-mandatory gap-1 overflow-x-auto overscroll-x-contain px-3 py-1 text-sm font-medium text-gray-600 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="mx-auto flex max-w-6xl justify-center gap-4 overflow-x-auto px-4 py-2.5 text-sm font-medium text-gray-600 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           aria-label="Primary sections"
         >
-          <Link href="/#product" className={`${linkClass} snap-start`}>
+          <Link href="/#product" className={linkClass}>
             Product
           </Link>
-          <Link href="/#use-cases" className={`${linkClass} snap-start`}>
-            Use cases
+          <Link href="/#use-cases" className={linkClass}>
+            Use Cases
           </Link>
-          <Link href="/docs" className={`${linkClass} snap-start`}>
+          <Link href="/docs" className={linkClass}>
             Docs
           </Link>
-          <Link href="/pricing" className={`${linkClass} snap-start`}>
+          <Link href="/pricing" className={linkClass}>
             Pricing
           </Link>
-          <Link href="/providers" className={`${linkClass} snap-start`}>
-            Providers
+          <Link href="/for-providers" className={linkClass}>
+            For providers
           </Link>
-          <Link href="/catalog" className={`${linkClass} snap-start`}>
+          <Link href="/providers" className={linkClass}>
+            Get listed
+          </Link>
+          <Link href="/catalog" className={linkClass}>
             Catalog
           </Link>
-          <Link href="/about" className={`${linkClass} snap-start pr-3`}>
+          <Link href="/about" className={linkClass}>
             About
           </Link>
         </nav>

@@ -72,7 +72,7 @@ function LiveBenchmarkBadge() {
 
   return (
     <span
-      className={`mx-auto inline-flex w-fit max-w-[min(calc(100vw-2rem),26rem)] flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border px-3 py-2.5 text-center text-[11px] font-medium leading-snug shadow-sm sm:max-w-none sm:px-4 sm:py-2 sm:text-xs sm:leading-normal ${borderClass}`}
+      className={`mx-auto inline-flex max-w-[min(100%,26rem)] flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full border px-3 py-2 text-center text-[11px] font-medium leading-snug shadow-sm sm:max-w-none sm:px-4 sm:text-xs sm:leading-normal ${borderClass}`}
       title={title}
     >
       {ok ? (
@@ -279,7 +279,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#FAF9F6] font-sans text-gray-900 antialiased">
       <MarketingNav />
 
-      <div className="relative flex flex-col items-center px-4 pt-8 sm:px-10 sm:pt-14 pb-[max(7rem,env(safe-area-inset-bottom,0px))] sm:pb-36">
+      <div className="relative flex flex-col items-center px-5 pb-28 pt-10 sm:px-10 sm:pb-36 sm:pt-14">
         {/* Dev Access Modal */}
         {showDevModal && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 p-4">
@@ -287,12 +287,10 @@ export default function Home() {
               <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-800">Developer Access</h2>
                 <button
-                  type="button"
                   onClick={handleCloseModal}
-                  aria-label="Close"
-                  className="inline-flex min-h-[44px] min-w-[44px] touch-manipulation items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                  className="text-gray-400 transition-colors hover:text-gray-600"
                 >
-                  <X size={24} aria-hidden />
+                  <X size={24} />
                 </button>
               </div>
 
@@ -367,22 +365,25 @@ export default function Home() {
             price, speed, and reliability.
           </p>
 
-          <div className="mx-auto mt-8 grid w-full max-w-3xl grid-cols-2 items-stretch gap-3 sm:mt-10 sm:gap-4">
+          <div className="mx-auto mt-8 grid w-full max-w-3xl grid-cols-2 items-stretch gap-2 sm:mt-10 sm:gap-4">
             <div className="min-w-0">{primaryCta}</div>
-            <Link
-              href="/docs/quickstart"
+            <a
+              href="/phase0-demo"
               className="inline-flex min-h-[48px] w-full min-w-0 items-center justify-center rounded-full border-2 border-gray-300 bg-white px-2.5 py-2.5 text-center text-xs font-medium leading-snug text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:min-h-[52px] sm:px-7 sm:py-3 sm:text-base sm:leading-relaxed"
             >
-              <span className="text-balance">API quickstart</span>
-            </Link>
+              <span className="text-balance">Try the Phase 0 Pinecone demo</span>
+            </a>
           </div>
-          <p className="mx-auto mt-5 max-w-2xl text-center text-sm">
+          <p className="mx-auto mt-5 max-w-2xl text-center text-sm text-gray-600">
+            <span className="font-medium text-gray-800">Infrastructure vendor?</span>{" "}
             <Link
               href={listingPay.href}
-              className="-mx-1 inline-flex min-h-[44px] items-center justify-center px-1 py-2 font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 touch-manipulation hover:text-indigo-700"
+              className="font-semibold text-indigo-600 underline decoration-indigo-600/30 underline-offset-2 hover:text-indigo-700"
             >
               Get your product listed
             </Link>
+            {" "}
+            $249/mo catalog listing, transparent placement.
           </p>
         </header>
 
@@ -639,6 +640,9 @@ export default function Home() {
           <h2 className="text-center text-2xl font-bold leading-snug tracking-tight text-gray-900 sm:text-3xl">
             Real Use Cases
           </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-pretty text-base leading-relaxed text-gray-600">
+            Where agents need a fast, grounded tool choice.
+          </p>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { title: "Vector DB Routing", body: "Pick the best hosted index for latency, cost, and filters." },
@@ -663,25 +667,29 @@ export default function Home() {
           <h2 className="text-center text-2xl font-bold leading-snug tracking-tight text-gray-900 sm:text-3xl">
             Teams shipping agents
           </h2>
+          <p className="mx-auto mt-3 max-w-xl text-center text-sm leading-relaxed text-gray-500">
+            Builders using structured routing. More on{" "}
+            <Link href="/about#testimonials" className="font-medium text-indigo-600 underline">
+              About
+            </Link>
+            .
+          </p>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
               {
-                quote:
-                  "We used to let the model debate Pinecone vs. Qdrant and eat tokens. Now the loop does one POST, we stash the JSON beside the trace, and `request_id` is enough when something looks off.",
-                who: "Staff engineer",
-                org: "Series B devtools · ~45 people",
+                quote: "We cut tool-pick latency to a single HTTP round-trip. Game changer for our agent loop.",
+                who: "Engineering lead",
+                org: "AI startup",
               },
               {
-                quote:
-                  "Our tests assert on keys, not paragraphs. `recommended`, `compute_ms`, and the cost fields are stable enough that we snapshot them in CI for regressions.",
-                who: "Tech lead",
-                org: "B2B workflow SaaS · ~120 people",
+                quote: "Finally JSON I can log and replay, not another paragraph from the model.",
+                who: "Founder",
+                org: "B2B SaaS",
               },
               {
-                quote:
-                  "Leadership wanted a single slide, not another benchmark PDF. Everyone stared at the same quoted p99 and $/1M dims in the payload—we locked the vendor that afternoon.",
-                who: "Platform PM",
-                org: "Enterprise data team · regulated sector",
+                quote: "The cost and latency fields made it obvious which vector host to standardize on.",
+                who: "Platform",
+                org: "Enterprise team",
               },
             ].map((t, i) => (
               <blockquote
@@ -753,12 +761,24 @@ export default function Home() {
             </table>
           </div>
 
-          <div className="mt-8 w-full text-center">
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
               href={listingPay.href}
               className="inline-flex rounded-full bg-gray-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-gray-800"
             >
               Get your product listed
+            </Link>
+            <Link
+              href="/for-providers"
+              className="inline-flex rounded-full border border-gray-300 bg-white px-6 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-gray-50"
+            >
+              For providers
+            </Link>
+            <Link href="/pricing" className="text-sm font-medium text-indigo-600 underline">
+              Full pricing &amp; FAQs
+            </Link>
+            <Link href="/catalog" className="text-sm font-medium text-indigo-600 underline">
+              Public catalog
             </Link>
           </div>
         </section>
@@ -772,11 +792,9 @@ export default function Home() {
           >
             Dev Access
           </button>
-          <div className="mt-8 flex justify-center">
-            <p className="inline-flex items-center justify-center rounded-full border border-gray-300/90 bg-white/80 px-4 py-2 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.22em] text-gray-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)] antialiased sm:px-5 sm:text-[11px] sm:tracking-[0.2em]">
-              [ A Thomas Collins production ]
-            </p>
-          </div>
+          <p className="mt-8 text-center font-mono text-[11px] font-medium leading-none tracking-[0.14em] text-gray-400 antialiased">
+            A Thomas Collins production
+          </p>
         </div>
       </div>
     </div>
