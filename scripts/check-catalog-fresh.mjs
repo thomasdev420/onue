@@ -4,6 +4,8 @@
  *   AMPLY_PROD_URL=https://www.useamply.com npm run check:catalog-fresh
  *
  * Optional: AMPLY_CATALOG_STALE_AFTER_HOURS — not used here; server decides stale flag.
+ * Optional: AMPLY_CATALOG_AGE_WARN_HOURS — if diagnostics.catalog_metrics_age_hours exceeds this,
+ *   print a GitHub Actions ::warning:: (exit 0). Default: unset (no warning).
  */
 import dotenv from 'dotenv';
 import path from 'node:path';
@@ -62,6 +64,19 @@ console.error(
 if (stale) {
   console.error('\nFAIL: catalog_metrics_stale=true — run catalog:sync + deploy, or fix Vercel cron.');
   process.exit(1);
+}
+
+const warnAfter = process.env.AMPLY_CATALOG_AGE_WARN_HOURS?.trim();
+if (warnAfter && age != null && Number.isFinite(Number(warnAfter))) {
+  const max = Number(warnAfter);
+  if (age > max) {
+    const msg = `catalog_metrics_age_hours=${age} exceeds AMPLY_CATALOG_AGE_WARN_HOURS=${max} (not stale yet; tighten sync if SLAs require fresher metrics)`;
+    if (process.env.GITHUB_ACTIONS === 'true') {
+      console.error(`::warning::${msg}`);
+    } else {
+      console.error(`\nWARN: ${msg}`);
+    }
+  }
 }
 
 console.error('\nOK: catalog metrics are fresh.');

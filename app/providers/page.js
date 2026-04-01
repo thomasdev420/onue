@@ -2,6 +2,7 @@ import Link from "next/link";
 import MarketingFooter from "@/app/components/marketing/MarketingFooter";
 import MarketingNav from "@/app/components/marketing/MarketingNav";
 import { getStripeListingPaymentUrl } from "@/app/lib/stripeListingUrls";
+import PlatformMetricsSection from "@/app/providers/PlatformMetricsSection";
 
 export const metadata = {
   title: "List your product where agents choose infrastructure | Amply",
@@ -37,6 +38,7 @@ const WHY = [
 const INCLUDED = [
   "Logo and one line description on the public catalog",
   "Linked from GET /api/v1/providers with a clear placement label",
+  "Listing-impact summary in the dashboard (platform traffic + share to paid rows; per-provider drill-down rolling out)",
   "Editorial review and publication within about two business days after we confirm your details",
 ];
 
@@ -161,6 +163,19 @@ export default function ProvidersSalesPage() {
             </p>
           </aside>
 
+          <div className="mt-8 rounded-2xl border border-emerald-200/90 bg-emerald-50/60 p-5 sm:p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-900/80">Risk-free pilot</p>
+            <p className="mt-2 text-sm leading-relaxed text-gray-800 sm:text-base">
+              We are rolling out a <strong className="text-gray-900">30-day full-analytics pilot</strong> for new listings:
+              if attributed routing activity does not meet a published minimum during that window, we&apos;ll refund your
+              first month or extend placement at no charge — terms confirmed in writing before checkout.{" "}
+              <a href="mailto:support@useamply.com?subject=Listing%20pilot%20terms" className="font-semibold text-indigo-600 underline">
+                Email us
+              </a>{" "}
+              to enable it on your subscription.
+            </p>
+          </div>
+
           <SectionCheckoutCta stripeUrl={stripeUrl} hero />
 
           {!stripeUrl && (
@@ -173,6 +188,8 @@ export default function ProvidersSalesPage() {
             </p>
           )}
         </section>
+
+        <PlatformMetricsSection />
 
         <section id="why-list" className="scroll-mt-28 border-t border-gray-200/80 bg-white/60 py-16 sm:py-20">
           <div className="mx-auto max-w-3xl px-5 sm:px-8">
@@ -313,11 +330,11 @@ export default function ProvidersSalesPage() {
               ))}
             </div>
             <p className="mt-8 text-center text-xs leading-relaxed text-gray-500">
-              Want a named case study or joint launch? Email{" "}
-              <a href="mailto:support@useamply.com" className="font-semibold text-indigo-600 underline">
+              Want a named case study with routed-volume and revenue directional detail? Email{" "}
+              <a href="mailto:support@useamply.com?subject=Case%20study" className="font-semibold text-indigo-600 underline">
                 support@useamply.com
               </a>
-              .
+              — we are prioritising two published stories with quantified outcomes for listed partners.
             </p>
           </div>
         </section>

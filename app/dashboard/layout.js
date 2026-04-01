@@ -21,6 +21,7 @@ export default function DashboardLayout({ children }) {
     if (pathname.includes('/dashboard/settings')) return '#6B7280';
     if (pathname.includes('/dashboard/selection')) return '#EA580C';
     if (pathname.includes('/dashboard/api-keys')) return '#4F46E5';
+    if (pathname.includes('/dashboard/listing-impact')) return '#059669';
     return '#6366F1';
   };
 

@@ -16,12 +16,24 @@ export function getApiKeySet() {
 }
 
 /**
+ * Production defaults to requiring Bearer auth on POST /api/v1/route unless
+ * AMPLY_ALLOW_ANONYMOUS_ROUTE=1 (preview / legacy only — not for public prod).
+ */
+export function isProductionRouteAuthStrict() {
+  return (
+    process.env.NODE_ENV === 'production' &&
+    process.env.AMPLY_ALLOW_ANONYMOUS_ROUTE?.trim() !== '1'
+  );
+}
+
+/**
  * @returns {'none' | 'api_key'}
- * `api_key` when env keys are set or when AMPLY_REQUIRE_API_KEY=1 (Bearer required).
+ * `api_key` when env keys are set, AMPLY_REQUIRE_API_KEY=1, or production strict default.
  */
 export function getAuthMode() {
   if (getApiKeySet().size > 0) return 'api_key';
   if (process.env.AMPLY_REQUIRE_API_KEY?.trim() === '1') return 'api_key';
+  if (isProductionRouteAuthStrict()) return 'api_key';
   return 'none';
 }
 
@@ -29,11 +41,12 @@ export function getAuthMode() {
  * @param {Request} request
  * @returns {Promise<{ ok: boolean, error?: string }>}
  * Accepts env AMPLY_API_KEYS **or** Supabase-backed user keys (amply_api_keys).
- * When no env keys and AMPLY_REQUIRE_API_KEY is not 1, open if no Bearer (dev).
+ * In production (strict), Bearer is required and must match env or DB.
  * Invalid Bearer always 401 when a token is sent.
  */
 export async function verifyRouteAccess(request) {
   const envKeys = getApiKeySet();
+  const mode = getAuthMode();
   const authHeader = request.headers.get('authorization') || '';
   const m = /^Bearer\s+(.+)$/i.exec(authHeader);
   const token = m ? m[1].trim() : null;
@@ -44,20 +57,23 @@ export async function verifyRouteAccess(request) {
     return r.ok;
   };
 
-  if (envKeys.size > 0) {
-    if (token && envKeys.has(token)) return { ok: true };
-    if (token && (await dbOk(token))) return { ok: true };
-    if (!token) return { ok: false, error: 'Missing or invalid Authorization header' };
+  if (mode === 'api_key') {
+    if (!token) {
+      return { ok: false, error: 'Missing or invalid Authorization header' };
+    }
+    if (envKeys.size > 0 && envKeys.has(token)) {
+      return { ok: true };
+    }
+    if (await dbOk(token)) {
+      return { ok: true };
+    }
     return { ok: false, error: 'Invalid API key' };
   }
 
   if (token) {
+    if (envKeys.size > 0 && envKeys.has(token)) return { ok: true };
     if (await dbOk(token)) return { ok: true };
     return { ok: false, error: 'Invalid API key' };
-  }
-
-  if (process.env.AMPLY_REQUIRE_API_KEY?.trim() === '1') {
-    return { ok: false, error: 'Missing or invalid Authorization header' };
   }
 
   return { ok: true };

@@ -12,6 +12,10 @@ import {
 import { loadProviders } from '@/app/lib/amplyRoute/loadProviders';
 import { resolveDatabaseUrl } from '@/app/lib/amplyRoute/resolveDatabaseUrl';
 import { withV1TraceHeaders } from '@/app/lib/amplyRoute/v1TraceHeaders';
+import {
+  normalizeReferralTag,
+  recordRouteDecision,
+} from '@/app/lib/amplyRoute/routeDecisionLog';
 import { getSupabaseServiceRole } from '@/app/services/amplySelection/supabaseAdmin';
 
 export const runtime = 'nodejs';
@@ -132,6 +136,15 @@ export async function POST(request) {
     }
   }
 
+  let referralTag = normalizeReferralTag(body.referral_tag);
+  if (body.referral_tag != null && body.referral_tag !== '' && referralTag == null) {
+    return badRequest(
+      'referral_tag must be empty or 1–64 chars: letters, digits, . _ : @ / -',
+      requestId,
+      t0,
+    );
+  }
+
   const hasDb = Boolean(resolveDatabaseUrl());
   const admin = hasDb ? null : getSupabaseServiceRole();
   const { providers, source, catalog_backend, catalog_freshness } = await loadProviders(admin);
@@ -205,6 +218,14 @@ export async function POST(request) {
     catalog_backend: catalog_backend ?? null,
     catalog_source: source,
     recommended: winner,
+  });
+
+  await recordRouteDecision({
+    recommendedProviderId: winner,
+    category: wrow.category,
+    catalogListing: wrow.catalog_listing,
+    requestId,
+    referralTag,
   });
 
   return NextResponse.json(payload, {

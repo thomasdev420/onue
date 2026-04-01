@@ -150,7 +150,14 @@ if (!skipWarmup) {
     });
     coldRouteWall = r0.wallMs;
     if (!r0.res.ok) {
-      console.error('Warmup route failed', r0.res.status, await r0.res.text().then((t) => t.slice(0, 200)));
+      const body = await r0.res.text().then((t) => t.slice(0, 300));
+      console.error('Warmup route failed', r0.res.status, body);
+      if (r0.res.status === 401) {
+        console.error(
+          '\nHint: Bearer rejected. Set AMPLY_ROUTE_BEARER_TOKEN to a key production accepts, or copy Vercel Production → AMPLY_API_KEYS (first comma-separated secret) into .env.\n' +
+            '  Run: node scripts/debug-amply-bearer-env.mjs\n',
+        );
+      }
       process.exit(1);
     }
   }

@@ -1,6 +1,7 @@
 /**
- * Optional sliding-window rate limit for POST /api/v1/route (per serverless instance).
- * Set AMPLY_V1_RATE_LIMIT_PER_MIN to a positive number (e.g. 120). Unset or 0 = disabled.
+ * Sliding-window rate limit for POST /api/v1/route (per serverless instance).
+ * Production: defaults to 120 req/min per client IP when env unset (set AMPLY_V1_RATE_LIMIT_PER_MIN=0 to disable).
+ * Non-production: unset or 0 = disabled unless AMPLY_V1_RATE_LIMIT_PER_MIN is set positive.
  * For global limits use Vercel Firewall, Upstash, etc.
  */
 
@@ -10,9 +11,30 @@ function clientKey(request) {
   return first || request.headers.get('x-real-ip') || request.headers.get('cf-connecting-ip') || 'unknown';
 }
 
-export function checkV1RouteRateLimit(request) {
+export function resolveV1RouteMaxPerMinute() {
   const raw = process.env.AMPLY_V1_RATE_LIMIT_PER_MIN?.trim();
-  const max = raw ? Number(raw) : 0;
+  if (raw === '0') return 0;
+  if (raw !== undefined && raw !== '') {
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return 120;
+  }
+  return 0;
+}
+
+/** For GET /api/v1/status (keep in sync with checkV1RouteRateLimit). */
+export function getV1RouteRateLimitSummary() {
+  const max = resolveV1RouteMaxPerMinute();
+  if (!Number.isFinite(max) || max <= 0) {
+    return { enabled: false, requests_per_minute_per_ip: null };
+  }
+  return { enabled: true, requests_per_minute_per_ip: max };
+}
+
+export function checkV1RouteRateLimit(request) {
+  const max = resolveV1RouteMaxPerMinute();
   if (!Number.isFinite(max) || max <= 0) {
     return { ok: true, limit: null, remaining: null, retryAfterSec: null };
   }

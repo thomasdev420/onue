@@ -18,6 +18,7 @@ function buildSpec(baseUrl) {
       version: AMPLY_PRODUCT_VERSION,
       description:
         'Machine-friendly vector routing: scores providers from catalog metrics (Supabase Postgres).\n\n' +
+        '**Production:** `POST /api/v1/route` requires `Authorization: Bearer` (see `GET /api/v1/status` `auth_mode`) unless `AMPLY_ALLOW_ANONYMOUS_ROUTE=1` on the server (preview only).\n\n' +
         'Latency semantics: **Wall RTT** is full client round-trip (network + edge). **Server compute** is handler time only. Use JSON `compute_ms` and the `X-Amply-Compute-Ms` response header (and `compute_*` fields from scripts/synthetic-probe.mjs) for SLO tracking. The ~200ms product bar applies to server compute, not necessarily to wall RTT from arbitrary clients or CI runners.',
     },
     servers: [{ url: baseUrl }],
@@ -48,6 +49,18 @@ function buildSpec(baseUrl) {
           responses: { '200': { description: 'providers[], default_scoring_weights' } },
         },
       },
+      '/api/v1/platform-metrics': {
+        get: {
+          summary: 'Public routing telemetry aggregates (7d/30d, share to listed providers, by category)',
+          operationId: 'getPlatformMetrics',
+          responses: {
+            '200': {
+              description:
+                'decisions_last_7d, decisions_last_30d, decisions_to_listed_providers_last_30d, pct, by_category_last_30d, methodology, telemetry_ready',
+            },
+          },
+        },
+      },
       '/api/v1/route': {
         post: {
           summary: 'Recommend a vector DB provider for a task',
@@ -67,6 +80,12 @@ function buildSpec(baseUrl) {
                     dimension: { type: 'integer', minimum: 1, maximum: 65536 },
                     filter_complexity: { enum: ['low', 'medium', 'high'] },
                     workload_type: { enum: ['insert_heavy', 'query_heavy', 'hybrid'] },
+                    referral_tag: {
+                      type: 'string',
+                      description:
+                        'Optional 1–64 char attribution token (letters, digits, ._:@/-). Counted in telemetry for listing ROI.',
+                      maxLength: 64,
+                    },
                   },
                 },
               },

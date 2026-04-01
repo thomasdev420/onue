@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { AMPLY_PRODUCT_VERSION } from '@/app/lib/amplyProductVersion';
-import { getAuthMode } from '@/app/lib/amplyRoute/auth';
+import { getAuthMode, isProductionRouteAuthStrict } from '@/app/lib/amplyRoute/auth';
 import { amplyLog } from '@/app/lib/amplyRoute/amplyLog';
 import { benchmarkTimestampIso } from '@/app/lib/amplyRoute/benchmarkStamp';
-import { loadProviders } from '@/app/lib/amplyRoute/loadProviders';
+import { getCatalogCacheTtlMs, loadProviders } from '@/app/lib/amplyRoute/loadProviders';
 import { catalogMetricsStaleness } from '@/app/lib/amplyRoute/catalogFreshness';
 import { resolveDatabaseUrl } from '@/app/lib/amplyRoute/resolveDatabaseUrl';
+import { getV1RouteRateLimitSummary } from '@/app/lib/amplyRoute/rateLimitV1Route';
 import { withV1TraceHeaders } from '@/app/lib/amplyRoute/v1TraceHeaders';
 import { getSupabaseServiceRole } from '@/app/services/amplySelection/supabaseAdmin';
 
@@ -38,7 +39,7 @@ export async function GET() {
   const computeMs = performance.now() - t0;
   const computeRounded = Math.round(computeMs);
 
-  const rateLimitPerMin = Number(process.env.AMPLY_V1_RATE_LIMIT_PER_MIN || 0);
+  const rateLimit = getV1RouteRateLimitSummary();
   const staleHours = Number.parseInt(process.env.AMPLY_CATALOG_STALE_AFTER_HOURS || '24', 10) || 24;
   const staleness = catalogMetricsStaleness(catalog_freshness, staleHours);
 
@@ -62,10 +63,7 @@ export async function GET() {
       data_mode: source === 'supabase' ? 'catalog' : 'seeded',
       catalog_freshness: catalog_freshness ?? null,
       auth_mode: getAuthMode(),
-      rate_limit:
-        Number.isFinite(rateLimitPerMin) && rateLimitPerMin > 0
-          ? { enabled: true, requests_per_minute_per_ip: rateLimitPerMin }
-          : { enabled: false, requests_per_minute_per_ip: null },
+      rate_limit: rateLimit,
       openapi_url: '/api/v1/openapi',
       request_id: requestId,
       compute_ms: computeRounded,
@@ -80,6 +78,9 @@ export async function GET() {
         catalog_metrics_stale: staleness.catalog_metrics_stale,
         catalog_metrics_stale_after_hours: staleness.catalog_metrics_stale_after_hours,
         user_api_keys_store_ready: hasSupabaseUrl && hasServiceRoleKey,
+        route_auth_production_strict: isProductionRouteAuthStrict(),
+        allow_anonymous_route_env: process.env.AMPLY_ALLOW_ANONYMOUS_ROUTE?.trim() === '1',
+        amply_catalog_cache_ms: getCatalogCacheTtlMs(),
       },
     },
     { headers: withV1TraceHeaders(corsHeaders, { requestId, computeMs }) },

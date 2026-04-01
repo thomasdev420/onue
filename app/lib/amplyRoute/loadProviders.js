@@ -8,6 +8,11 @@ const PG_CACHE_MS = Number.isFinite(CACHE_MS_RAW)
   ? Math.max(0, Math.min(CACHE_MS_RAW, 120_000))
   : 20_000;
 
+/** Effective in-process TTL for Postgres catalog rows (see GET /api/v1/status diagnostics). */
+export function getCatalogCacheTtlMs() {
+  return PG_CACHE_MS;
+}
+
 /** In-process cache: cuts repeated PG round-trips on warm serverless (reduces wall RTT tail). */
 async function loadProvidersFromDatabaseUrlCached(dbUrl) {
   if (PG_CACHE_MS <= 0) {
@@ -26,6 +31,7 @@ async function loadProvidersFromDatabaseUrlCached(dbUrl) {
 
 function rowToProvider(row) {
   return {
+    category: typeof row.category === 'string' && row.category.trim() ? row.category.trim() : 'vector_db',
     display_name: row.display_name,
     win_rate: Number(row.win_rate),
     p99_latency_ms: Number(row.p99_latency_ms),
@@ -75,7 +81,7 @@ export async function loadProviders(admin) {
   const { data, error } = await admin
     .from('amply_route_providers')
     .select(
-      'id, display_name, p99_latency_ms, cost_per_1m_dims_usd, success_rate_last_24h, success_rate_last_7d, win_rate, revenue_captured_usd, missed_opportunity_usd, metrics_as_of, updated_at, catalog_listing',
+      'id, display_name, category, p99_latency_ms, cost_per_1m_dims_usd, success_rate_last_24h, success_rate_last_7d, win_rate, revenue_captured_usd, missed_opportunity_usd, metrics_as_of, updated_at, catalog_listing',
     )
     .eq('is_active', true)
     .order('id');

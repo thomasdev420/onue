@@ -11,6 +11,7 @@ export const SEEDED_PROVIDERS = Object.fromEntries(
   providers.map((p) => [
     p.id,
     {
+      category: p.category || 'vector_db',
       display_name: p.display_name,
       win_rate: p.win_rate,
       p99_latency_ms: p.p99_latency_ms,

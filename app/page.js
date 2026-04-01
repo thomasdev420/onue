@@ -764,11 +764,6 @@ export default function Home() {
           >
             Dev Access
           </button>
-          <div className="mt-8 flex justify-center">
-            <p className="inline-flex items-center justify-center rounded-full border border-gray-300/90 bg-white/80 px-4 py-2 font-mono text-[10px] font-medium uppercase leading-none tracking-[0.22em] text-gray-600 shadow-[0_1px_2px_rgba(0,0,0,0.04)] antialiased sm:px-5 sm:text-[11px] sm:tracking-[0.2em]">
-              [ A Thomas Collins production ]
-            </p>
-          </div>
         </div>
       </div>
     </div>
