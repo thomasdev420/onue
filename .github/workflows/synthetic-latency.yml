@@ -12,6 +12,8 @@
 #
 # To change sample size, edit AMPLY_PROBE_ITERATIONS below.
 # Optional env: AMPLY_PROBE_FAIL_WALL_P95_MS / AMPLY_PROBE_FAIL_COMPUTE_P95_MS for hard gates.
+# AMPLY_PROBE_ROUTE_MINIMAL=1 — smaller POST body for less upload/parse variance (stable US runner → iad1).
+# After each run: Actions → this workflow → latest run → Artifacts → synthetic-probe-log (JSON includes route.status.compute_p95_ms).
 
 name: Synthetic API latency
 
@@ -24,9 +26,9 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: 'npm'
@@ -41,6 +43,7 @@ jobs:
           AMPLY_ROUTE_BEARER_TOKEN: ${{ secrets.AMPLY_ROUTE_BEARER_TOKEN }}
           AMPLY_PROBE_ITERATIONS: '60'
           AMPLY_PROBE_WARMUP: '1'
+          AMPLY_PROBE_ROUTE_MINIMAL: '1'
         run: |
           if [ -z "$AMPLY_PROD_URL" ]; then
             echo '::error::Missing repository secret AMPLY_PROD_URL. GitHub → Settings → Secrets and variables → Actions → New repository secret.'
@@ -50,5 +53,14 @@ jobs:
             echo '::error::Need AMPLY_API_KEYS and/or AMPLY_ROUTE_BEARER_TOKEN (Bearer for POST /api/v1/route).'
             exit 1
           fi
-          echo '::notice::Probing production (host masked in logs).'
-          npm run probe:synthetic -- "$AMPLY_PROD_URL"
+          echo '::notice::Probing production from GitHub-hosted runner (US Azure; compare compute_p95 across runs).'
+          set -o pipefail
+          npm run probe:synthetic -- "$AMPLY_PROD_URL" 2>&1 | tee probe-log.txt
+
+      - name: Upload probe log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-probe-log
+          path: probe-log.txt
+          retention-days: 30

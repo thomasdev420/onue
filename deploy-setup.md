@@ -1,5 +1,19 @@
 # Vercel Deployment Setup
 
+## Production API hardening (routing)
+
+After deploy, **`POST /api/v1/route`** behaves as follows:
+
+- **Production (default):** Bearer auth is **required** unless **`AMPLY_ALLOW_ANONYMOUS_ROUTE=1`** (use only for private preview; not for public production).
+- **Keys:** Set **`AMPLY_API_KEYS`** (comma-separated server keys) and/or Supabase **`NEXT_PUBLIC_SUPABASE_URL`** + **`SUPABASE_SERVICE_ROLE_KEY`** so **dashboard user keys** (`amply_api_keys`) work.
+- **Rate limit:** **`AMPLY_V1_RATE_LIMIT_PER_MIN`** defaults to **120** per client IP in production when unset. Set **`AMPLY_V1_RATE_LIMIT_PER_MIN=0`** to turn off (not recommended on the public internet).
+
+**`GET /api/v1/status`** includes **`diagnostics.route_auth_production_strict`**, **`allow_anonymous_route_env`**, and **`user_api_keys_store_ready`** for quick checks.
+
+Dashboard and **`/api/user/*`** (except dev) require a **NextAuth** session via **`middleware.js`** when **`NEXTAUTH_SECRET`** is set.
+
+---
+
 ## Required Environment Variables
 
 Add these environment variables in your Vercel project settings:
@@ -98,7 +112,7 @@ The public API (`/api/v1/status`, `/api/v1/route`) exposes two different timing 
 
 **Product bar (~200 ms):** Use **server compute** (`compute_ms` / `X-Amply-Compute-Ms`, e.g. `compute_p95_ms` in the synthetic probe) as the primary SLO for “fast agent path.” **Wall p95** from a **GitHub-hosted runner** (typically US) can sit around **~200–250 ms** without indicating a regression—compare **compute p95** across deploys. For wall RTT comparable to users in another region, run `npm run probe:synthetic` from a machine in that region.
 
-**Compute region:** This repo sets **`"regions": ["iad1"]`** in **`vercel.json`** (US East) for more **stable** latency from US probes and shorter cold paths vs. bouncing regions. **EU-heavy users** may see higher RTT; switch to **`"lhr1"`** or remove **`regions`** if that fits your audience better.
+**Compute region:** This repo sets **`"regions": ["iad1"]`** in **`vercel.json`** (US East) for more **stable** latency from US probes and shorter cold paths vs. bouncing regions. **EU-heavy users** may see higher RTT; switch to **`"lhr1"`** or remove **`regions`** if that fits your audience better. **`GET /api/v1/status`** includes **`diagnostics.amply_catalog_cache_ms`** (effective in-process catalog TTL from **`AMPLY_CATALOG_CACHE_MS`**, clamped 0–120000) so you can confirm cache tuning in production without reading server logs.
 
 **Measure p95 (local or CI):** Scripts honor **`DOTENV_CONFIG_PATH`** so you can point at a file from **`vercel env pull`** (production secrets) without editing `.env`:
 
@@ -184,6 +198,21 @@ npm run check:gha-secrets
 GITHUB_REPOSITORY=owner/repo npm run check:gha-secrets   # if not default remote
 ```
 
+**CI actions:** Workflows use **`actions/checkout@v5`** and **`actions/setup-node@v5`** (action runtime on Node 24 per upstream; your app still runs **`npm ci` / `node-version: '20'`** to match `package.json` engines).
+
+### Git — large binary slipped into history (e.g. `node-installer.pkg`)
+
+`node-installer.pkg` is **gitignored** so it is not re-added. If GitHub still warns on push, the blob remains in **old commits**. Removing it **rewrites history** — everyone must **`git fetch --all`** / reclone; you must **`git push --force`** every remote that had the old history (coordinate if both **`onue`** and **`amply`** share that history).
+
+Optional fix (after `brew install git-filter-repo` or pip install):
+
+```bash
+git filter-repo --path node-installer.pkg --invert-paths
+git push --force amply main   # example: only if you intend to rewrite that remote
+```
+
+Only do this when you understand force-push impact.
+
 ---
 
 ## Catalog automation (ETL) — keep `metrics_as_of` live
@@ -193,6 +222,8 @@ GITHUB_REPOSITORY=owner/repo npm run check:gha-secrets   # if not default remote
 ### Apply to production Postgres
 
 0. **Listing disclosure column (one-time):** run `database_migration_amply_route_catalog_listing.sql` so `GET /api/v1/providers` and `/catalog` can return `catalog_listing` (`organic` vs paid tiers). New installs: `database_setup_amply_route.sql` already includes the column.
+
+0b. **Routing telemetry (one-time, provider transparency):** run **`database_migration_amply_route_decisions.sql`** in the same Postgres / Supabase project. This creates **`amply_route_decisions`** (one row per successful **`POST /api/v1/route`**) and the **`amply_route_platform_metrics()`** helper used by **`GET /api/v1/platform-metrics`**, **`/providers`** (impact section), and **`/dashboard/listing-impact`**. Optional request body field **`referral_tag`** is stored for future attribution reports.
 
 1. **On deploy (Vercel):** `vercel.json` registers **`GET /api/cron/catalog-refresh`** on a schedule. **Hobby (free) plans only allow at most once per day**; this repo uses **`0 9 * * *`** (≈09:00 UTC daily). **Pro** allows more frequent crons (e.g. every few hours). The **Observability → Cron Jobs** table may look **empty or redacted on Hobby**; that does not stop the route from working—use **`curl`** (below) to run it anytime.  
 2. **Env on Vercel:** set **`CRON_SECRET`** (opaque string, e.g. `openssl rand -hex 24`). Vercel sends `Authorization: Bearer <CRON_SECRET>` when the cron runs.  
@@ -210,7 +241,9 @@ npm run catalog:sync
 
 This upserts all rows from the JSON and sets **`metrics_as_of`** / **`updated_at`** to **`NOW()`**.
 
-**Alert when prod is stale:** GitHub Actions workflow **`catalog-freshness.yml`** (schedule + `workflow_dispatch`) runs **`npm run check:catalog-fresh`** against **`AMPLY_PROD_URL`**. Add that repository secret; a red run means **`catalog_metrics_stale`** is still true (fix cron, run `catalog:sync`, or ship new JSON).
+**Alert when prod is stale:** GitHub Actions workflow **`catalog-freshness.yml`** (schedule + `workflow_dispatch`) runs **`npm run check:catalog-fresh`** against **`AMPLY_PROD_URL`**. Add that repository secret; a red run means **`catalog_metrics_stale`** is still true (fix cron, run `catalog:sync`, or ship new JSON). The workflow sets **`AMPLY_CATALOG_AGE_WARN_HOURS=12`**: if **`catalog_metrics_age_hours`** is above that but not yet “stale,” the job prints a **warning** (still green) so you can tighten sync before SLAs bite.
+
+**Synthetic latency CI:** **`synthetic-latency.yml`** uses **`AMPLY_PROBE_ROUTE_MINIMAL=1`** (smaller POST body for stable **`compute_p95_ms`**), uploads **`probe-log.txt`** as a workflow artifact, and runs from a **GitHub-hosted US runner** (compare **`compute_p95_ms`** across deploys; wall RTT still includes runner↔edge distance).
 
 **Strict deploy verify (optional):** `AMPLY_VERIFY_FAIL_ON_STALE=1 npm run verify:deploy -- https://…` fails if stale.
 

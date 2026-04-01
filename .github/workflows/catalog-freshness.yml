@@ -1,5 +1,6 @@
 # Fail when production GET /api/v1/status reports catalog_metrics_stale (alert via GitHub email / notifications).
 # Needs: repository secret AMPLY_PROD_URL (same host as prod).
+# AMPLY_CATALOG_AGE_WARN_HOURS — yellow warning when catalog_metrics_age_hours exceeds this (job still passes). Lower (e.g. 6) if SLAs tighten.
 
 name: Catalog freshness check
 
@@ -12,9 +13,9 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: 'npm'
@@ -25,6 +26,8 @@ jobs:
       - name: Check production catalog is not stale
         env:
           AMPLY_PROD_URL: ${{ secrets.AMPLY_PROD_URL }}
+          # Warn (yellow) when age creeps up; still exits 0 unless catalog_metrics_stale=true
+          AMPLY_CATALOG_AGE_WARN_HOURS: '12'
         run: |
           if [ -z "$AMPLY_PROD_URL" ]; then
             echo '::error::Set repository secret AMPLY_PROD_URL (e.g. https://www.useamply.com)'
