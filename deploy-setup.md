@@ -247,6 +247,10 @@ This upserts all rows from the JSON and sets **`metrics_as_of`** / **`updated_at
 
 **Strict deploy verify (optional):** `AMPLY_VERIFY_FAIL_ON_STALE=1 npm run verify:deploy -- https://…` fails if stale.
 
+**Platform metrics route:** `npm run verify:deploy -- https://…` also **GETs `/api/v1/platform-metrics`** and fails if the response is not **HTTP 200** with JSON (`ok`, `decisions_last_30d`, `request_id`). If you see **404**, Production is not running a build that includes `app/api/v1/platform-metrics/route.js` — **redeploy** from the linked Git branch. If JSON loads but `error_code` hints at a missing DB function, run **`database_migration_amply_route_decisions.sql`** in Supabase. Optional: `AMPLY_VERIFY_FAIL_ON_TELEMETRY=1` treats telemetry migration errors as a hard failure.
+
+**Latency / SLO:** A single **`GET /api/v1/status`** `compute_ms` can spike (cold start, cache); do **not** use it alone as proof of the ~200ms server bar. Use **`npm run probe:synthetic:p95`** (or CI) and compare **`compute_p95`** on **`POST /api/v1/route`** to the product goal; wall RTT includes your network to Vercel.
+
 ### Editing metrics honestly
 
 1. Update numbers in **`data/amply_route_catalog.json`** (and bump **`version`** if you track releases).  

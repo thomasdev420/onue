@@ -1,5 +1,5 @@
 /**
- * Production / preview check: GET /api/v1/status + POST /api/v1/route.
+ * Production / preview check: GET /api/v1/status + GET /api/v1/platform-metrics + POST /api/v1/route.
  *
  * Usage:
  *   npm run verify:deploy -- https://your-app.vercel.app
@@ -161,6 +161,68 @@ if (statusJson.diagnostics?.catalog_metrics_stale) {
   }
 }
 
+// --- GET /api/v1/platform-metrics (public JSON; must not 404 on production) ---
+const pmUrl = `${base}/api/v1/platform-metrics`;
+let pmRes;
+try {
+  pmRes = await fetch(pmUrl);
+} catch (e) {
+  console.error(`GET ${pmUrl} failed:`, e.cause?.code || e.message);
+  process.exit(1);
+}
+const pmText = await pmRes.text();
+let pmJson;
+try {
+  pmJson = JSON.parse(pmText);
+} catch {
+  console.error(
+    `GET /api/v1/platform-metrics returned non-JSON (HTTP ${pmRes.status}). First 500 chars:\n`,
+    pmText.slice(0, 500),
+  );
+  if (pmRes.status === 404) {
+    console.error(
+      '\n→ HTTP 404: this route is missing from the deployment.',
+      '\n  Fix: Vercel → Project → confirm Production is built from `main` with `app/api/v1/platform-metrics/route.js`, then Redeploy.',
+    );
+  }
+  process.exit(1);
+}
+
+console.log('\nGET /api/v1/platform-metrics\n', JSON.stringify(pmJson, null, 2));
+
+if (!pmRes.ok) {
+  console.error(`\nFAIL: HTTP ${pmRes.status} on platform-metrics`);
+  if (pmRes.status === 404) {
+    console.error(
+      '→ Redeploy Production from latest Git (see app/api/v1/platform-metrics/route.js).',
+    );
+  }
+  process.exit(1);
+}
+
+if (pmJson.ok !== true) {
+  console.error('\nFAIL: GET /api/v1/platform-metrics JSON ok !== true');
+  process.exit(1);
+}
+if (typeof pmJson.decisions_last_30d !== 'number' || !Number.isFinite(pmJson.decisions_last_30d)) {
+  console.error('\nFAIL: platform-metrics missing numeric decisions_last_30d');
+  process.exit(1);
+}
+if (typeof pmJson.request_id !== 'string' || !/^[0-9a-f-]{36}$/i.test(pmJson.request_id)) {
+  console.error('\nFAIL: platform-metrics missing valid request_id');
+  process.exit(1);
+}
+
+if (pmJson.error_code === 'telemetry_migration_pending' || pmJson.error_code === 'rpc_failed') {
+  console.error(
+    '\nWARN: platform-metrics DB function/table may be missing — run database_migration_amply_route_decisions.sql in Supabase (see deploy-setup.md § Routing telemetry). Counts may be zero until migration + traffic.',
+  );
+  if (process.env.AMPLY_VERIFY_FAIL_ON_TELEMETRY === '1') {
+    console.error('\nFAIL: AMPLY_VERIFY_FAIL_ON_TELEMETRY=1');
+    process.exit(1);
+  }
+}
+
 // --- POST /api/v1/route ---
 const routeUrl = `${base}/api/v1/route`;
 const body = {
@@ -217,5 +279,5 @@ if (src !== 'supabase') {
   process.exit(1);
 }
 
-console.error('\nOK: production checks passed (catalog + route from Supabase).');
+console.error('\nOK: production checks passed (status + platform-metrics + catalog + route from Supabase).');
 process.exit(0);
